@@ -40,6 +40,16 @@ class ContextRouteTests(unittest.TestCase):
         _, estimated_tokens = context_plan.estimate(required)
         self.assertLess(estimated_tokens, 5000)
 
+    def test_detected_engine_aliases_resolve_to_real_profiles(self):
+        for engine, expected in (("rpg-maker-mz", "rpg-maker.md"),
+                                 ("rpg-maker-mv", "rpg-maker.md"),
+                                 ("source", "source-engine.md")):
+            _, optional = context_plan.resolve("integration", engine)
+            self.assertIn("engines/" + expected, optional)
+            self.assertTrue((ROOT / "engines" / expected).is_file())
+        with self.assertRaises(ValueError):
+            context_plan.resolve("integration", "../outside")
+
 
 if __name__ == "__main__":
     unittest.main()

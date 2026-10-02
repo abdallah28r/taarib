@@ -23,6 +23,30 @@ static QA report is not a substitute for that acceptance.
 7. Record engine/build, language code, counts, fonts, RTL method, modified files,
    patch method, known issues, and removal instructions in `reports/FINAL.md`.
 
+The developer patch helpers support `add` and `replace` without bundling
+untouched originals. For a synthetic or authorized game copy:
+
+```text
+python scripts/build_patch_package.py <clean_game_copy> <new_package_dir> <game-relative-file> [...] --patch-root <changed_copy>
+python scripts/apply_patch_package.py <clean_game_copy> <new_package_dir> --yes
+python scripts/uninstall_patch_package.py <game_copy> <transaction-id> --yes
+```
+
+The install command prints the transaction path; retain its final directory
+name for uninstall. If an interrupted installation leaves a `prepared`
+transaction, the same uninstall command can recover it when its current files
+still match either the original or the patch hashes. For an update, verify and remove the prior transaction,
+then install the new package against the supported original hashes. Do not
+overwrite a changed installed file: investigate or preserve the user's edit.
+These scripts require Python and are **developer/test helpers**, not a finished
+recipient installer. Before claiming a shareable package, provide a tested
+game-specific wrapper/installer that does not require Codex or the development
+toolchain, with an Arabic `INSTALL_AR.md`, supported build hashes, requirements,
+update/removal instructions, and successful install/update/uninstall on clean
+copies. If that wrapper is not available, label the deliverable a developer
+patch candidate, not a ready-to-share release. Review every changed asset and
+dependency for redistribution rights; a hash match is not a license grant.
+
 For a game patch, make the installer portable: discover or ask for the
 recipient's game directory, verify supported original game files and
 supported build, and include the patch payload, an easy Arabic installation

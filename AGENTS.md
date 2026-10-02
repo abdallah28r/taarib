@@ -37,6 +37,10 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
 - Do not guess meaning-changing context, gender, kinship, puzzles, or gameplay.
   Batch non-blocking uncertainties; ask only when the decision blocks safe work.
 - Run the validator appropriate to the changed artifact before integration.
+- When selecting an external tool, record only the version actually adopted in
+  `tools/selected-tools.json` with source, license, digest, and decision. The
+  broad catalog is a candidate list, not evidence of installation, compatibility,
+  redistribution permission, or a complete license review.
 - Do not launch the game, upload data, install models, or contact an external AI
   service without the authority required by `PROJECT.yaml` and current user
   instructions. Official OpenAI image editing is the narrow standing exception
@@ -99,3 +103,7 @@ same finding across all records.
 - Template changes: `python scripts/verify_template.py`.
 - Release-only checks, SBOM, manifest, and public ZIP: run the release route,
   not after ordinary translation batches.
+- `build_patch_package.py`, `apply_patch_package.py`, and
+  `uninstall_patch_package.py` are developer helpers. Passing their synthetic
+  tests does not make a game patch a user-ready portable installer; follow the
+  separate recipient and runtime gates in `references/release.md`.

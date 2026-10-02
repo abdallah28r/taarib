@@ -156,7 +156,8 @@ def main() -> int:
     errors = validate(args.manifest)
     for error in errors:
         print("ERROR", error)
-    print("IMAGE_REGIONS=PASS" if not errors else "IMAGE_REGIONS=FAIL")
+    print("IMAGE_REGION_STRUCTURE=PASS" if not errors else "IMAGE_REGION_STRUCTURE=FAIL")
+    print("SCOPE=hashes, dimensions, mode, decision records, and changed-pixel boundaries only; visual/OCR/native-format QA remains required")
     return 1 if errors else 0
 
 

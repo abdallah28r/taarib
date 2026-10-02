@@ -17,6 +17,13 @@ class FormatStructureTests(unittest.TestCase):
         errors, _ = MODULE.check_pair(source, target, "plural")
         self.assertEqual(errors, [])
 
+    def test_arabic_plural_categories_can_extend_source_when_formatter_supports_them(self):
+        source = "{count, plural, one {One file} other {# files}}"
+        target = ("{count, plural, zero {لا ملفات} one {ملف واحد} two {ملفان} "
+                  "few {# ملفات} many {# ملفًا} other {# ملف}}")
+        errors, _ = MODULE.check_pair(source, target, "arabic-plurals")
+        self.assertEqual(errors, [])
+
     def test_icu_requires_original_branches_and_nested_variables(self):
         source = "{count, plural, one {{player} has one} other {{player} has many}}"
         target = "{count, plural, one {{player} لديه واحد} other {لديه الكثير}}"

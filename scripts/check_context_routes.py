@@ -1,5 +1,6 @@
 """Validate progressive-disclosure routes and their critical coverage."""
 from __future__ import annotations
+import importlib.util
 import json
 from pathlib import Path
 
@@ -8,8 +9,16 @@ def validate():
     data=json.loads((ROOT/"config/context-routes.json").read_text(encoding="utf-8"));errors=[]
     if data.get("schema_version")!=1: errors.append("schema_version must be 1")
     for name,item in data.get("routes",{}).items():
-        for path in [*data.get("always",[]),item.get("skill",""),*item.get("required",[])]:
+        for path in [*data.get("always",[]),item.get("skill",""),*item.get("required",[]),*item.get("optional",[])]:
             if not path or ("<engine>" not in path and not (ROOT/path).is_file()): errors.append(f"{name}: missing {path}")
+    aliases=json.loads((ROOT/"config/engine-profile-aliases.json").read_text(encoding="utf-8"))
+    spec=importlib.util.spec_from_file_location("detect_engine_for_routes",ROOT/"scripts/detect_engine.py")
+    detector=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(detector)
+    for engine in detector.MARKERS:
+        profile=aliases.get(engine,engine)
+        if not (ROOT/"engines"/f"{profile}.md").is_file():
+            errors.append(f"{engine}: no engine profile for detected ID")
     must={
       "discovery":{"references/project-run.md","references/discovery.md"},
       "mod-research":{"references/localization-mods.md","LEGAL_AND_CLEAN_ROOM_POLICY.md"},

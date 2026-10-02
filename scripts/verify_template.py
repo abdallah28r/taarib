@@ -26,6 +26,7 @@ def main(argv=None) -> int:
         ("context-routes", [py, "scripts/check_context_routes.py"]),
         ("license-guard", [py, "scripts/license_guard.py"]),
         ("engine-knowledge", [py, "scripts/check_knowledge.py", "engines"]),
+        ("tool-provenance-structure", [py, "scripts/check_tool_provenance.py"]),
     ]
     results = [run(*item) for item in checks]
     if a.release:

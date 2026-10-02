@@ -45,12 +45,15 @@ def merge(old_source: Path, new_source: Path, old_target: Path, id_column: str):
             for field in context_fields
         ) and any((prior_source.get(field) or "") != (row.get(field) or "")
                   for field in context_fields)
+        approved_context_changed = bool(prior_target) and any(
+            field in prior_target and (prior_target.get(field) or "") != (row.get(field) or "")
+            for field in context_fields)
         if prior_source and prior_source.get("source") != row.get("source"):
             merged["previous_target"] = (prior_target or {}).get("target", "")
             merged["target"] = ""
             merged["status"] = "review_source_changed"
             counts["changed_source"] += 1
-        elif context_changed:
+        elif context_changed or approved_context_changed:
             merged["previous_target"] = (prior_target or {}).get("target", "")
             merged["target"] = ""
             merged["status"] = "review_context_changed"

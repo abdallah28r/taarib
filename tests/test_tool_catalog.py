@@ -16,9 +16,11 @@ class ToolCatalogTests(unittest.TestCase):
         ids = [tool["id"] for tool in catalog["tools"]]
         self.assertEqual(len(ids), len(set(ids)))
         self.assertGreaterEqual(len(ids), 30)
+        profiles = set(catalog["profiles"])
         for tool in catalog["tools"]:
             self.assertTrue(tool["url"].startswith("https://"))
             self.assertTrue(tool["profiles"])
+            self.assertFalse(set(tool["profiles"]) - profiles, tool["id"])
             self.assertIn(tool["tier"], {"core", "recommended", "conditional"})
 
     def test_unverified_licenses_are_conditional(self):

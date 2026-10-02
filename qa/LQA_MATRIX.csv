@@ -1,8 +1,8 @@
-category,case,expected,evidence,status
-text,placeholder preservation,all source tokens preserved,loc_qa output,not-run
-text,Arabic NFC/no tatweel,normalized Arabic without presentation forms,loc_qa output,not-run
-layout,RTL and mixed Latin,numbers and variables display correctly,build screenshot,not-run
-layout,overflow and clipping,no truncation at target resolution,build screenshot,not-run
-functional,save/load and menu navigation,localized strings persist,playtest video,not-run
-functional,controller/keyboard input,controls remain usable,playtest notes,not-run
-compatibility,fonts and fallback,all glyphs render on target device,device matrix,not-run
+id,category,build,scene_or_key,locale,resolution,input_mode,expected,observed,severity,layer,reproduction,evidence,status,retest
+case-001,text,unverified,placeholder preservation,ar,n/a,n/a,all source tokens preserved,n/a,n/a,source,run structural QA,loc_qa output,not-run,n/a
+case-002,text,unverified,Arabic NFC/no tatweel,ar,n/a,n/a,normalized logical Arabic,n/a,n/a,source,run structural QA,loc_qa output,not-run,n/a
+case-003,layout,unverified,RTL and mixed Latin,ar,unverified,unverified,correct order and joining,n/a,n/a,renderer,inspect representative screen,n/a,not-run,n/a
+case-004,layout,unverified,overflow and clipping,ar,unverified,unverified,no truncation,n/a,n/a,renderer,inspect target resolutions,n/a,not-run,n/a
+case-005,functional,unverified,save/load and menu navigation,ar,unverified,unverified,localized strings persist,n/a,n/a,runtime,playtest when authorized,n/a,not-run,n/a
+case-006,functional,unverified,controller/keyboard input,ar,unverified,unverified,controls remain usable,n/a,n/a,runtime,playtest when authorized,n/a,not-run,n/a
+case-007,compatibility,unverified,fonts and fallback,ar,unverified,unverified,all glyphs render,n/a,n/a,font,inspect target device,n/a,not-run,n/a

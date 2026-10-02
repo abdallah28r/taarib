@@ -3,10 +3,11 @@ from __future__ import annotations
 import argparse,hashlib,json,shutil
 from datetime import datetime,timezone
 from pathlib import Path
+from uuid import uuid4
 def main():
  p=argparse.ArgumentParser();p.add_argument("root",type=Path);p.add_argument("paths",nargs="+",type=Path);a=p.parse_args();root=a.root.resolve()
  if not root.is_dir(): raise SystemExit("root does not exist")
- stamp=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ");out=root/"backups"/stamp;out.mkdir(parents=True)
+ stamp=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ");out=root/"backups"/(stamp+"-"+uuid4().hex);out.mkdir(parents=True)
  manifest={}
  for src in a.paths:
   s=(src if src.is_absolute() else root/src).resolve()

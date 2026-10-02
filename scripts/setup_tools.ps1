@@ -1,8 +1,12 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('core','qa','fonts','media','ocr','cat','patching','all')]
+    [ValidateSet('core','qa','fonts','media','ocr','cat','patching','binary','source','gamemaker','all')]
     [string]$Profile = 'core',
-    [switch]$InstallApps
+    [switch]$InstallApps,
+    [string]$SevenZipTag,
+    [string]$XdeltaTag,
+    [string]$TessdataSha256,
+    [hashtable]$AppVersions = @{}
 )
 
 $ErrorActionPreference = 'Stop'
@@ -33,7 +37,14 @@ if ($Profile -eq 'ocr') {
     New-Item -ItemType Directory -Path $Tessdata -Force | Out-Null
     $ArabicModel = Join-Path $Tessdata 'ara.traineddata'
     if (-not (Test-Path -LiteralPath $ArabicModel)) {
-        Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/ara.traineddata' -OutFile $ArabicModel
+        if ($TessdataSha256 -notmatch '^[0-9a-fA-F]{64}$') { throw 'OCR download requires a verified -TessdataSha256.' }
+        $TemporaryModel = "$ArabicModel.download"
+        Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/ara.traineddata' -OutFile $TemporaryModel
+        if ((Get-FileHash -LiteralPath $TemporaryModel -Algorithm SHA256).Hash -ne $TessdataSha256.ToUpperInvariant()) {
+            Remove-Item -LiteralPath $TemporaryModel
+            throw 'Arabic OCR model checksum mismatch.'
+        }
+        Move-Item -LiteralPath $TemporaryModel -Destination $ArabicModel
     }
 }
 
@@ -46,15 +57,16 @@ if ($InstallApps) {
         New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
         $SevenZip = Join-Path $BinDir '7zr.exe'
         if (-not (Test-Path -LiteralPath $SevenZip)) {
-            $Release = Invoke-RestMethod -Uri 'https://api.github.com/repos/ip7z/7zip/releases/latest'
+            if (-not $SevenZipTag) { throw '7zr installation requires an exact -SevenZipTag.' }
+            $Release = Invoke-RestMethod -Uri "https://api.github.com/repos/ip7z/7zip/releases/tags/$([uri]::EscapeDataString($SevenZipTag))"
             $Asset = $Release.assets | Where-Object name -eq '7zr.exe' | Select-Object -First 1
-            if (-not $Asset) { throw 'The latest 7-Zip release has no 7zr.exe asset.' }
-            Invoke-WebRequest -Uri $Asset.browser_download_url -OutFile $SevenZip
-            if ($Asset.digest -like 'sha256:*') {
-                $Expected = $Asset.digest.Substring(7).ToUpperInvariant()
-                $Actual = (Get-FileHash -LiteralPath $SevenZip -Algorithm SHA256).Hash
-                if ($Actual -ne $Expected) { throw '7zr.exe checksum mismatch.' }
-            }
+            if (-not $Asset -or $Asset.digest -notmatch '^sha256:[0-9a-fA-F]{64}$') { throw '7zr release asset requires a published SHA-256 digest.' }
+            $TemporarySevenZip = "$SevenZip.download"
+            Invoke-WebRequest -Uri $Asset.browser_download_url -OutFile $TemporarySevenZip
+            $Expected = $Asset.digest.Substring(7).ToUpperInvariant()
+            $Actual = (Get-FileHash -LiteralPath $TemporarySevenZip -Algorithm SHA256).Hash
+            if ($Actual -ne $Expected) { Remove-Item -LiteralPath $TemporarySevenZip; throw '7zr.exe checksum mismatch.' }
+            Move-Item -LiteralPath $TemporarySevenZip -Destination $SevenZip
         }
     }
     if ($Profile -in @('patching','all')) {
@@ -64,16 +76,15 @@ if ($InstallApps) {
         New-Item -ItemType Directory -Path $BinDir,$Downloads,$Extracted -Force | Out-Null
         $Xdelta = Join-Path $BinDir 'xdelta3.exe'
         if (-not (Test-Path -LiteralPath $Xdelta)) {
-            $Release = Invoke-RestMethod -Uri 'https://api.github.com/repos/jmacd/xdelta/releases/latest'
+            if (-not $XdeltaTag) { throw 'Xdelta installation requires an exact -XdeltaTag.' }
+            $Release = Invoke-RestMethod -Uri "https://api.github.com/repos/jmacd/xdelta/releases/tags/$([uri]::EscapeDataString($XdeltaTag))"
             $Asset = $Release.assets | Where-Object name -like '*windows-x86_64.zip' | Select-Object -First 1
-            if (-not $Asset) { throw 'The latest Xdelta release has no Windows x64 asset.' }
+            if (-not $Asset -or $Asset.digest -notmatch '^sha256:[0-9a-fA-F]{64}$') { throw 'Xdelta release asset requires a published SHA-256 digest.' }
             $Archive = Join-Path $Downloads $Asset.name
             Invoke-WebRequest -Uri $Asset.browser_download_url -OutFile $Archive
-            if ($Asset.digest -like 'sha256:*') {
-                $Expected = $Asset.digest.Substring(7).ToUpperInvariant()
-                $Actual = (Get-FileHash -LiteralPath $Archive -Algorithm SHA256).Hash
-                if ($Actual -ne $Expected) { throw 'Xdelta archive checksum mismatch.' }
-            }
+            $Expected = $Asset.digest.Substring(7).ToUpperInvariant()
+            $Actual = (Get-FileHash -LiteralPath $Archive -Algorithm SHA256).Hash
+            if ($Actual -ne $Expected) { Remove-Item -LiteralPath $Archive; throw 'Xdelta archive checksum mismatch.' }
             Expand-Archive -LiteralPath $Archive -DestinationPath $Extracted -Force
             $Found = Get-ChildItem -LiteralPath $Extracted -Filter 'xdelta3.exe' -File -Recurse | Select-Object -First 1
             if (-not $Found) { throw 'xdelta3.exe was not found in the downloaded archive.' }
@@ -91,7 +102,8 @@ if ($InstallApps) {
         default { @() }
     }
     foreach ($Id in $AppIds | Select-Object -Unique) {
-        winget install --id $Id --exact --silent --accept-source-agreements --accept-package-agreements --disable-interactivity
+        if (-not $AppVersions.ContainsKey($Id)) { throw "winget installation requires an exact version for $Id in -AppVersions" }
+        winget install --id $Id --version $AppVersions[$Id] --exact --silent --accept-source-agreements --accept-package-agreements --disable-interactivity
         if ($LASTEXITCODE -notin 0, -1978335189) { throw "winget failed for $Id with exit code $LASTEXITCODE" }
     }
 }

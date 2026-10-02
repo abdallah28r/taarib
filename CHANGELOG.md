@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-03 — Full-template audit fixes
+
+- Created an exact Git baseline before these changes and developed them in a
+  separate worktree/branch.
+- Extended developer patch packages to add and replace files, check hashes,
+  back up originals, uninstall, and recover interrupted prepared installs;
+  final recipient installers remain a separate game-specific release gate.
+- Prevented approved translations from carrying into changed context; mapped
+  detected engine IDs to their existing profiles and repaired missing tool
+  profile declarations.
+- Clarified Arabic plural categories, image structural-check limits, direct
+  visual QA, typography contrast/style constraints, and detailed LQA records.
+- Added explicit engine-profile evidence states and selected-tool provenance;
+  application downloads now require exact versions/tags and published hashes.
+- Added synthetic regression tests and distinct backup transaction names.
+
 ## 2026-10-02 — Localization mod route
 
 - Added a focused one-time survey of game/engine mods that solve Arabic

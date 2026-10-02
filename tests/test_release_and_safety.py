@@ -100,5 +100,98 @@ class ReleaseAndSafetyTests(unittest.TestCase):
             self.assertEqual(len(snapshots), 1)
             self.assertEqual(snapshots[0].read_text(encoding="utf-8"), "Save")
 
+    def test_package_add_replace_uninstall_and_reinstall(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary = Path(temporary)
+            root, changed, package = temporary / "game", temporary / "changed", temporary / "package"
+            (root / "data").mkdir(parents=True)
+            (changed / "data").mkdir(parents=True)
+            (root / "data" / "text.txt").write_text("Save", encoding="utf-8")
+            (changed / "data" / "text.txt").write_text("حفظ", encoding="utf-8")
+            (changed / "data" / "font.txt").write_text("licensed-font", encoding="utf-8")
+            build = subprocess.run([sys.executable, "-B", str(ROOT / "scripts" / "build_patch_package.py"),
+                                    str(root), str(package), "data/text.txt", "data/font.txt",
+                                    "--patch-root", str(changed)], capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stdout + build.stderr)
+            manifest = json.loads((package / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual({x["path"]: x["action"] for x in manifest["files"]},
+                             {"data/text.txt": "replace", "data/font.txt": "add"})
+            install_cmd = [sys.executable, "-B", str(ROOT / "scripts" / "apply_patch_package.py"),
+                           str(root), str(package), "--yes"]
+            self.assertEqual(subprocess.run(install_cmd, capture_output=True).returncode, 0)
+            self.assertEqual((root / "data" / "text.txt").read_text(encoding="utf-8"), "حفظ")
+            self.assertTrue((root / "data" / "font.txt").exists())
+            transaction = next((root / ".install-state").iterdir()).name
+            uninstall_cmd = [sys.executable, "-B", str(ROOT / "scripts" / "uninstall_patch_package.py"),
+                             str(root), transaction, "--yes"]
+            self.assertEqual(subprocess.run(uninstall_cmd, capture_output=True).returncode, 0)
+            self.assertEqual((root / "data" / "text.txt").read_text(encoding="utf-8"), "Save")
+            self.assertFalse((root / "data" / "font.txt").exists())
+            self.assertNotEqual(subprocess.run(uninstall_cmd, capture_output=True).returncode, 0)
+            self.assertEqual(subprocess.run(install_cmd, capture_output=True).returncode, 0)
+
+    def test_uninstall_refuses_a_user_changed_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary = Path(temporary)
+            root, changed, package = temporary / "game", temporary / "changed", temporary / "package"
+            root.mkdir()
+            changed.mkdir()
+            (changed / "ar.txt").write_text("Arabic", encoding="utf-8")
+            build = subprocess.run([sys.executable, "-B", str(ROOT / "scripts" / "build_patch_package.py"),
+                                    str(root), str(package), "ar.txt", "--patch-root", str(changed)],
+                                   capture_output=True)
+            self.assertEqual(build.returncode, 0)
+            install = subprocess.run([sys.executable, "-B", str(ROOT / "scripts" / "apply_patch_package.py"),
+                                      str(root), str(package), "--yes"], capture_output=True)
+            self.assertEqual(install.returncode, 0)
+            (root / "ar.txt").write_text("User changed", encoding="utf-8")
+            transaction = next((root / ".install-state").iterdir()).name
+            uninstall = subprocess.run([sys.executable, "-B", str(ROOT / "scripts" / "uninstall_patch_package.py"),
+                                        str(root), transaction, "--yes"], capture_output=True)
+            self.assertNotEqual(uninstall.returncode, 0)
+            self.assertEqual((root / "ar.txt").read_text(encoding="utf-8"), "User changed")
+
+    def test_prepared_install_recovery_removes_added_file_and_restores_original(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary = Path(temporary)
+            root, changed, package = temporary / "game", temporary / "changed", temporary / "package"
+            root.mkdir()
+            changed.mkdir()
+            (root / "base.txt").write_bytes(b"old")
+            (changed / "base.txt").write_bytes(b"new")
+            (changed / "added.txt").write_bytes(b"arabic")
+            build = subprocess.run([sys.executable, "-B", str(ROOT / "scripts/build_patch_package.py"),
+                                    str(root), str(package), "base.txt", "added.txt", "--patch-root", str(changed)],
+                                   capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            install = subprocess.run([sys.executable, "-B", str(ROOT / "scripts/apply_patch_package.py"),
+                                      str(root), str(package), "--yes"], capture_output=True, text=True)
+            self.assertEqual(install.returncode, 0, install.stderr)
+            transaction = next((root / ".install-state").iterdir())
+            state = transaction / "install-state.json"
+            record = json.loads(state.read_text(encoding="utf-8"))
+            record["status"] = "prepared"
+            state.write_text(json.dumps(record), encoding="utf-8")
+            uninstall = subprocess.run([sys.executable, "-B", str(ROOT / "scripts/uninstall_patch_package.py"),
+                                        str(root), transaction.name, "--yes"], capture_output=True, text=True)
+            self.assertEqual(uninstall.returncode, 0, uninstall.stderr)
+            self.assertEqual((root / "base.txt").read_bytes(), b"old")
+            self.assertFalse((root / "added.txt").exists())
+
+    def test_patch_rejects_manifest_payload_and_casefold_duplicate(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary = Path(temporary)
+            root, changed, package = temporary / "game", temporary / "changed", temporary / "package"
+            root.mkdir()
+            changed.mkdir()
+            for name in ("manifest.json", "A.txt", "a.txt"):
+                (changed / name).write_text("x", encoding="utf-8")
+            script = ROOT / "scripts/build_patch_package.py"
+            for files in (("manifest.json",), ("A.txt", "a.txt")):
+                result = subprocess.run([sys.executable, "-B", str(script), str(root), str(package),
+                                         *files, "--patch-root", str(changed)], capture_output=True, text=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse(package.exists())
+
 
 if __name__ == "__main__": unittest.main()

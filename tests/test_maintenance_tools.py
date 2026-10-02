@@ -71,6 +71,19 @@ class MaintenanceToolTests(unittest.TestCase):
             self.assertEqual(counts["changed_context"], 1)
             self.assertEqual(counts["unapproved"], 1)
 
+    def test_update_merge_rejects_approved_target_with_stale_context(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            old_source, new_source, old_target = tmp / "old.csv", tmp / "new.csv", tmp / "target.csv"
+            write_csv(old_source, [{"id": "1", "source": "Case", "note": "menu", "target": "", "status": ""}])
+            write_csv(new_source, [{"id": "1", "source": "Case", "note": "menu", "target": "", "status": ""}])
+            write_csv(old_target, [{"id": "1", "source": "Case", "note": "courtroom", "target": "قضية", "status": "approved"}])
+            rows, _, counts = merge_game_update.merge(old_source, new_source, old_target, "id")
+            self.assertEqual(rows[0]["status"], "review_context_changed")
+            self.assertEqual(rows[0]["target"], "")
+            self.assertEqual(rows[0]["previous_target"], "قضية")
+            self.assertEqual(counts["changed_context"], 1)
+
     def test_tmx_rejects_unapproved_rows(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)

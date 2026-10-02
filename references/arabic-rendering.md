@@ -33,6 +33,12 @@ with a small set of Arabic-capable, distributable candidates. Preview them in
 representative game screens when available and authorized; otherwise use
 captured UI/assets and record that in-game appearance remains unverified.
 Choose for legibility and the game's visual identity, not glyph coverage alone.
+Also compare contrast against the actual changing background and readability
+at the smallest supported UI scale. Preserve the source asset's effects when
+typesetting baked-in image text: do not invent an outline, shadow, backing
+panel, or glow just to boost a numeric contrast score. If readability cannot
+be achieved without altering the visual design, keep the asset as a review
+case and seek a design-level solution rather than silently changing it.
 Record only the selected role -> font/weight
 mapping and any important constraint in `PROJECT.yaml` under `typography`;
 do not create a report for every candidate or ask the user to choose each font.
