@@ -1,0 +1,74 @@
+schema_version: 1
+
+external_image_editing:
+  enabled: true
+  provider: "openai-official"
+  authorization_scope: "current-project"
+  final_asset_requires_review: true
+
+classification:
+  required_before_editing: true
+  states: ["TRANSLATE", "KEEP", "REVIEW"]
+  keep_if_translation_distorts_or_adds_information: true
+  forbid_external_caption_or_explanatory_overlay: true
+  embedded_design_text_default: "KEEP"
+  standalone_nameplate_with_approved_glossary: "TRANSLATE when the name is the image's player-facing content and the original design can be preserved"
+  embedded_design_categories:
+    - "clothing-and-accessories"
+    - "character-body-or-design-details"
+    - "weapons-and-tools-held-or-used-by-characters"
+    - "food-and-packaging"
+    - "commercial-or-fictional-products"
+    - "cosmetics-and-consumables"
+  gameplay_or_story_critical_exception: "TRANSLATE only when the image itself can be localized without distortion, invented information, or a new visual element; otherwise KEEP"
+
+style_fidelity:
+  match_source: true
+  source_typography_first: true
+  coordinate_with_project_role_fonts: true
+  do_not_force_one_font_across_all_images: true
+  forbid_invented_outline: true
+  forbid_invented_shadow: true
+  forbid_invented_glow: true
+  forbid_invented_panel_or_background: true
+  preserve_fill_color_opacity_weight_spacing_rotation_perspective: true
+
+candidate_search:
+  strategy: "adaptive"
+  try_every_method_unconditionally: false
+  simple_image_initial_candidates: 1
+  complex_or_uncertain_initial_candidates: 2
+  expand_only_after_visual_failure: true
+  stop_after_visual_and_technical_pass: true
+  keep_source_when_all_candidates_fail: true
+
+openai_editing_modes:
+  background_only: "restore inside tight text mask without generating text; typeset approved Arabic separately"
+  full_text_candidate: "replace text with exact approved Arabic in the original style; review before use"
+  raw_result_auto_integration: false
+
+region_record:
+  required_image_fields: ["image", "source", "source_sha256", "regions"]
+  required_region_fields: ["box", "decision", "reason"]
+  translated_region_fields: ["target_text", "review_status"]
+  approval_fields: ["candidate", "candidate_sha256", "method", "visual_reviewed", "visual_review", "technical_qa"]
+  optional_when_relevant: ["mask", "source_text", "prompt", "model", "visual_qa"]
+
+visual_review:
+  required_for_every_changed_image: true
+  source_and_candidate_must_be_opened: true
+  reviewer: "agent"
+  record: "source_opened, candidate_opened, and concise visual findings per approved region"
+  inspect_at_native_scale: true
+  transparent_assets_require_dark_light_and_checkerboard_views: true
+  side_by_side_comparison: true
+  numeric_only_acceptance_forbidden: true
+  generated_asset_auto_integration_forbidden: true
+
+technical_gates:
+  preserve_dimensions: true
+  preserve_color_mode_and_alpha_semantics: true
+  preserve_native_texture_format_mips_and_compression: true
+  outside_allowed_region_changed_pixels: 0
+  source_script_residue_check: true
+  exact_text_and_glossary_check: true

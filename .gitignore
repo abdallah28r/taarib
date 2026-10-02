@@ -1,0 +1,12 @@
+.tools/
+**/__pycache__/
+*.pyc
+source/*
+!source/README.md
+target/*
+!target/README.md
+backups/*
+!backups/README.md
+builds/
+releases/
+.install-state/

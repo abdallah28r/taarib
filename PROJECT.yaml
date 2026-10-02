@@ -1,0 +1,64 @@
+game:
+  name: "[اسم اللعبة]"
+  install_path: "[المسار الكامل للعبة]"
+  source_language: "en"
+  target_locale: "ar"
+  tone: "[نبرة اللعبة والشخصيات]"
+  register: "msa"
+  dialect_policy: "none-unless-approved"
+  digits: "western"
+  dates: "gregorian-month-names"
+  time_format: "12h"
+  quotation_marks: "arabic"
+  diacritics: "minimal"
+  profanity_policy: "same-intensity-as-source"
+  units_policy: "preserve-source-unless-approved"
+  native_encoding: "detect-and-preserve"
+  working_encoding: "utf-8"
+  token_profile: "generic"
+
+workflow:
+  current_route: "discovery"
+  engine_profile: ""
+  tools_path: "C:\\LocTools"
+  mode: "continuous"
+  approval_checkpoints: false
+  startup_intake: "ask-once-per-new-game"
+  mod_research: "once-after-engine-identification"  # localization-useful mods only; never automatic adoption
+  subagent_preference: "ask"  # yes/no after the initial grouped questions
+  image_scope: "ask"  # yes/no; image policy still controls what is translated
+  install_to_user_copy: true  # intended end state for an end-to-end game request; target only the user's identified copy
+  user_playtest_gate: true
+  portable_package_after_user_acceptance: true
+  allow_launch_game: false
+  allow_subagents: true  # capability; subagent_preference controls this game
+  subagent_concurrency: "adaptive_no_fixed_limit"
+  max_batch_strings: 500
+  max_batch_source_tokens: 4000
+  max_prompt_overhead_tokens: 1200
+  batch_size_is_ceiling: true
+  review_policy: "structural-100-percent-adaptive-semantic"
+  full_text_review: "only-explicit-high-risk-or-release"
+  # أسئلة البداية تُطرح دفعة واحدة. حدّث current_route عند انتقال المرحلة؛ الأسئلة غير المانعة تُجمع في STATUS.md.
+
+image_localization:
+  policy_file: "config/image-localization-policy.yaml"
+  classification_required: true
+  visual_review_required: true
+  numeric_only_acceptance: false
+  adaptive_candidate_search: true
+  preserve_source_if_no_candidate_passes: true
+  external_image_editing:
+    enabled: true
+    provider: "openai-official"
+    authorization_scope: "current-project"
+    final_asset_requires_review: true
+
+typography:
+  selection: "agent-led-match-game-identity"
+  role_fonts: {}  # Fill only roles the renderer actually supports (for example UI, headings, dialogue).
+
+output:
+  interchange_format: "auto"
+  preserve_native_format: true
+  prefer_patch_package: true

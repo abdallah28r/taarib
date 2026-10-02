@@ -1,0 +1,37 @@
+---
+name: localization-subagent-orchestration
+description: Plan, brief, coordinate, and verify localization subagents with controlled model routing, disjoint scopes, and bounded integration cost.
+---
+
+# Localization subagent orchestration
+
+Subagents are allowed as a capability. For a new game, first honor the one-time
+project choice recorded under `references/project-run.md`; do not delegate if
+the user selected no or the choice is still unresolved. When enabled, use them
+only when parallel or specialist value exceeds briefing and merge cost; there
+is no fixed concurrency cap. Do not ask again for every batch.
+
+## Required policy
+
+Run `python scripts/context_plan.py delegation` and read every returned file.
+The machine-readable policy is binding. Do not duplicate model/provider rules
+in a task prompt by memory.
+
+Generate each bounded contract with:
+
+```text
+python scripts/make_subagent_brief.py --route <route> --task <task> --scope <paths> --write-mode read-only|write
+```
+
+- Give writers disjoint files; one writer owns each file at a time.
+- Nested delegation is allowed only when children inherit the complete policy
+  and keep disjoint scopes.
+- Choose the lightest allowed hosted model/effort that meets semantic and
+  structural risk. Escalate after recorded failure evidence, not by habit.
+- Never ask for hidden chain-of-thought.
+
+The root agent validates scope and diffs, runs deterministic format/token tests,
+checks terminology conflicts, and samples semantic high-risk cases. It does not
+retranslate every successful row by default. Split structurally failing batches
+and retry only within the bounded policy; preserve unresolved rows and reasons
+instead of looping indefinitely.

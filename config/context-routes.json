@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "always": ["PROJECT.yaml", "STATUS.md"],
+  "routes": {
+    "discovery": {
+      "skill": ".agents/skills/game-localization-engineering/SKILL.md",
+      "required": ["references/project-run.md", "references/discovery.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "mod-research": {
+      "skill": ".agents/skills/game-localization-engineering/SKILL.md",
+      "required": ["references/localization-mods.md", "LEGAL_AND_CLEAN_ROOM_POLICY.md"],
+      "optional": ["engines/<engine>.md", "tools/open-source-tools.json"]
+    },
+    "extraction": {
+      "skill": ".agents/skills/game-localization-engineering/SKILL.md",
+      "required": ["references/extraction-integration.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "translation-ui": {
+      "skill": ".agents/skills/arabic-game-translation/SKILL.md",
+      "required": ["glossary.yaml", "references/translation-core.md", "references/ui-style.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "translation-dialogue": {
+      "skill": ".agents/skills/arabic-game-translation/SKILL.md",
+      "required": ["glossary.yaml", "references/translation-core.md", "references/dialogue-style.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "subtitles": {
+      "skill": ".agents/skills/arabic-game-translation/SKILL.md",
+      "required": ["glossary.yaml", "references/translation-core.md", "references/dialogue-style.md", "references/subtitles-style.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "qa-structural": {
+      "skill": ".agents/skills/game-localization-qa/SKILL.md",
+      "required": ["references/qa-strategy.md"],
+      "optional": ["glossary.yaml", "engines/<engine>.md"]
+    },
+    "qa-rendering": {
+      "skill": ".agents/skills/game-localization-qa/SKILL.md",
+      "required": ["references/qa-strategy.md", "references/arabic-rendering.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "images": {
+      "skill": ".agents/skills/game-image-localization/SKILL.md",
+      "required": ["config/image-localization-policy.yaml", "references/image-localization.md"],
+      "optional": ["glossary.yaml", "engines/<engine>.md"]
+    },
+    "integration": {
+      "skill": ".agents/skills/game-localization-engineering/SKILL.md",
+      "required": ["references/extraction-integration.md", "references/arabic-rendering.md"],
+      "optional": ["engines/<engine>.md", "references/localization-mods.md"]
+    },
+    "maintenance": {
+      "skill": ".agents/skills/localization-project-maintenance/SKILL.md",
+      "required": ["references/extraction-integration.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "delegation": {
+      "skill": ".agents/skills/localization-subagent-orchestration/SKILL.md",
+      "required": ["MODEL_AND_SUBAGENT_POLICY.md", "config/agent-policy.json"],
+      "optional": []
+    },
+    "application-research": {
+      "skill": ".agents/skills/game-localization-engineering/SKILL.md",
+      "required": ["LEGAL_AND_CLEAN_ROOM_POLICY.md", "compliance/RESEARCH_SOURCE_REGISTER.json", "knowledge/APPLICATION_RESEARCH_PATTERNS.md"],
+      "optional": []
+    },
+    "release": {
+      "skill": ".agents/skills/localization-project-maintenance/SKILL.md",
+      "required": ["references/release.md", "LEGAL_AND_CLEAN_ROOM_POLICY.md", "RELEASE_COMPLIANCE.md", "THIRD_PARTY_NOTICES.md"],
+      "optional": ["engines/<engine>.md"]
+    }
+  }
+}

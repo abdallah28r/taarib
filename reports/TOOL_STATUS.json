@@ -1,0 +1,249 @@
+{
+  "python": "3.13.11",
+  "profiles": [
+    "core",
+    "fonts",
+    "patching",
+    "qa"
+  ],
+  "summary": {
+    "installed": 5,
+    "missing": 6,
+    "catalog-only": 3
+  },
+  "tools": [
+    {
+      "id": "python",
+      "name": "Python",
+      "profiles": [
+        "core"
+      ],
+      "tier": "core",
+      "status": "installed",
+      "commands": [
+        {
+          "command": "python",
+          "path": "C:\\Program Files\\PyManager\\python.EXE",
+          "version": "Python 3.13.11"
+        }
+      ],
+      "modules": [],
+      "url": "https://www.python.org/",
+      "note": "Runs the deterministic project scripts."
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "profiles": [
+        "core"
+      ],
+      "tier": "core",
+      "status": "installed",
+      "commands": [
+        {
+          "command": "git",
+          "path": "C:\\Program Files\\Git\\cmd\\git.EXE",
+          "version": "git version 2.55.0.windows.5"
+        }
+      ],
+      "modules": [],
+      "url": "https://git-scm.com/",
+      "note": "Versioning for project-owned text and scripts; never commit copyrighted game assets."
+    },
+    {
+      "id": "7zip",
+      "name": "7-Zip / 7zr",
+      "profiles": [
+        "core"
+      ],
+      "tier": "recommended",
+      "status": "installed",
+      "commands": [
+        {
+          "command": "7zr",
+          "path": "C:\\Users\\Owner\\AppData\\Local\\Microsoft\\WinGet\\Packages\\7zip.7zr_Microsoft.Winget.Source_8wekyb3d8bbwe\\7zr.EXE",
+          "version": "Command Line Error:"
+        },
+        {
+          "command": "7z",
+          "path": "C:\\Program Files\\7-Zip\\7z.exe",
+          "version": "Command Line Error:"
+        }
+      ],
+      "modules": [],
+      "url": "https://www.7-zip.org/",
+      "note": "Portable general archive inspection; not an engine-specific repacker."
+    },
+    {
+      "id": "fonttools",
+      "name": "fontTools/TTX",
+      "profiles": [
+        "core",
+        "fonts"
+      ],
+      "tier": "core",
+      "status": "installed",
+      "commands": [
+        {
+          "command": "ttx",
+          "path": "C:\\Users\\Owner\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\ttx.EXE",
+          "version": "4.63.0"
+        }
+      ],
+      "modules": [
+        {
+          "module": "fontTools",
+          "distributions": [
+            {
+              "distribution": "fonttools",
+              "version": "4.63.0"
+            }
+          ]
+        }
+      ],
+      "url": "https://github.com/fonttools/fonttools",
+      "note": "Coverage, tables, merge, subset, and deterministic font inspection."
+    },
+    {
+      "id": "harfbuzz",
+      "name": "HarfBuzz",
+      "profiles": [
+        "fonts"
+      ],
+      "tier": "recommended",
+      "status": "installed",
+      "commands": [],
+      "modules": [
+        {
+          "module": "uharfbuzz",
+          "distributions": [
+            {
+              "distribution": "uharfbuzz",
+              "version": "0.56.1"
+            }
+          ]
+        }
+      ],
+      "url": "https://github.com/harfbuzz/harfbuzz",
+      "note": "Reference shaping tests; does not prove the game renderer uses HarfBuzz."
+    },
+    {
+      "id": "fribidi",
+      "name": "GNU FriBidi",
+      "profiles": [
+        "fonts"
+      ],
+      "tier": "conditional",
+      "status": "missing",
+      "commands": [],
+      "modules": [],
+      "url": "https://github.com/fribidi/fribidi",
+      "note": "Reference Unicode BiDi conversion and diagnostics."
+    },
+    {
+      "id": "translate-toolkit",
+      "name": "Translate Toolkit",
+      "profiles": [
+        "qa"
+      ],
+      "tier": "recommended",
+      "status": "missing",
+      "commands": [],
+      "modules": [],
+      "url": "https://github.com/translate/translate",
+      "note": "PO/XLIFF/TMX conversion, counts, conflicts, terminology, and 40+ pofilter checks."
+    },
+    {
+      "id": "omegat",
+      "name": "OmegaT",
+      "profiles": [
+        "qa"
+      ],
+      "tier": "recommended",
+      "status": "missing",
+      "commands": [],
+      "modules": [],
+      "url": "https://github.com/omegat-org/omegat",
+      "note": "Desktop CAT tool with TMX, glossary, fuzzy matching, and update reuse."
+    },
+    {
+      "id": "weblate",
+      "name": "Weblate",
+      "profiles": [
+        "qa"
+      ],
+      "tier": "conditional",
+      "status": "catalog-only",
+      "commands": [],
+      "modules": [],
+      "url": "https://github.com/WeblateOrg/weblate",
+      "note": "Self-hosted collaborative TMS; justified for teams, review states, or Git integration."
+    },
+    {
+      "id": "okapi",
+      "name": "Okapi Framework",
+      "profiles": [
+        "qa"
+      ],
+      "tier": "conditional",
+      "status": "catalog-only",
+      "commands": [],
+      "modules": [],
+      "url": "https://okapiframework.org/",
+      "note": "Filters, extraction/merge, pseudo-localization, and format QA."
+    },
+    {
+      "id": "languagetool",
+      "name": "LanguageTool",
+      "profiles": [
+        "qa"
+      ],
+      "tier": "conditional",
+      "status": "missing",
+      "commands": [],
+      "modules": [],
+      "url": "https://github.com/languagetool-org/languagetool",
+      "note": "Proofreading only after measuring Arabic false positives on the game's names and tone."
+    },
+    {
+      "id": "xdelta3",
+      "name": "Xdelta3",
+      "profiles": [
+        "patching"
+      ],
+      "tier": "recommended",
+      "status": "missing",
+      "commands": [],
+      "modules": [],
+      "url": "https://github.com/jmacd/xdelta",
+      "note": "Small binary delta packages tied to an exact original checksum."
+    },
+    {
+      "id": "hdiffpatch",
+      "name": "HDiffPatch",
+      "profiles": [
+        "patching"
+      ],
+      "tier": "conditional",
+      "status": "missing",
+      "commands": [],
+      "modules": [],
+      "url": "https://github.com/sisong/HDiffPatch",
+      "note": "Fast file/directory deltas; ship checksum verification and restoration instructions."
+    },
+    {
+      "id": "rtltmpro",
+      "name": "RTLTMPro",
+      "profiles": [
+        "unity",
+        "fonts"
+      ],
+      "tier": "conditional",
+      "status": "catalog-only",
+      "commands": [],
+      "modules": [],
+      "url": "https://github.com/pnarimani/RTLTMPro",
+      "note": "Source-level Unity TextMesh Pro RTL support."
+    }
+  ]
+}

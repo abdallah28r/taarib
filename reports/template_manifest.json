@@ -1,0 +1,640 @@
+{
+  "root": "C:\\Users\\Owner\\Documents\\ara\\arabic-loc-template_v3\\arabic-loc-template",
+  "files": [
+    {
+      "path": ".agents/skills/arabic-game-translation/references/ai-localization-workflow.md",
+      "size": 3286,
+      "sha256": "89f4488d34485fb01828902838456436ba99de5c8731972e9dfe5fa62036b650"
+    },
+    {
+      "path": ".agents/skills/arabic-game-translation/SKILL.md",
+      "size": 1959,
+      "sha256": "4df0d9b0b6fc20c1f91252fc1bc7f00b4763604fcdbf09064abdfb6190d922a9"
+    },
+    {
+      "path": ".agents/skills/game-localization-engineering/references/engine-playbooks.md",
+      "size": 2787,
+      "sha256": "6d5ecb6d3d4f7ac987c6a5c7767f5028850761b2f525a6aa662f5e1a519f8d4e"
+    },
+    {
+      "path": ".agents/skills/game-localization-engineering/references/tool-catalog.md",
+      "size": 7142,
+      "sha256": "feb45ced90f6fb295510b845e29f0f7329c82544f6acf097f781a879fe144bdc"
+    },
+    {
+      "path": ".agents/skills/game-localization-engineering/SKILL.md",
+      "size": 2252,
+      "sha256": "216b16d17361426e231dbac139c6c49957268ff92ed5f7fb2c55b50fd7a10081"
+    },
+    {
+      "path": ".agents/skills/game-localization-qa/references/lqa-severity.md",
+      "size": 602,
+      "sha256": "a0ac103af69217c1b0a3621917798a11cf8ce4ad0faa3d1986f74358b7800178"
+    },
+    {
+      "path": ".agents/skills/game-localization-qa/SKILL.md",
+      "size": 1666,
+      "sha256": "b53eef3311c41d0807309e2c7cb81ca47fc48d241e6902598ff3645279483419"
+    },
+    {
+      "path": ".agents/skills/localization-knowledge-capture/SKILL.md",
+      "size": 1509,
+      "sha256": "e9de787dc586190ed254864623e20dd7bee18929e9228cbc634943d026bd2453"
+    },
+    {
+      "path": ".agents/skills/localization-project-maintenance/references/improvement-proposals.md",
+      "size": 1010,
+      "sha256": "fd768d2d3432b2c84cc5e96d1cedfb2b42ae54efb78a839f6d70e501890b21f7"
+    },
+    {
+      "path": ".agents/skills/localization-project-maintenance/SKILL.md",
+      "size": 1592,
+      "sha256": "26d95ad9897e308c3ea8e2698552707db790e793c65ae2292ba35ad7683ad27b"
+    },
+    {
+      "path": ".agents/skills/localization-subagent-orchestration/SKILL.md",
+      "size": 1491,
+      "sha256": "83f6765510851f7bb3940cacfaab241441d151da6a48aeb0dc4689ad155481b5"
+    },
+    {
+      "path": ".gitignore",
+      "size": 147,
+      "sha256": "6e6207991418f8422a5626c232e719f327da64c90c51f191eb9390d35777800e"
+    },
+    {
+      "path": ".releaseignore",
+      "size": 301,
+      "sha256": "b98c278d3374e3db4b180162a5fda42ed3f0c0a837baee2c4c8c1d402f45b319"
+    },
+    {
+      "path": "AGENTS.md",
+      "size": 3330,
+      "sha256": "dc7f18b6d48cdf5ebdace452fa4cfba952834453e8536683d167d8e1c84b8e0b"
+    },
+    {
+      "path": "backups/README.md",
+      "size": 137,
+      "sha256": "6c262695f472c93c98f5f70c18cfb91a4c58395edfc5d9df33b8c6442cdbb600"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "size": 1376,
+      "sha256": "c3275d54c276958d20613243ff468eba4a3b3617e747e5d3c4ce959c52063f46"
+    },
+    {
+      "path": "CLAUDE.md",
+      "size": 3497,
+      "sha256": "748db7bd7c365649846b9a0b8f1bdfe35a07614274896ab3b3c7ee7a401b6395"
+    },
+    {
+      "path": "compliance/CLEAN_ROOM_LEDGER.csv",
+      "size": 2089,
+      "sha256": "4215653af7429131851f5c7611c7ff6cd1373489c8f2c6c35afe3c03387575c7"
+    },
+    {
+      "path": "compliance/README.md",
+      "size": 1021,
+      "sha256": "87688eb0de6d214e828c2b3565496db445504136c83dffb89dc9caf98d0b4f71"
+    },
+    {
+      "path": "compliance/RESEARCH_SOURCE_REGISTER.json",
+      "size": 5942,
+      "sha256": "e7aac240e65c1f0db0b8ce247b7c372e96d355c25877ce3e451d8cd8442644a0"
+    },
+    {
+      "path": "config/agent-policy.json",
+      "size": 3022,
+      "sha256": "c84b96cad5227c90f9b0b7d4b814d16f20f3e2675af0c54d7ca695abb53044bb"
+    },
+    {
+      "path": "config/context-routes.json",
+      "size": 2839,
+      "sha256": "7d9caa5a8e7813a5a54c116178adb4c77613569a517f6a206de9668314ce0151"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "size": 393,
+      "sha256": "4d1763947f247ca26dad56e0026798fe36cc27478570b7ff3bd868714676bf0e"
+    },
+    {
+      "path": "engines/bannerlord.md",
+      "size": 1540,
+      "sha256": "d31fa9ce03845418b940156f00c164c2e72b68918b6714be1bd37e1e133826b8"
+    },
+    {
+      "path": "engines/ENGINE_PROFILE_TEMPLATE.md",
+      "size": 2949,
+      "sha256": "ed0ec814ddbe6b12d971da77fde848fd41c244239bbcc600a93a361465638310"
+    },
+    {
+      "path": "engines/gamemaker.md",
+      "size": 569,
+      "sha256": "187bcd201ec9632c8f6fcdf6bd791c22a5d0a0e63e8541cbc68b8f5b6896988f"
+    },
+    {
+      "path": "engines/godot.md",
+      "size": 1465,
+      "sha256": "fd4a505bbcead067dda020cda17b1c19b299d6c4705d8808e7c8f048b4e9617e"
+    },
+    {
+      "path": "engines/paradox-clausewitz.md",
+      "size": 1674,
+      "sha256": "cbc5ee28b3ce59eb71be4c08eacc5ecef67a6321bcb8ffca054833422d84ac9d"
+    },
+    {
+      "path": "engines/README.md",
+      "size": 1513,
+      "sha256": "fdc9ebd402638badb0b8d21d6e49d9733c3161ab82169b68dc42dd6d59c5474a"
+    },
+    {
+      "path": "engines/renpy.md",
+      "size": 2492,
+      "sha256": "2654f1c5f4a06f30f07d90eb82bb63eb7a9633e443a9a5468cc16319991ae68b"
+    },
+    {
+      "path": "engines/rpg-maker.md",
+      "size": 607,
+      "sha256": "33163cb70072092af08a8ae5e8bfd641a9e3d7519004d6931cb8c6ec66e522f6"
+    },
+    {
+      "path": "engines/source-engine.md",
+      "size": 530,
+      "sha256": "20c87607fe25078abf58e0848d8064460da6186ce5fc2c3a6975c0d5263f7be0"
+    },
+    {
+      "path": "engines/unity.md",
+      "size": 3216,
+      "sha256": "45bcf5f3e910a861c160d475509d20d2c5e61862568167ebefc54e111ab2aaf2"
+    },
+    {
+      "path": "engines/unreal.md",
+      "size": 2891,
+      "sha256": "f2dd83bd6ef9be3eea9a6ff73dc5d5999188746953e326fbd299b0dd7de3171c"
+    },
+    {
+      "path": "glossary.yaml",
+      "size": 2612,
+      "sha256": "31731c8cd9190c23ebc6aa82d4298175eb7c375abd264b69194a7528b8eea6e5"
+    },
+    {
+      "path": "GUIDE.md",
+      "size": 970,
+      "sha256": "7e91a47aac319333999aef293c10a9a5bd0b7f858e14b838d34f5c3fabe5cae8"
+    },
+    {
+      "path": "knowledge/APPLICATION_RESEARCH_PATTERNS.md",
+      "size": 4729,
+      "sha256": "30c0430a2968c889562ba41382aa81301f1e5961540d3edafe26ddb295899c86"
+    },
+    {
+      "path": "knowledge/GENERAL_LOCALIZATION_KNOWLEDGE.md",
+      "size": 5493,
+      "sha256": "ee547534ce3026370bf3e00713f75307b59777e86ebef1454ac498c3a513d868"
+    },
+    {
+      "path": "knowledge/PROJECT_DISCOVERIES.md",
+      "size": 1066,
+      "sha256": "793e1d6f55b34bcfc8a8d4988975b6e82e137db5d0065863db5a418d6e79f254"
+    },
+    {
+      "path": "knowledge/README.md",
+      "size": 856,
+      "sha256": "07405d9c1d6c5f04eece71fa6f069bf5af308bc26d2e7607341b102f4cb8a4c4"
+    },
+    {
+      "path": "LEGAL_AND_CLEAN_ROOM_POLICY.md",
+      "size": 5036,
+      "sha256": "27fb6266972a35d70527658225bd4f5a8f381e4a0a15e5ff08703b9b15c8868f"
+    },
+    {
+      "path": "LICENSE",
+      "size": 1098,
+      "sha256": "b14135532b31f67d119d8a1f1eb9ff144dd98b75e1da0fdb93981237f5b3906f"
+    },
+    {
+      "path": "loc-kit/CHARACTERS.yaml",
+      "size": 92,
+      "sha256": "e9aca6516c9be1153e0d858af52aa71eb7c76b39efe915b2273a3b27dcb25641"
+    },
+    {
+      "path": "loc-kit/GAME_CONTEXT.md",
+      "size": 276,
+      "sha256": "a695a0a9b3385719f1d82ef7b1c7921db39eea001641dc38ae45d42425a8c3da"
+    },
+    {
+      "path": "loc-kit/README.md",
+      "size": 390,
+      "sha256": "10e38351e43a682aed41d7875f67a4b6333617159b37ea70e4b9cc929c480488"
+    },
+    {
+      "path": "loc-kit/STRING_CONTEXT.csv",
+      "size": 64,
+      "sha256": "c9b160b56c9d5b03702fe8effd1eef62d13e03085eb2ec38abf064fb0600e2c0"
+    },
+    {
+      "path": "loc-kit/SYSTEMS.md",
+      "size": 248,
+      "sha256": "0b78a94681cd81d90df59d6abf68dcd3656b233966fac96961c1fece4ff50bd0"
+    },
+    {
+      "path": "MODEL_AND_SUBAGENT_POLICY.md",
+      "size": 7287,
+      "sha256": "cd57bc6e6a1cc16b0ed865a66fddb3a699aefa105a10302b0fabb45605a3f1af"
+    },
+    {
+      "path": "PROJECT.yaml",
+      "size": 1279,
+      "sha256": "90d70a788bf12e66256d9cabcfd48368188ca0256888ebc1d4de904fc85618f2"
+    },
+    {
+      "path": "qa/LQA_MATRIX.csv",
+      "size": 657,
+      "sha256": "a86617a342a84397afaa394e16a720c8cf390e5e234b5190c05b18f47ccaac5f"
+    },
+    {
+      "path": "qa/RTL_TEST_MATRIX.md",
+      "size": 479,
+      "sha256": "015ae7a3590bf3b81eb175fcad664ee4a2b174764f8f509855feeea20b01fea6"
+    },
+    {
+      "path": "references/arabic-rendering.md",
+      "size": 1641,
+      "sha256": "b11a46e15ed5493c860662d6dc82f618994c06d71783bca1da416a59cb806cf0"
+    },
+    {
+      "path": "references/dialogue-style.md",
+      "size": 1273,
+      "sha256": "f66250399a0b7820f1e85e7a11692e8215c864b2b16a7700d8b99167445df129"
+    },
+    {
+      "path": "references/discovery.md",
+      "size": 1757,
+      "sha256": "bff23de538aaa3f3eec8b173a576122531261eba2e7b54b7e8952019d9d9ba4d"
+    },
+    {
+      "path": "references/extraction-integration.md",
+      "size": 1725,
+      "sha256": "3b6ac7e89b6dcd289fcdf0f438649d954e3d50234229f9480af42c4df11787aa"
+    },
+    {
+      "path": "references/qa-strategy.md",
+      "size": 1458,
+      "sha256": "c080156c8c1552e0b343e0a23ef79b2e2a481e5d3f07e0b348d3db9d45c66707"
+    },
+    {
+      "path": "references/release.md",
+      "size": 1098,
+      "sha256": "00bd904f7e788ff58bb2e8da1ee37bc95d39480c86a440dc709e2c74614ad085"
+    },
+    {
+      "path": "references/subtitles-style.md",
+      "size": 1376,
+      "sha256": "c26102f4a9be3c8944e84735255a1d93b83ba54daa378910ecd77d633de472ab"
+    },
+    {
+      "path": "references/translation-core.md",
+      "size": 2862,
+      "sha256": "5d1f60ad0071bd0d10ddda54848a3efdfedcc92c16f1fa717d78ad894bd8f567"
+    },
+    {
+      "path": "references/ui-style.md",
+      "size": 1165,
+      "sha256": "489575df2df95900d82ab7f9418fc046a4feebc9d4ffb9d26100386a47703573"
+    },
+    {
+      "path": "RELEASE_COMPLIANCE.md",
+      "size": 1061,
+      "sha256": "a68d253812eed3ec0ee7edc892e25faff96f0769d8f519a10e30fae0735adca7"
+    },
+    {
+      "path": "reports/AGENT_POLICY_STATUS.json",
+      "size": 35,
+      "sha256": "6516ed5c8f626de79f8e34a8b7e015e8e49710c3f50840a5400ad4ab378b328a"
+    },
+    {
+      "path": "reports/archive/APPLICATION_RESEARCH_INTEGRATION_20260926.md",
+      "size": 4153,
+      "sha256": "3e8d91871fb82f9067e374ef6cb82d8c6fe6a379f9bc711bbcccd1d87ab341c1"
+    },
+    {
+      "path": "reports/archive/FUTURE_OPTIONS.md",
+      "size": 4034,
+      "sha256": "5787210a7645ee2a22989d48f4da471224a2b5adf6620419dfcc2d9790949446"
+    },
+    {
+      "path": "reports/archive/OPEN_SOURCE_TOOLS.md",
+      "size": 3900,
+      "sha256": "85a14ee252e65d67f7fcd8b6e93e9630029a62d72c98a37cc604e64d742a3fac"
+    },
+    {
+      "path": "reports/archive/SUBAGENT_POLICY_UPDATE_20260923.md",
+      "size": 1836,
+      "sha256": "46b960ae6bb8cb7b58e808a54ce07a731c5cd167cf3b68079ed9bf4c577cae6f"
+    },
+    {
+      "path": "reports/archive/TEMPLATE_AUDIT.md",
+      "size": 4487,
+      "sha256": "3bb66c886fb0616ac04ee892c99dcbce890500596bbc4bee0e9c5144ee87d455"
+    },
+    {
+      "path": "reports/archive/TEMPLATE_REVIEW_20260926.md",
+      "size": 2641,
+      "sha256": "0c350ec4d539d25b3760f00400c7648e2f64da6360e1790732f60c60aa1c081d"
+    },
+    {
+      "path": "reports/IMPROVEMENT_PROPOSALS.md",
+      "size": 2389,
+      "sha256": "e59540ebe8c4ec0bb7b2dc2d2591e351536a09afe0625a86303adb064b69a28c"
+    },
+    {
+      "path": "reports/QA.md",
+      "size": 1552,
+      "sha256": "ca0f815766b979ee2b761973cd5558eecd8068daef52b0143da2da8d7119de62"
+    },
+    {
+      "path": "reports/README.md",
+      "size": 616,
+      "sha256": "fc53954cf7d18195cfb849d8f6e458b0a64ed906223728f0562acdb32b2ba868"
+    },
+    {
+      "path": "reports/SBOM.cdx.json",
+      "size": 3083,
+      "sha256": "650bbaa2ccdbb4d7d39cdba7019cec4bdceea509ed47892415132e32749a1a86"
+    },
+    {
+      "path": "reports/TOOL_STATUS.json",
+      "size": 6583,
+      "sha256": "28701918e523a19cdb7993c7feeb77b314fee18ad5c70724a2f9a07e152c7899"
+    },
+    {
+      "path": "reports/VERIFY_TEMPLATE.json",
+      "size": 1284,
+      "sha256": "eb40e0a2115b2b5f2a351d980cf212f3034c32374350ba1ae2bbed119eb7d808"
+    },
+    {
+      "path": "requirements/constraints-20260926.txt",
+      "size": 199,
+      "sha256": "482f7fcc33cbac631f4563b50939bfb4523e9a248b04b2129ea3c142f59418af"
+    },
+    {
+      "path": "requirements/fonts.txt",
+      "size": 54,
+      "sha256": "70550fbc1a30a436c6d896bdc8c4a1dedbefaac62762632ddcdb206d471b4ad2"
+    },
+    {
+      "path": "requirements/ocr.txt",
+      "size": 38,
+      "sha256": "ef3d1e8f6c94b433bd6dda248abc3d4db0e504cdcb66e57115e423124b460dca"
+    },
+    {
+      "path": "requirements/qa.txt",
+      "size": 97,
+      "sha256": "ca6b01dd555f909523f9da31c9deabdecf6d6570104373ab9776b994d8dbebe0"
+    },
+    {
+      "path": "requirements.txt",
+      "size": 32,
+      "sha256": "69d2e4314a3676066c61e88ad575a0bee082d395d8f3b4f873ff52c2711fedc4"
+    },
+    {
+      "path": "scripts/apply_patch_package.py",
+      "size": 2085,
+      "sha256": "d97d7fd87b11cc4eb1afa4f4e7a288f2f9c2bb871b959eee3607bcb1cced5bd0"
+    },
+    {
+      "path": "scripts/build_manifest.py",
+      "size": 1708,
+      "sha256": "930277cc91ca4bc56e5ea9f09a514b939a4b47216c1d04aa5b0ec3db70ac518b"
+    },
+    {
+      "path": "scripts/build_patch_package.py",
+      "size": 1115,
+      "sha256": "b1bd7c61eac067733a4fcb09ec45bd47e2392a78fbc4a10882db257a0bb3b924"
+    },
+    {
+      "path": "scripts/build_release.py",
+      "size": 1345,
+      "sha256": "aeb7a79f193d9ae67e6d60ea3523f5d690aae7411c5a70620bd9afe3aa870e1a"
+    },
+    {
+      "path": "scripts/capture_filter.py",
+      "size": 1974,
+      "sha256": "d1018a860583874dd715328f1c82092356389e8424386dcdcc43c80ab07cbe45"
+    },
+    {
+      "path": "scripts/check_agent_policy.py",
+      "size": 4865,
+      "sha256": "7a9ef01ff4eb91276ae6693899a20a3b5eb0bcf52c87cc6454f26a7e46263f9d"
+    },
+    {
+      "path": "scripts/check_context_routes.py",
+      "size": 1650,
+      "sha256": "36b4edd135236b84a31de272cec4a85c9abec8935d98e9035cec9717cf43ee9b"
+    },
+    {
+      "path": "scripts/check_font.py",
+      "size": 1493,
+      "sha256": "227d63b61c22fa2cdb9ae8c8ce4c71cf49e951b3b555b9a45fd82e4d298c1aa4"
+    },
+    {
+      "path": "scripts/check_font_shaping.py",
+      "size": 1279,
+      "sha256": "50a47ab65203d2c347d3b08a372b4db2118e3fa83e840596f06f6f2f1071b80b"
+    },
+    {
+      "path": "scripts/check_knowledge.py",
+      "size": 928,
+      "sha256": "9b567471c0f200c993a346243dd01dbb893b13fccc9e2e018fbded63c4a0804e"
+    },
+    {
+      "path": "scripts/check_tokens.py",
+      "size": 281,
+      "sha256": "ccdc2a3b99ede953ca84b8d16ac4564a084b2692701a6193ed8cea8d63ee5b0f"
+    },
+    {
+      "path": "scripts/context_plan.py",
+      "size": 1618,
+      "sha256": "87ea9d48e8fa98056025e7ab8a83b12ea93b4f81eabd6d5290d8843e151f97e3"
+    },
+    {
+      "path": "scripts/detect_engine.py",
+      "size": 4530,
+      "sha256": "1cd83f5ef38593418ea7d917ac0645d0df8b2189a49e0f91774f5991f6757d11"
+    },
+    {
+      "path": "scripts/detect_protection.py",
+      "size": 2171,
+      "sha256": "1ce30ceef25e2f7674e894cdbd27784d103c722086a7a14c3ae3ad6c97481aa9"
+    },
+    {
+      "path": "scripts/estimate_tokens.py",
+      "size": 2320,
+      "sha256": "483a919b9172db7631eb185bb1f69e81497452fc0c0e6f1edf59a6a5ce132b8c"
+    },
+    {
+      "path": "scripts/export_tmx.py",
+      "size": 3210,
+      "sha256": "c34ba5b0bc0cabd9d6a3e5aaaf18962443b85fa4a8a99e98af5034dae48ca0bf"
+    },
+    {
+      "path": "scripts/format_qa.py",
+      "size": 3765,
+      "sha256": "40a660264b75f1888a32abd1e5310159171efdd8b9f86cb21161f1766c84382f"
+    },
+    {
+      "path": "scripts/generate_sbom.py",
+      "size": 2266,
+      "sha256": "ec86799add48b0d595acc5d574d96de88c22598f76fe2fe333071e2ba83bc342"
+    },
+    {
+      "path": "scripts/license_guard.py",
+      "size": 4710,
+      "sha256": "eb6a4a9f116e050a848081995f2fec7f4fdb579601f0f6388118bf6d1774e219"
+    },
+    {
+      "path": "scripts/loc_qa.py",
+      "size": 5900,
+      "sha256": "4f39d45700ba067b60c02abeb67078d0f0cb4653b171ffc33efa1948e97c191a"
+    },
+    {
+      "path": "scripts/make_subagent_brief.py",
+      "size": 3053,
+      "sha256": "4d638c8d54c41a6143c7b924e11514fbdf86348ffed7e2e6ff5af4b4d3fbec96"
+    },
+    {
+      "path": "scripts/merge_game_update.py",
+      "size": 4001,
+      "sha256": "c478a52ecc432061bbcc199f5e0e5f1f156c4f8374059ad62344640053f2ad42"
+    },
+    {
+      "path": "scripts/project_stats.py",
+      "size": 2738,
+      "sha256": "c8ff228abaeef301e3290db200572ce86dcc482a310b5c0d7ac0963f8a8482ba"
+    },
+    {
+      "path": "scripts/pseudo_localize.py",
+      "size": 1133,
+      "sha256": "98960903ba3380acea7c565e67b6058c2fa09a4077dbdbb6656fef90bfb46bcc"
+    },
+    {
+      "path": "scripts/safe_backup.py",
+      "size": 1380,
+      "sha256": "8a525370215b3f96be0bd5866b8bc24bfc8a2600269a7408efa43b0598974544"
+    },
+    {
+      "path": "scripts/safe_replace.py",
+      "size": 1020,
+      "sha256": "e4ba58dfea91070d4234a35909951ab9b214f84d4cbf5f14a0600fe8eb9ba675"
+    },
+    {
+      "path": "scripts/setup_tools.ps1",
+      "size": 4951,
+      "sha256": "bb9e2345a8b2c35ecf25bca9b50c512e6156956ff5cb2225d20fd0a646da1e0e"
+    },
+    {
+      "path": "scripts/tool_doctor.py",
+      "size": 4623,
+      "sha256": "7042528f8a13415e9a7c3aae8d2d62f065044ad670ccecafe40718146d6b58bd"
+    },
+    {
+      "path": "scripts/translation_map_stats.py",
+      "size": 3362,
+      "sha256": "e520150abf8b752638d299980224848ef8c52ceca96659402a62d6f1930cbfd5"
+    },
+    {
+      "path": "scripts/verify_template.py",
+      "size": 1844,
+      "sha256": "e7373171f46237830a1cc71572c2b66b348ddf43690dbcb49eac52d341af3f84"
+    },
+    {
+      "path": "SECURITY.md",
+      "size": 415,
+      "sha256": "4f3e401b4bf4677809d9a508b8445db8d4442aaad35a0887584bb046260edc95"
+    },
+    {
+      "path": "source/README.md",
+      "size": 192,
+      "sha256": "80ad93ac06a960eb0e48c0b26eeea8b25cff3973267eb728760a39e31da10a82"
+    },
+    {
+      "path": "STATUS.md",
+      "size": 1649,
+      "sha256": "62b8c3f52d8c21f0ea8ff422447b353d48be64e924f8907deb0c17ecccea8a31"
+    },
+    {
+      "path": "STYLE.md",
+      "size": 790,
+      "sha256": "6fe60c938c656011c7b6b403b30a7e75a63b66abedf1403fdf7ee6644b578ddd"
+    },
+    {
+      "path": "target/README.md",
+      "size": 206,
+      "sha256": "9516007b4cd6a11519294e6c90748fa462b7425faa87b55059dd34818d12c222"
+    },
+    {
+      "path": "tests/test_agent_policy.py",
+      "size": 1344,
+      "sha256": "b3f60e07d37195a63eba1de8977d8688c63f612c1ffac71e6332a7d11c237544"
+    },
+    {
+      "path": "tests/test_context_routes.py",
+      "size": 1558,
+      "sha256": "17a7a3ff7541d69bd1cc5b9dc8430aacfc2eab578d8b3538a6448001a3e381f5"
+    },
+    {
+      "path": "tests/test_discovery_tools.py",
+      "size": 1840,
+      "sha256": "59dc3dae3fe79b75f0dcd9e8b9e122020efc353fe723f37bd55b9fa594e0bb00"
+    },
+    {
+      "path": "tests/test_estimate_tokens.py",
+      "size": 1039,
+      "sha256": "c51916ffcc18f66acf4f69ba6e7c252a513508bfdad4ce61cec377b4a27f6426"
+    },
+    {
+      "path": "tests/test_hardening.py",
+      "size": 2095,
+      "sha256": "7617fdb8db467ba45c34363a1aa1c66d808b9dd562f41bea490dcf7a62ed6427"
+    },
+    {
+      "path": "tests/test_license_guard.py",
+      "size": 1565,
+      "sha256": "e9697a80f2d9706c57e5c12e6623f1f7fd97fe2ab3e0aa762345319d12e3ec55"
+    },
+    {
+      "path": "tests/test_loc_qa.py",
+      "size": 1757,
+      "sha256": "6f3dcb41a069c969c64c51d52e288960dbb51fe50cc655cd0736c69497968a38"
+    },
+    {
+      "path": "tests/test_maintenance_tools.py",
+      "size": 2993,
+      "sha256": "b4e36243bf213095ab0ccb21d9b1ec658e4fd56e4af153a4795acdd0a0213058"
+    },
+    {
+      "path": "tests/test_tool_catalog.py",
+      "size": 1231,
+      "sha256": "4e6c74c729ca012bbddfd3a10edf4348f6c80c2414917cd1f7f3454e767966e0"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "size": 1103,
+      "sha256": "b553d3d3da38818b763fc2ecbd61d328bd9ccc0e9173a50deb61a10c506f8d27"
+    },
+    {
+      "path": "tools/open-source-tools.json",
+      "size": 14459,
+      "sha256": "af54c1862c45341fa3e44c0626b74b019862a898d01e460f844aa0687169a745"
+    },
+    {
+      "path": "work/NOTES.md",
+      "size": 459,
+      "sha256": "47e19364945f9edf34373d04c3e7852e98f041d214176093ebc7b47a6f7c2335"
+    },
+    {
+      "path": "اقرأني.md",
+      "size": 3311,
+      "sha256": "26db2ceb6a39bcc3a74820319f5f2caec3356953cfe0ebd1cb1460791677ea99"
+    }
+  ]
+}

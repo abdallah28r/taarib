@@ -1,0 +1,5 @@
+Babel>=2.14,<3
+charset-normalizer>=3.3,<4
+polib>=1.2,<2
+regex>=2024.0
+translate-toolkit>=3.15,<4

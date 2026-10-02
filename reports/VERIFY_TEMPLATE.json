@@ -1,0 +1,53 @@
+{
+  "ok": true,
+  "checks": [
+    {
+      "name": "unit-tests",
+      "exit_code": 0,
+      "stdout": "LICENSE_GUARD=PASS\nFILES=1 ROWS=1 ERRORS=0 WARNINGS=0\nERROR C:\\Users\\Owner\\AppData\\Local\\Temp\\tmpsv_7zxvv\\bad.csv:2 [1] token mismatch missing={'{name}': 1} extra={}\nFILES=1 ROWS=1 ERRORS=1 WARNINGS=0\n",
+      "stderr": "................patch hash mismatch: x\n.......................\n----------------------------------------------------------------------\nRan 39 tests in 1.613s\n\nOK\n"
+    },
+    {
+      "name": "compile",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "agent-policy",
+      "exit_code": 0,
+      "stdout": "{\"ok\": true, \"errors\": []}\n",
+      "stderr": ""
+    },
+    {
+      "name": "context-routes",
+      "exit_code": 0,
+      "stdout": "CONTEXT_ROUTES=PASS\n",
+      "stderr": ""
+    },
+    {
+      "name": "license-guard",
+      "exit_code": 0,
+      "stdout": "LICENSE_GUARD=PASS\n",
+      "stderr": ""
+    },
+    {
+      "name": "engine-knowledge",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "release-archive",
+      "exit_code": 0,
+      "stdout": "FILES=115 OUTPUT=C:\\Users\\Owner\\AppData\\Local\\Temp\\tmp4a8uxj9m\\arabic-loc-template.zip\n",
+      "stderr": ""
+    },
+    {
+      "name": "artifact-sbom",
+      "exit_code": 0,
+      "stdout": "FILES=115 OUTPUT=C:\\Users\\Owner\\AppData\\Local\\Temp\\tmp4a8uxj9m\\SBOM.cdx.json\n",
+      "stderr": ""
+    }
+  ]
+}

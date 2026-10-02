@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-09-26",
+  "policy": "Internal compliance register. Study behavior and architecture. Copy code only from verified permissive sources while preserving notices. GPL, AGPL, source-available, proprietary, unknown-license, and expired-permission sources are clean-room-only. Do not use this file as product UI or marketing content.",
+  "handling_classes": {
+    "permissive-notices": "Code reuse is possible after file-level review and preservation of copyright, license, and NOTICE obligations.",
+    "external-tool-only": "May be invoked separately; do not vendor or adapt its code into the permissive core.",
+    "clean-room-only": "Use public behavior and neutral requirements only; copy no code, prompts, prose, resources, or binaries.",
+    "rejected": "Do not use or inspect beyond lawful public information."
+  },
+  "applications": [
+    {
+      "id": "xunity-autotranslator",
+      "name": "XUnity.AutoTranslator",
+      "url": "https://github.com/bbepis/XUnity.AutoTranslator",
+      "license": "MIT",
+      "license_status": "verified-upstream-2026-09-26",
+      "handling": "permissive-notices",
+      "study": ["runtime text capture", "translation endpoint interface", "deduplication", "cache", "font override", "failure circuit breakers"],
+      "public_attribution": "No UI or marketing credit normally required; preserve MIT copyright and license in distributed substantial copies."
+    },
+    {
+      "id": "translumo",
+      "name": "Translumo",
+      "url": "https://github.com/ramjke/Translumo",
+      "license": "Apache-2.0",
+      "license_status": "verified-upstream-2026-09-26",
+      "handling": "permissive-notices",
+      "study": ["screen capture", "OCR scheduling", "overlay", "translation provider abstraction"],
+      "public_attribution": "No UI or marketing credit normally required; preserve license, copyright/patent notices, changed-file notices, and upstream NOTICE if present."
+    },
+    {
+      "id": "gamelingo",
+      "name": "GameLingo",
+      "url": "https://github.com/fbscarel/gamelingo",
+      "license": "MIT",
+      "license_status": "verified-upstream-2026-09-26",
+      "handling": "permissive-notices",
+      "study": ["multi-region OCR", "pixel-font preprocessing", "hotkeys", "gamepad input", "translation cache"],
+      "public_attribution": "No UI or marketing credit normally required; preserve MIT copyright and license in distributed substantial copies."
+    },
+    {
+      "id": "ugt",
+      "name": "Universal Game Translator",
+      "url": "https://github.com/SethRobinson/UGT",
+      "license": "BSD-style-attribution",
+      "license_status": "verified-upstream-2026-09-26",
+      "handling": "permissive-notices",
+      "study": ["capture to OCR pipeline", "translation display", "speech output"],
+      "public_attribution": "Inspect the exact LICENSE before copying; preserve its attribution notice in the distribution."
+    },
+    {
+      "id": "rst-game-translation",
+      "name": "RSTGameTranslation",
+      "url": "https://github.com/antqfpt/rstgametranslation",
+      "license": "BSD-style-attribution",
+      "license_status": "verified-upstream-2026-09-26",
+      "handling": "permissive-notices",
+      "study": ["multiple OCR backends", "provider failover", "overlay", "game-context metadata", "speech capture"],
+      "public_attribution": "Inspect the exact LICENSE and inherited acknowledgements before copying."
+    },
+    {
+      "id": "luna-translator",
+      "name": "LunaTranslator",
+      "url": "https://github.com/HIllya51/LunaTranslator",
+      "license": "GPL-3.0",
+      "license_status": "verified-upstream-2026-09-26",
+      "handling": "clean-room-only",
+      "study": ["text hooks", "emulator hooks", "OCR backends", "embedded translation", "profiles", "translation providers"],
+      "public_attribution": "Do not copy into the permissive core; independent implementation only."
+    },
+    {
+      "id": "aurex-translator",
+      "name": "AurexTranslator",
+      "url": "https://github.com/Kirizaku/AurexTranslator",
+      "license": "GPL-3.0",
+      "license_status": "verified-upstream-2026-09-26",
+      "handling": "clean-room-only",
+      "study": ["input-source abstraction", "engine plugins", "profiles", "regex replacements", "multi-architecture loading"],
+      "public_attribution": "Do not copy into the permissive core; independent implementation only."
+    },
+    {
+      "id": "ainiee",
+      "name": "AiNiee",
+      "url": "https://github.com/NEKOparapa/AiNiee",
+      "license": "AGPL-3.0",
+      "license_status": "verified-upstream-2026-09-26",
+      "handling": "clean-room-only",
+      "study": ["file adapters", "batching", "context windows", "glossaries", "protected-term lists", "provider rotation", "long-text recovery"],
+      "public_attribution": "Do not copy into the permissive core or hosted service; independent implementation only."
+    },
+    {
+      "id": "translator-plus-plus",
+      "name": "Translator++",
+      "url": "https://dreamsavior.net/",
+      "license": "GPL-3.0-claimed-mixed-components",
+      "license_status": "verify-exact-release-and-component",
+      "handling": "clean-room-only",
+      "study": ["project adapters", "spreadsheet workflow", "translation memory", "engine plugins"],
+      "public_attribution": "Do not copy until the exact source file and license scope are verified."
+    },
+    {
+      "id": "source-available-or-closed-apps",
+      "name": "Source-available, closed, no-license, and expired-permission applications",
+      "url": "about:internal-research-only",
+      "license": "proprietary-or-unknown",
+      "license_status": "no-current-permission",
+      "handling": "clean-room-only",
+      "study": ["lawfully observed public behavior", "neutral inputs and outputs", "failure cases"],
+      "public_attribution": "Copy nothing. Old or expired permission is ignored. Do not use private files as authorization."
+    }
+  ]
+}
