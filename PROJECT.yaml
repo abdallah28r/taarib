@@ -56,6 +56,13 @@ image_localization:
 
 typography:
   selection: "agent-led-match-game-identity"
+  search_external_candidates_when_fit_may_improve: true
+  download_verified_fonts_without_repeat_approval: true
+  install_selected_font_for_current_windows_user_only_if_required: true
+  machine_wide_font_install: false
+  font_policy: "references/font-sourcing.md"
+  selected_font_registry: "fonts/FONT_USAGE.json"
+  user_install_log: "fonts/SYSTEM_INSTALLS.json"
   role_fonts: {}  # Fill only roles the renderer actually supports (for example UI, headings, dialogue).
 
 output:

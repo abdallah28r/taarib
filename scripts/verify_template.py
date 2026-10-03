@@ -27,6 +27,7 @@ def main(argv=None) -> int:
         ("license-guard", [py, "scripts/license_guard.py"]),
         ("engine-knowledge", [py, "scripts/check_knowledge.py", "engines"]),
         ("tool-provenance-structure", [py, "scripts/check_tool_provenance.py"]),
+        ("font-records", [py, "scripts/check_font_records.py"]),
     ]
     results = [run(*item) for item in checks]
     if a.release:

@@ -32,3 +32,8 @@ knowledge/GENERAL_LOCALIZATION_KNOWLEDGE.md
 source/README.md
 target/README.md
 backups/README.md
+fonts/README.md
+fonts/selected/README.md
+fonts/licenses/README.md
+fonts/FONT_USAGE.json
+fonts/SYSTEM_INSTALLS.json

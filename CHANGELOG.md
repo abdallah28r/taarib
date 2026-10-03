@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-03 — Font sourcing and records
+
+- Added conditional web search and direct visual comparison of Arabic font
+  candidates for game text and images; source examples are not a site allowlist.
+- Allowed verified font downloads and necessary current-user-only Windows
+  installation under the project's standing policy, with rights and rollback
+  gates; no all-users or existing-font replacement route.
+- Added project font/notice folders, separate selected-use and system-install
+  records, structural validation, and a public-template release exclusion for
+  nonempty local records or actual font binaries.
+
 ## 2026-10-03 — Full-template audit fixes
 
 - Created an exact Git baseline before these changes and developed them in a

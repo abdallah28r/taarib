@@ -15,6 +15,12 @@ static QA report is not a substitute for that acceptance.
    Declared Python dependencies are metadata, not evidence that they ship.
 4. Audit shipped components, exact versions/build options, notices, licenses,
    source-offer or relinking obligations, fonts, and media.
+   For fonts, review `fonts/FONT_USAGE.json` and include selected font files
+   only where redistribution/embedding rights are verified. Exclude
+   `fonts/SYSTEM_INSTALLS.json` from the game patch; its Windows account paths
+   and registry details are local development records, not recipient settings.
+   Do not copy game-shipped font files into the patch; reference them in the
+   recipient's legitimate game build instead.
 5. Exclude private research, extracted game text/assets, keys, backups, logs,
    and machine-specific data.
 6. For each claimed supported game build/platform, test clean install, update,

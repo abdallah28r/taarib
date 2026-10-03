@@ -10,3 +10,7 @@ backups/*
 builds/
 releases/
 .install-state/
+fonts/selected/*
+!fonts/selected/README.md
+fonts/licenses/*
+!fonts/licenses/README.md

@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 import zipfile
 
@@ -20,9 +21,22 @@ def load(name):
 
 
 sbom = load("generate_sbom")
+release = load("build_release")
 
 
 class ReleaseAndSafetyTests(unittest.TestCase):
+    def test_public_template_release_refuses_populated_font_records(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "fonts").mkdir()
+            (root / "PROJECT.yaml").write_text('name: "[اسم اللعبة]"\ninstall_path: "[المسار الكامل للعبة]"\n', encoding="utf-8")
+            (root / "fonts/FONT_USAGE.json").write_text(json.dumps({"schema": 1, "fonts": [{"id": "private"}]}), encoding="utf-8")
+            (root / "fonts/SYSTEM_INSTALLS.json").write_text(json.dumps({"schema": 1, "installations": []}), encoding="utf-8")
+            archive = root / "public.zip"
+            with patch.object(release, "ROOT", root):
+                self.assertEqual(release.main([str(archive)]), 2)
+            self.assertFalse(archive.exists())
+
     def test_release_allowlist_omits_notes_and_reports(self):
         with tempfile.TemporaryDirectory() as temporary:
             archive = Path(temporary) / "template.zip"
@@ -33,6 +47,10 @@ class ReleaseAndSafetyTests(unittest.TestCase):
                 names = set(package.namelist())
             self.assertIn("AGENTS.md", names)
             self.assertIn(".releaseinclude", names)
+            self.assertIn("fonts/FONT_USAGE.json", names)
+            self.assertIn("fonts/SYSTEM_INSTALLS.json", names)
+            self.assertIn("references/font-sourcing.md", names)
+            self.assertFalse(any(name.startswith("fonts/selected/") and name.endswith((".ttf", ".otf")) for name in names))
             self.assertNotIn("work/NOTES.md", names)
             self.assertFalse(any(name.startswith("reports/") for name in names))
             self.assertFalse(any("__pycache__" in name or name.endswith(".pyc") for name in names))

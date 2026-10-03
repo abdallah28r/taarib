@@ -41,6 +41,9 @@ For a standalone character/place nameplate, use the approved glossary spelling
 when the name is the image's useful content; the embedded-design `KEEP` rule
 does not apply. For official OpenAI editing, use the `background-only` or
 `full-text-candidate` prompt contract in `references/image-localization.md`.
+When selecting an external font for image text, read
+`references/font-sourcing.md`; do not assume the system's installed fonts are
+the only choices. Keep source-image typography as the primary visual constraint.
 Record changed regions in a lightweight manifest and run
 `python scripts/check_image_regions.py <manifest.json>` before approval. The
 check complements, never replaces, opening and comparing the actual images.

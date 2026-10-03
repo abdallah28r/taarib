@@ -40,17 +40,17 @@
     "qa-rendering": {
       "skill": ".agents/skills/game-localization-qa/SKILL.md",
       "required": ["references/qa-strategy.md", "references/arabic-rendering.md"],
-      "optional": ["engines/<engine>.md"]
+      "optional": ["references/font-sourcing.md", "engines/<engine>.md"]
     },
     "images": {
       "skill": ".agents/skills/game-image-localization/SKILL.md",
       "required": ["config/image-localization-policy.yaml", "references/image-localization.md"],
-      "optional": ["glossary.yaml", "engines/<engine>.md"]
+      "optional": ["references/font-sourcing.md", "glossary.yaml", "engines/<engine>.md"]
     },
     "integration": {
       "skill": ".agents/skills/game-localization-engineering/SKILL.md",
       "required": ["references/extraction-integration.md", "references/arabic-rendering.md"],
-      "optional": ["engines/<engine>.md", "references/localization-mods.md"]
+      "optional": ["references/font-sourcing.md", "engines/<engine>.md", "references/localization-mods.md"]
     },
     "maintenance": {
       "skill": ".agents/skills/localization-project-maintenance/SKILL.md",

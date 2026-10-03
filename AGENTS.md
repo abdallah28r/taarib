@@ -41,6 +41,11 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
   `tools/selected-tools.json` with source, license, digest, and decision. The
   broad catalog is a candidate list, not evidence of installation, compatibility,
   redistribution permission, or a complete license review.
+- For game-text or image fonts, use `references/font-sourcing.md` when selecting
+  a new face. Search/download verified candidates as the project policy allows;
+  install only a selected font for the current Windows user if the renderer
+  truly requires it. Record actual use in `fonts/FONT_USAGE.json` and any
+  account-level installation in `fonts/SYSTEM_INSTALLS.json`.
 - Do not launch the game, upload data, install models, or contact an external AI
   service without the authority required by `PROJECT.yaml` and current user
   instructions. Official OpenAI image editing is the narrow standing exception

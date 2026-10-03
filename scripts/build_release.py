@@ -1,6 +1,6 @@
 """Build a public template ZIP from an explicit allowlist."""
 from __future__ import annotations
-import argparse, fnmatch, zipfile
+import argparse, fnmatch, json, zipfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -15,6 +15,10 @@ def main(argv=None):
     project=(ROOT/"PROJECT.yaml").read_text(encoding="utf-8")
     if 'name: "[اسم اللعبة]"' not in project or 'install_path: "[المسار الكامل للعبة]"' not in project:
         print("ERROR public template release requires unfilled game name and path");return 2
+    for name, field in (("FONT_USAGE.json", "fonts"), ("SYSTEM_INSTALLS.json", "installations")):
+        data = json.loads((ROOT / "fonts" / name).read_text(encoding="utf-8"))
+        if data.get(field):
+            print(f"ERROR public template release requires an empty {name}");return 2
     context_csv=(ROOT/"loc-kit"/"STRING_CONTEXT.csv").read_text(encoding="utf-8-sig").splitlines()
     if len(context_csv)!=1:
         print("ERROR public template release requires an empty STRING_CONTEXT.csv");return 2

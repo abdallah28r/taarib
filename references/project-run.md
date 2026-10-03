@@ -47,6 +47,11 @@ blocker; do not present each completed phase as a question.
 The agent may select tools, translation batches, glossary candidates, and
 technically and aesthetically suitable fonts. After font discovery, choose and
 record one compact, role-aware typography plan per `references/arabic-rendering.md`.
+The standing project font policy in `PROJECT.yaml` permits source-verified font
+downloads and a necessary current-user-only Windows install without repeated
+approval; follow `references/font-sourcing.md` and its two records. It does not
+permit an all-users install, replacement of an existing system font, or bundling
+a font without rights.
 Apply it to game text and use it as a secondary coherence check for localized
 images; the image's source style remains the primary constraint. Do not ask the
 user to approve each font or stop after the typography plan. The agent must not

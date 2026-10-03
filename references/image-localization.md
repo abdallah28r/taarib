@@ -53,6 +53,10 @@ symbol/icon glyphs as text, or invent outlines or effects to hide a mismatch.
 Judge the result in-game or in its adjacent UI context when available, not as
 an isolated crop alone. If the font choice cannot preserve the source design,
 reject the edit and keep the source image.
+If a different Arabic face is needed, use the project font search and rights
+route in `references/font-sourcing.md`; do not limit image lettering to fonts
+already installed on the machine. Record the selected font's image/asset use
+in `fonts/FONT_USAGE.json` without duplicating the per-region image manifest.
 
 ## Adaptive candidate search
 

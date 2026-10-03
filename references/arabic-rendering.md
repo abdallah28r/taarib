@@ -25,6 +25,9 @@ Font priority: shipped Arabic coverage, shipped fallback, added licensed
 fallback, then replacement. Inspect every used weight, fallback, icon font, and
 atlas. `check_font.py` proves cmap coverage only; `check_font_shaping.py` is a
 HarfBuzz smoke test only. Neither proves the game uses that renderer path.
+When an existing font is unsuitable or an external face may clearly fit the
+game better, follow `references/font-sourcing.md` to search, compare, obtain,
+record, and—only if required—install the selected font for this Windows user.
 
 After discovering the game's actual font slots and visual style, make one
 compact typography plan for this game. Compare the source type's character
@@ -41,6 +44,7 @@ be achieved without altering the visual design, keep the asset as a review
 case and seek a design-level solution rather than silently changing it.
 Record only the selected role -> font/weight
 mapping and any important constraint in `PROJECT.yaml` under `typography`;
+record its exact files, rights, uses, and test result in `fonts/FONT_USAGE.json`.
 do not create a report for every candidate or ask the user to choose each font.
 
 Where the renderer supports separate slots and it improves coherence, assign
