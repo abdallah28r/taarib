@@ -128,7 +128,8 @@ routes fail, preserve the original.
 
 ## Official OpenAI image-editing modes
 
-When the project enables `openai-official`, choose a mode only after the region
+When the new-game intake approved it (`PROJECT.yaml` →
+`image_localization.external_image_editing.enabled: "yes"`), choose a mode only after the region
 is `TRANSLATE`. The authorization applies to this project's images, not to
 other external services. These are prompt contracts, not fixed model names:
 
@@ -209,7 +210,7 @@ image by themselves.
   transparent microtextures need alpha-aware backgrounds and upscaling.
 - SAM2-class segmentation: refine the containing object or surface, then
   intersect with text evidence; it is not a text detector.
-- OpenAI official image editing: permitted when the project policy enables it.
+- OpenAI official image editing: permitted only when the project intake approved it.
   Raw output dimensions and surrounding art are untrusted; normalize and
   composite only inside the allowed mask. Full-text is a reviewed candidate,
   not an automatic final asset.

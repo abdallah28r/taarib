@@ -12,14 +12,18 @@ for missing project choices. Do not ask for facts already established. Include:
 
 1. Game name and the user's installation path/build/platform if not clear. The
    agent may discover the exact build read-only; ask which copy to modify only
-   if multiple installations or editions make the target ambiguous. Verified
-   installation on that copy is the default end state under this template;
-   the user may opt out at startup.
-2. Whether to use subagents for this game (`yes`/`no`). They are available by
+   if multiple installations or editions make the target ambiguous.
+2. Whether the agent may install the verified, reversible build on that copy
+   (`yes`/`no`). Record it as `workflow.install_to_user_copy`; the template's
+   `"ask"` value is not permission.
+3. Whether to use subagents for this game (`yes`/`no`). They are available by
    policy, but this one-time project preference controls whether to delegate.
-3. Whether baked text in UI/art images is in scope (`yes`/`no`). If yes, follow
+4. Whether baked text in UI/art images is in scope (`yes`/`no`). If yes, follow
    the image policy; this does not mean translating every visible marking.
-4. Whether the agent may launch the game for a smoke test (`yes`/`no`). Default
+   If yes, also ask whether in-scope images may be sent to official OpenAI
+   image editing (`yes`/`no`), recorded as
+   `image_localization.external_image_editing.enabled`.
+5. Whether the agent may launch the game for a smoke test (`yes`/`no`). Default
    is no; user playtesting is still required for final quality.
 
 Ask about tone, dialect, mature language, a preferred font, or accessibility
@@ -64,8 +68,9 @@ Researching a mod is not permission to modify or bundle it. Use
 
 ## Install, user trial, then shareable package
 
-Installation to the user's named copy is the default requested outcome unless
-the user opts out or the target is ambiguous. Before it, verify target build and
+Installation to the user's named copy is the completion step when the intake
+recorded `install_to_user_copy: "yes"` and the target is unambiguous; with
+`"no"`, stop at a verified build and its install instructions. Before it, verify target build and
 original hashes, create restorable backups outside the replacement set, run
 native/structural/image gates, and use the least invasive reversible method.
 Verify installed files and give a rollback procedure. If the build is unknown,
@@ -87,7 +92,7 @@ include the patch/localization payload, a straightforward installer or
 well-tested installation script, a removal/rollback route, required
 redistributable runtime components, a build/version compatibility check, and
 Arabic installation/use instructions (`INSTALL_AR.md` or equivalent). A
-recipient should not need Codex or the development toolchain to install it.
+recipient should not need an AI agent or the development toolchain to install it.
 The installer discovers or asks for the recipient's game directory; never
 hard-code the creator's `C:\` path. Validate
 the recipient's original game/build before applying deltas; do not request

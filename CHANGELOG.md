@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-10-19 — Phase 0: runtime-neutral, safe defaults
+
+- Fixed `glossary.yaml`: unquoted `Yes`/`No`/`On`/`Off` keys loaded as YAML
+  booleans and silently dropped `نعم` and `لا`. Added `scripts/check_yaml.py`
+  (rejects non-string and duplicate keys) to `verify_template.py`.
+- Template defaults for installing on the user's copy and for OpenAI image
+  editing are now `"ask"`; the new-game intake asks for both explicitly.
+- Model routes now name tiers (light/standard/deep) mapped per runtime for
+  Codex and Claude Code; the policy allows the active runtime's hosted models
+  and keeps the local-model ban (reason: translation quality).
+- Claude Code support: `CLAUDE.md` imports `AGENTS.md`; `.claude/skills/` is
+  generated from `.agents/skills/` by `scripts/sync_runtime_skills.py` and
+  checked for drift. Added a mixed-runtime single-writer rule.
+- `source/` and `target/` READMEs no longer claim they fill automatically.
+
 ## 2026-10-03 — Font sourcing and records
 
 - Added conditional web search and direct visual comparison of Arabic font

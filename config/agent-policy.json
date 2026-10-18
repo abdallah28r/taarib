@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed_on": "2026-09-25",
+  "reviewed_on": "2026-10-19",
   "authorization": {
     "subagents": "allowed_by_default",
     "permission_persists": true,
@@ -9,11 +9,12 @@
     "single_writer_per_file": true
   },
   "providers": {
-    "allowed": ["openai_hosted_models_exposed_by_runtime"],
+    "allowed": ["hosted_frontier_models_exposed_by_the_active_runtime"],
+    "local_model_ban_reason": "translation_quality",
     "local_language_models": "prohibited",
     "local_machine_translation": "prohibited",
     "local_ocr_or_stt": "explicit_user_authorization_per_current_task",
-    "external_ai_services": "explicit_named_service_authorization_per_current_task_except_project_enabled_openai_official_image_editing",
+    "external_ai_services": "explicit_named_service_authorization_per_current_task_except_intake_approved_openai_official_image_editing",
     "forbidden_local_ids": [
       "ollama",
       "llama.cpp",
@@ -25,46 +26,60 @@
       "transformers-local"
     ]
   },
+  "runtimes": {
+    "codex": {
+      "instructions": "AGENTS.md",
+      "skills_dir": ".agents/skills",
+      "per_agent_model_selection": "runtime_dependent",
+      "nested_delegation": "runtime_dependent",
+      "tiers": {"light": "gpt-6-luna", "standard": "gpt-6-sol", "deep": "gpt-6-astra"}
+    },
+    "claude-code": {
+      "instructions": "CLAUDE.md (imports AGENTS.md)",
+      "skills_dir": ".claude/skills (generated from .agents/skills)",
+      "per_agent_model_selection": "supported",
+      "nested_delegation": "unsupported_root_agent_fans_out",
+      "tiers": {"light": "haiku", "standard": "sonnet", "deep": "opus"}
+    }
+  },
+  "mixed_runtime": {
+    "shared_state": "files_only",
+    "single_writer_per_file_across_runtimes": true,
+    "record_active_scope_in": "STATUS.md"
+  },
   "routing": {
     "mechanical": {
-      "model_class": "luna",
-      "current_example": "gpt-6-luna",
+      "tier": "light",
       "effort": "low",
       "use_for": "inventory, counting, hashes, token comparison, simple extraction, deterministic checks"
     },
     "scoped_edit": {
-      "model_class": "luna_or_sol",
-      "current_example": "gpt-6-luna",
+      "tier": "light",
       "effort": "medium",
-      "use_for": "small mechanical edits or coordinated updates from a clear brief"
+      "use_for": "small mechanical edits or coordinated updates from a clear brief; standard/low if light fails"
     },
     "ui_translation": {
-      "model_class": "sol",
-      "current_example": "gpt-6-sol",
+      "tier": "standard",
       "effort": "low",
       "use_for": "clear UI translation with established context, terminology, and deterministic QA"
     },
     "contextual_translation": {
-      "model_class": "sol",
-      "current_example": "gpt-6-sol",
+      "tier": "standard",
       "effort": "medium",
       "use_for": "dialogue, narrative, character voice, and contextual bulk translation"
     },
     "deep_review": {
-      "model_class": "sol",
-      "current_example": "gpt-6-sol",
+      "tier": "standard",
       "effort": "high",
       "use_for": "wordplay, ambiguity, sensitive language, deep review, or complex debugging"
     },
     "architecture": {
-      "model_class": "astra",
-      "current_example": "gpt-6-astra",
+      "tier": "deep",
       "effort": "medium",
       "use_for": "conflicting evidence, risky architecture, integration strategy, or final adjudication"
     },
     "exceptional": {
-      "model_class": "astra",
-      "current_example": "gpt-6-astra",
+      "tier": "deep",
       "effort": "xhigh",
       "use_for": "exceptional long-running work only after a representative evaluation shows material benefit"
     }

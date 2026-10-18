@@ -1,5 +1,7 @@
 # ===== مصطلحات عامة (تنتقل معك لكل لعبة) =====
 general:
+  # Quote YAML 1.1 boolean words (Yes/No/On/Off/Y/N/True/False) used as keys;
+  # unquoted, PyYAML loads them as true/false and silently drops entries.
   Save: حفظ
   Load: تحميل
   Continue: متابعة
@@ -15,8 +17,8 @@ general:
   Apply: تطبيق
   Cancel: إلغاء
   Confirm: تأكيد
-  Yes: نعم
-  No: لا
+  "Yes": نعم
+  "No": لا
   Loading: جارٍ التحميل
   Pause: إيقاف مؤقت
   Controls: التحكم
@@ -53,8 +55,8 @@ general:
   Tutorial: البرنامج التعليمي
   Enabled: مفعّل
   Disabled: معطّل
-  On: تشغيل
-  Off: إيقاف
+  "On": تشغيل
+  "Off": إيقاف
 
 # ===== أسماء تُكتب بحروف عربية (نقحرة ثابتة) =====
 names:

@@ -46,7 +46,7 @@ then install the new package against the supported original hashes. Do not
 overwrite a changed installed file: investigate or preserve the user's edit.
 These scripts require Python and are **developer/test helpers**, not a finished
 recipient installer. Before claiming a shareable package, provide a tested
-game-specific wrapper/installer that does not require Codex or the development
+game-specific wrapper/installer that does not require an AI agent or the development
 toolchain, with an Arabic `INSTALL_AR.md`, supported build hashes, requirements,
 update/removal instructions, and successful install/update/uninstall on clean
 copies. If that wrapper is not available, label the deliverable a developer
@@ -60,7 +60,7 @@ guide, uninstall/rollback instructions, and all runtime prerequisites that may
 legally be redistributed. Bundle permitted dependencies or state precisely
 how to obtain anything that cannot be bundled. Do not include the original
 game archives/assets, user backups, private paths/logs, or unsupported binary
-patches. Do not require Codex or the development toolchain on the recipient's
+patches. Do not require an AI agent or the development toolchain on the recipient's
 machine, and do not ask for store-account credentials or bypass ownership
 controls. Shareability means a recipient with a supported legitimate copy can
 install it; it does not promise every edition or device is compatible.

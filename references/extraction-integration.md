@@ -41,9 +41,9 @@ Before mutation, back up with hashes. After installation, verify output hashes,
 uninstall behavior, native parsing, and the no-change baseline. Game launch and
 runtime testing require current authority. For a new game's end-to-end run,
 follow `references/project-run.md`: checked, reversible installation on the
-**user's identified copy** is the default after QA for an end-to-end request,
-without approval at every intermediate step. Respect a user opt-out or an
-ambiguous target. Give the user a
+**user's identified copy** follows QA when the intake approved it, without
+approval at every intermediate step. Respect a `no` answer or an ambiguous
+target. Give the user a
 playtest window after installation and use their findings to refine the build
 before preparing the shareable game package.
 

@@ -15,8 +15,16 @@ def load_policy(path: Path = DEFAULT_POLICY) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def model_line(policy: dict, tier: str, runtime: str | None) -> str:
+    runtimes = policy["runtimes"]
+    names = [runtime] if runtime else sorted(runtimes)
+    examples = ", ".join(f"{name}: {runtimes[name]['tiers'][tier]}" for name in names)
+    return f"- Model tier: {tier} ({examples})"
+
+
 def build_brief(policy: dict, route_name: str, task: str, scope: str,
-                write_mode: str = "read-only", deliverable: str = "Return findings and evidence.") -> str:
+                write_mode: str = "read-only", deliverable: str = "Return findings and evidence.",
+                runtime: str | None = None) -> str:
     route = policy["routing"][route_name]
     auth = policy["authorization"]
     providers = policy["providers"]
@@ -28,12 +36,12 @@ def build_brief(policy: dict, route_name: str, task: str, scope: str,
         f"- Scope: {scope}",
         f"- Write mode: {write_mode}",
         f"- Requested route: {route_name}",
-        f"- Model class: {route['model_class']} (current example: {route['current_example']})",
+        model_line(policy, route["tier"], runtime),
         f"- Reasoning effort: {route['effort']}",
         "",
         "## Binding constraints",
         "",
-        "- Use only an OpenAI-hosted model exposed by the runtime. If the requested model is unavailable or cannot be selected per agent, report that fact; do not substitute a local or third-party model.",
+        "- Use only a hosted frontier model exposed by the active runtime (Codex or Claude Code). If the requested tier is unavailable or cannot be selected per agent, report that fact; never substitute a local model.",
         f"- Local language models: {providers['local_language_models']}; local machine translation: {providers['local_machine_translation']}.",
         "- Do not install or download tools or models, contact an external AI service, launch the game, perform destructive actions, or expand scope.",
         f"- Nested delegation: {auth['nested_delegation']}. Create child agents only for independent bounded work and pass this full policy to them.",
@@ -56,8 +64,11 @@ def main(argv=None) -> int:
     parser.add_argument("--scope", required=True)
     parser.add_argument("--write-mode", choices=("read-only", "write"), default="read-only")
     parser.add_argument("--deliverable", default="Return findings and evidence.")
+    parser.add_argument("--runtime", choices=sorted(policy["runtimes"]),
+                        help="show only this runtime's model for the tier")
     args = parser.parse_args(argv)
-    print(build_brief(policy, args.route, args.task, args.scope, args.write_mode, args.deliverable), end="")
+    print(build_brief(policy, args.route, args.task, args.scope, args.write_mode, args.deliverable,
+                      args.runtime), end="")
     return 0
 
 

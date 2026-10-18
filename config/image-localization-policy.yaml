@@ -1,7 +1,10 @@
 schema_version: 1
 
 external_image_editing:
-  enabled: true
+  # Not enabled here. The per-project switch is PROJECT.yaml
+  # image_localization.external_image_editing.enabled, which stays "ask" until
+  # the new-game intake records an explicit yes.
+  enabled_by: "PROJECT.yaml:image_localization.external_image_editing.enabled"
   provider: "openai-official"
   authorization_scope: "current-project"
   final_asset_requires_review: true

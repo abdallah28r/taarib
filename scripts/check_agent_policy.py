@@ -12,6 +12,8 @@ DEFAULT_POLICY = ROOT / "config" / "agent-policy.json"
 CATALOG = ROOT / "tools" / "open-source-tools.json"
 SETUP = ROOT / "scripts" / "setup_tools.ps1"
 FORBIDDEN_ACTIVE_IDS = {"ollama", "argos-translate", "libretranslate", "localai", "llama.cpp"}
+REQUIRED_RUNTIMES = ("codex", "claude-code")
+TIERS = ("light", "standard", "deep")
 
 
 def validate(root: Path = ROOT, policy_path: Path | None = None) -> list[str]:
@@ -46,11 +48,24 @@ def validate(root: Path = ROOT, policy_path: Path | None = None) -> list[str]:
     if providers.get("local_ocr_or_stt") != "explicit_user_authorization_per_current_task":
         errors.append("local OCR/STT must require explicit current-task authorization")
 
+    runtimes = policy.get("runtimes", {})
+    for name in REQUIRED_RUNTIMES:
+        tiers = runtimes.get(name, {}).get("tiers", {})
+        if name not in runtimes:
+            errors.append(f"missing runtime: {name}")
+        for tier in TIERS:
+            if name in runtimes and not tiers.get(tier):
+                errors.append(f"runtime {name} has no model for tier {tier}")
+    if policy.get("mixed_runtime", {}).get("single_writer_per_file_across_runtimes") is not True:
+        errors.append("single writer per file must hold across runtimes")
+
     routing = policy.get("routing", {})
     for route in ("mechanical", "scoped_edit", "ui_translation", "contextual_translation",
                   "deep_review", "architecture", "exceptional"):
         if route not in routing:
             errors.append(f"missing routing entry: {route}")
+        elif routing[route].get("tier") not in TIERS:
+            errors.append(f"routing entry {route} must use a tier from {TIERS}")
 
     try:
         catalog = json.loads((root / "tools" / "open-source-tools.json").read_text(encoding="utf-8"))

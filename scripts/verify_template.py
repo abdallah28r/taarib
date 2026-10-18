@@ -22,6 +22,8 @@ def main(argv=None) -> int:
     checks = [
         ("unit-tests", [py, "-m", "unittest", "discover", "-s", "tests"]),
         ("compile", [py, "-m", "compileall", "-q", "scripts", "tests"]),
+        ("yaml-keys", [py, "scripts/check_yaml.py"]),
+        ("runtime-skills", [py, "scripts/sync_runtime_skills.py", "--check"]),
         ("agent-policy", [py, "scripts/check_agent_policy.py"]),
         ("context-routes", [py, "scripts/check_context_routes.py"]),
         ("license-guard", [py, "scripts/license_guard.py"]),

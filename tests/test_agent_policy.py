@@ -32,11 +32,30 @@ class AgentPolicyTests(unittest.TestCase):
             "write",
             "Updated scene plus QA result",
         )
-        self.assertIn("gpt-6-sol", brief)
+        self.assertIn("Model tier: standard", brief)
+        self.assertIn("codex: gpt-6-sol", brief)
+        self.assertIn("claude-code: sonnet", brief)
         self.assertIn("Reasoning effort: medium", brief)
         self.assertIn("Local language models: prohibited", brief)
         self.assertIn("independent bounded work", brief)
         self.assertIn("sole writer", brief)
+
+    def test_brief_can_target_one_runtime(self):
+        policy = make_subagent_brief.load_policy(ROOT / "config" / "agent-policy.json")
+        brief = make_subagent_brief.build_brief(
+            policy, "mechanical", "Count rows", "source/", runtime="claude-code")
+        self.assertIn("Model tier: light (claude-code: haiku)", brief)
+        self.assertNotIn("gpt-6", brief)
+
+    def test_runtime_without_a_tier_is_rejected(self):
+        import json, tempfile
+        policy = json.loads((ROOT / "config" / "agent-policy.json").read_text(encoding="utf-8"))
+        del policy["runtimes"]["claude-code"]["tiers"]["deep"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "policy.json"
+            path.write_text(json.dumps(policy), encoding="utf-8")
+            errors = check_agent_policy.validate(ROOT, path)
+        self.assertTrue(any("claude-code" in e and "deep" in e for e in errors))
 
 
 if __name__ == "__main__":
