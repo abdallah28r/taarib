@@ -27,6 +27,15 @@ style_fidelity:
   source_typography_first: true
   coordinate_with_project_role_fonts: true
   do_not_force_one_font_across_all_images: true
+  match_visible_text_scale_as_close_as_possible: true
+  measure_visible_ink_not_only_region_box: true
+  smaller_text_is_not_automatic_rejection: true
+  avoid_downsizing_before_trying_fit_routes: true
+  visual_priority: "meaning-and-readability > artwork-and-composition > source-typography > approximate-scale > occupancy-metric"
+  do_not_fill_region_for_its_own_sake: true
+  preserve_intentional_negative_space: true
+  forbid_nonuniform_glyph_scaling_to_hit_target_width: true
+  whole_image_resizing_for_text_fit: false
   forbid_invented_outline: true
   forbid_invented_shadow: true
   forbid_invented_glow: true
@@ -39,8 +48,18 @@ candidate_search:
   simple_image_initial_candidates: 1
   complex_or_uncertain_initial_candidates: 2
   expand_only_after_visual_failure: true
+  text_only_assets: "extra_size_and_occupancy_review"
+  size_fit_attempts: ["font-family", "font-size", "weight", "tracking", "line-spacing", "alignment", "line-breaks", "safe-layout-adjustment"]
+  preserve_best_non_distorting_candidate: true
+  stop_when_next_size_gain_harms_visual_balance: true
   stop_after_visual_and_technical_pass: true
   keep_source_when_all_candidates_fail: true
+
+legacy_candidate_reuse:
+  inspect_generation_method_before_reuse: true
+  prior_approval_does_not_waive_current_visual_review: true
+  flag_glyph_resampling_done_only_to_fill_source_width: true
+  compare_full_image_before_keep_or_replace: true
 
 openai_editing_modes:
   background_only: "restore inside tight text mask without generating text; typeset approved Arabic separately"
@@ -52,7 +71,7 @@ region_record:
   required_region_fields: ["box", "decision", "reason"]
   translated_region_fields: ["target_text", "review_status"]
   approval_fields: ["candidate", "candidate_sha256", "method", "visual_reviewed", "visual_review", "technical_qa"]
-  optional_when_relevant: ["mask", "source_text", "prompt", "model", "visual_qa"]
+  optional_when_relevant: ["mask", "source_text", "prompt", "model", "visual_qa", "source_text_bounds", "target_text_bounds", "source_visible_height", "target_visible_height", "visual_scale_ratio", "size_match", "fit_attempts", "font_size"]
 
 visual_review:
   required_for_every_changed_image: true

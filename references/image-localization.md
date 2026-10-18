@@ -42,6 +42,53 @@ not improve contrast by inventing a panel, stroke, shadow, or glow. If the
 required Arabic cannot remain readable without such an invention, reject the
 candidate and keep the source.
 
+### Match text size without sacrificing the design
+
+The original text's visible ink bounds, height, width, baseline, and occupancy
+are comparison evidence, **not targets to maximize**. Preserve intentional
+empty space and the full image's visual balance. Priority: correct, readable
+Arabic; intact artwork/composition; faithful typographic character; then
+approximate scale. A numerical occupancy or width match never justifies an
+uglier image. This matters especially for images made mostly of text: compare
+the complete native-size asset and its neighboring UI, not just a tight crop.
+
+If the Arabic looks too small, try suitable non-distorting routes: a better
+Arabic face, native font size/weight, tracking, line spacing, alignment, line
+breaks, and safe layout inside the existing design. Do not resize the whole
+image to fit text, stretch or squeeze glyphs non-uniformly to hit a target
+width, add an outline/shadow/panel, or move text outside the image. Stop
+enlarging when the next gain in size makes the result cramped, disproportionate,
+or less attractive. A slightly smaller but balanced rendering can be better
+than an exact-width rendering with distorted letters.
+
+Before reusing an older generator or an already approved image, inspect how
+the lettering was made. A saved approval or passing pixel gate does not
+grandfather a candidate under the current visual policy. If a script resized
+rendered glyphs merely to occupy the source text width, flag its outputs for
+full-image, native-size comparison with the pristine source and a natural-
+proportion alternative. Replace only a visually inferior candidate after
+review; never discard a correct translation or rebuild the game solely from a
+stretch factor or occupancy number.
+
+Use the native-size view for the decision and a zoomed view for diagnosing
+glyph edges. Compare candidate variants as whole images. If the candidate
+still differs after useful routes are tried, keep the best readable,
+non-distorting, visually balanced candidate and record the limitation for
+review; do not reject the translation solely because its size is imperfect.
+For each newly approved or reworked text-only image, compare visible ink and
+record `source_text_bounds`, `target_text_bounds`, `source_visible_height`,
+`target_visible_height`, `visual_scale_ratio`, `size_match`, and a concise
+`fit_attempts` note where the lettering can be isolated reliably. When it
+cannot, record why measurement is unreliable and give a direct visual finding
+instead. Do not backfill invented measurements into older approvals. No fixed
+ratio is a pass/fail threshold: Arabic glyph proportions and line layout can
+differ from the source. The measurements support visual judgment, not replace
+it. For illustrated images, record the same data only where it helps resolve a
+size concern. Use `size_match: close` when the scale fits, or `best-safe` with a
+short limitation note when further enlargement would distort the design;
+`needs-improvement` marks an unfinished candidate, not a rejection of the
+translation.
+
 When choosing or generating Arabic lettering, compare it with the original
 image's typography **first** and with the game's selected Arabic typography
 plan (`PROJECT.yaml` -> `typography.role_fonts`) **second**. Match the original
@@ -131,12 +178,14 @@ at native scale and zoomed scale, side by side; inspect transparent assets over
 dark, light, and checkerboard backgrounds. For generative edits, also blink or
 overlay source/candidate and inspect the allowed-mask boundary.
 
-Reject a candidate when any of these is true:
+Repair or reject a candidate when any of these is true after suitable attempts:
 
 - Arabic spelling, shaping, order, or terminology is wrong.
-- size, placement, baseline, perspective, weight, color, opacity, spacing, or
-  style is materially unlike the source, or it clashes with the approved game
-  typography and adjacent assets without a source-style reason;
+- placement, baseline, perspective, weight, color, opacity, spacing, or style
+  distorts the source, or clashes with adjacent assets without a source-style
+  reason. A size difference alone calls for improvement, not automatic
+  rejection; retain the best readable, non-distorting, visually balanced
+  result with a review note if a closer match cannot be reached safely;
 - an outline, shadow, glow, panel, decoration, or extra glyph was invented;
 - source text remains, background reconstruction is blurred/repeated, or a
   character, face, clothing, prop, lighting, composition, or transparency

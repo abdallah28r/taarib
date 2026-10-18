@@ -30,10 +30,20 @@ generic tool preferences, but not the preservation and review gates.
    unchanged. Do not move the translation outside the image as a workaround.
 4. Match the original text treatment. Do not invent an outline, shadow, glow,
    panel, texture, decoration, color, weight, or contrast treatment.
-5. Use adaptive candidate search. Inspect the source and every serious
+5. Match apparent text scale where it improves the full image; never maximize
+   coverage at the expense of beauty or readability. Visible-ink measurements
+   are diagnostic, not targets. Try suitable font and layout options, but do
+   not resize the whole image or stretch/squeeze glyphs non-uniformly to fill
+   a box. Stop when further enlargement worsens balance; keep the best
+   readable, non-distorting candidate even if smaller, with a short review
+   note. Text-only images need extra whole-image size/balance comparison.
+   Before reusing an old approved candidate or generator, inspect its glyph
+   transformations; prior approval and numeric gates do not waive a fresh
+   native-size visual check when the method stretched text to fill a box.
+6. Use adaptive candidate search. Inspect the source and every serious
    candidate visually; numeric scores and diff metrics are gates and evidence,
    never proof of visual quality.
-6. A generated or inpainted result is a candidate only. Preserve the untouched
+7. A generated or inpainted result is a candidate only. Preserve the untouched
    source, restore exact dimensions/alpha/native format, composite changes only
    in the allowed region, and require review before integration.
 
