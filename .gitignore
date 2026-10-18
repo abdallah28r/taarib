@@ -5,6 +5,10 @@ source/*
 !source/README.md
 target/*
 !target/README.md
+units/*
+!units/README.md
+reports/PROGRESS.md
+reports/progress.html
 backups/*
 !backups/README.md
 builds/

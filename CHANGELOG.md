@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-19 — Phase 1: translation units and measured progress
+
+- Added `units/**/*.jsonl`, one record per string and per image text region,
+  with five forward-only statuses: extracted, translated, proofread,
+  integrated, tested. Integrated and tested require recorded evidence; a
+  proofreader must differ from the translator; source hashes catch changed
+  sources.
+- Added `scripts/loc.py` (`validate`, `normalize`, `search`, `mark`,
+  `progress`) and `scripts/loc_units.py`. Progress is computed from units and
+  `qa/LQA_MATRIX.csv` and rendered as chat text, `reports/PROGRESS.md`, or
+  `reports/progress.html`; `PROJECT.yaml` → `reporting.progress_display`
+  defaults to showing it only when asked.
+- Image text regions, including KEEP ones, are now searchable units.
+- `STATUS.md` no longer carries counts; documented per-batch Git commits and
+  tags for private game repositories.
+
 ## 2026-10-19 — Phase 0: runtime-neutral, safe defaults
 
 - Fixed `glossary.yaml`: unquoted `Yes`/`No`/`On`/`Off` keys loaded as YAML

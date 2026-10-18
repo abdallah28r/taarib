@@ -14,27 +14,27 @@
     },
     "extraction": {
       "skill": ".agents/skills/game-localization-engineering/SKILL.md",
-      "required": ["references/extraction-integration.md"],
+      "required": ["references/translation-units.md", "references/extraction-integration.md"],
       "optional": ["engines/<engine>.md"]
     },
     "translation-ui": {
       "skill": ".agents/skills/arabic-game-translation/SKILL.md",
-      "required": ["glossary.yaml", "references/translation-core.md", "references/ui-style.md"],
+      "required": ["references/translation-units.md", "glossary.yaml", "references/translation-core.md", "references/ui-style.md"],
       "optional": ["engines/<engine>.md"]
     },
     "translation-dialogue": {
       "skill": ".agents/skills/arabic-game-translation/SKILL.md",
-      "required": ["glossary.yaml", "references/translation-core.md", "references/dialogue-style.md"],
+      "required": ["references/translation-units.md", "glossary.yaml", "references/translation-core.md", "references/dialogue-style.md"],
       "optional": ["engines/<engine>.md"]
     },
     "subtitles": {
       "skill": ".agents/skills/arabic-game-translation/SKILL.md",
-      "required": ["glossary.yaml", "references/translation-core.md", "references/dialogue-style.md", "references/subtitles-style.md"],
+      "required": ["references/translation-units.md", "glossary.yaml", "references/translation-core.md", "references/dialogue-style.md", "references/subtitles-style.md"],
       "optional": ["engines/<engine>.md"]
     },
     "qa-structural": {
       "skill": ".agents/skills/game-localization-qa/SKILL.md",
-      "required": ["references/qa-strategy.md"],
+      "required": ["references/translation-units.md", "references/qa-strategy.md"],
       "optional": ["glossary.yaml", "engines/<engine>.md"]
     },
     "qa-rendering": {
@@ -44,12 +44,12 @@
     },
     "images": {
       "skill": ".agents/skills/game-image-localization/SKILL.md",
-      "required": ["config/image-localization-policy.yaml", "references/image-localization.md"],
+      "required": ["references/translation-units.md", "config/image-localization-policy.yaml", "references/image-localization.md"],
       "optional": ["references/font-sourcing.md", "glossary.yaml", "engines/<engine>.md"]
     },
     "integration": {
       "skill": ".agents/skills/game-localization-engineering/SKILL.md",
-      "required": ["references/extraction-integration.md", "references/arabic-rendering.md"],
+      "required": ["references/translation-units.md", "references/extraction-integration.md", "references/arabic-rendering.md"],
       "optional": ["references/font-sourcing.md", "engines/<engine>.md", "references/localization-mods.md"]
     },
     "maintenance": {

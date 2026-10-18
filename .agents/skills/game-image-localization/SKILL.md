@@ -54,6 +54,10 @@ does not apply. For official OpenAI editing, use the `background-only` or
 When selecting an external font for image text, read
 `references/font-sourcing.md`; do not assume the system's installed fonts are
 the only choices. Keep source-image typography as the primary visual constraint.
+Record every text region found in an image, including `KEEP` regions, as a
+`kind: image` translation unit (`asset`, `box`, visible `source` text, and the
+decision) so image text is searchable and counted with all other text; see
+`references/translation-units.md`.
 Record changed regions in a lightweight manifest and run
 `python scripts/check_image_regions.py <manifest.json>` before approval. The
 check complements, never replaces, opening and comparing the actual images.

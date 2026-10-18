@@ -32,6 +32,9 @@ live in those references and are not repeated here.
   clipping as separate layers. Logical Unicode Arabic remains canonical.
 - Runtime evidence is authoritative for rendering. Never launch the game or
   upload logs unless the current task authorizes it.
+- Mark units `integrated` only with the build they entered and `tested` only
+  with what was observed in the running game (`loc.py mark --evidence`). A
+  passing validator is never evidence for `tested`.
 - Record each distinct defect once in `qa/LQA_MATRIX.csv` with screen/key,
   environment, observed/expected result, severity, evidence, and retest.
 

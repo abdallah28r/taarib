@@ -34,8 +34,10 @@ ordinary translation batch.
   context. Mark it for review and continue with independent rows.
 - Skip already approved Arabic targets. Use coherent scenes/screens rather than
   arbitrary row slices when context exists.
-- Run the format validator for every changed artifact. Report translated,
-  skipped, review-needed, and structurally invalid counts.
+- Write each translation into its unit (`target`, `status: translated`,
+  `translated_by`, `batch`) per `references/translation-units.md`, then run
+  `python scripts/loc.py validate` and the native format validator. Report
+  counts from `loc.py progress`, not from memory.
 
 Use a representative pilot only when tone, terminology, text type, or the
 translation route is genuinely new. Do not repeat it for every resumed batch.

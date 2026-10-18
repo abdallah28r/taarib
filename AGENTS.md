@@ -96,6 +96,11 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
 
 ## Records
 
+- `units/**/*.jsonl`: one translation unit per string and per image text
+  region, with its status (extracted → translated → proofread → integrated →
+  tested). It is the only source for counts and progress percentages; see
+  `references/translation-units.md`. Show progress only as
+  `PROJECT.yaml` → `reporting.progress_display` says (default: when asked).
 - `STATUS.md`: a short current snapshot: phase, last completed batch, blockers,
   and one resumable next action. Record backup paths and consequential choices,
   not every tool command, agent turn, or historical count.
@@ -113,6 +118,8 @@ same finding across all records.
 
 ## Verification
 
+- Translation units: `python scripts/loc.py validate` after every batch and
+  before integration; zero errors required.
 - Translation artifacts: `loc_qa.py` or `format_qa.py` as appropriate.
 - Template changes: `python scripts/verify_template.py`.
 - Release-only checks, SBOM, manifest, and public ZIP: run the release route,
