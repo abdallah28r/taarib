@@ -14,7 +14,9 @@ and commands unless runtime evidence proves visibility.
   format only when every key, namespace, context, plural, comment, ordering,
   escape, encoding requirement, and rebuild field survives the round trip.
 - Keep source, target, and generated artifacts separate. Record string counts.
-- Prove extract → rebuild without semantic changes before bulk translation.
+- Prove extract → rebuild without semantic changes before bulk translation by
+  passing `python scripts/adapter_contract.py` for the game's adapter on a copy
+  of the actual build (see `adapters/README.md`).
 
 ## Updates
 

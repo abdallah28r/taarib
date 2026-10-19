@@ -125,8 +125,11 @@ same finding across all records.
 
 ## Verification
 
+- Adapters: `python scripts/adapter_contract.py --adapter <adapter> --game <copy>`
+  must pass on the actual build before bulk translation.
 - Translation units: `python scripts/loc.py validate` after every batch and
-  before integration; zero errors required.
+  before integration; zero errors required. Build with `loc.py rebuild`, which
+  includes only proofread units by default.
 - Translation artifacts: `loc_qa.py` or `format_qa.py` as appropriate.
 - Template changes: `python scripts/verify_template.py`.
 - Release-only checks, SBOM, manifest, and public ZIP: run the release route,

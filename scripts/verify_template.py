@@ -25,6 +25,8 @@ def main(argv=None) -> int:
         ("yaml-keys", [py, "scripts/check_yaml.py"]),
         ("runtime-files", [py, "scripts/sync_runtime.py", "--check"]),
         ("translation-units", [py, "scripts/loc.py", "validate"]),
+        ("renpy-adapter-contract", [py, "scripts/adapter_contract.py", "--adapter", "adapters/renpy.py",
+                                    "--game", "examples/renpy-reference"]),
         ("agent-policy", [py, "scripts/check_agent_policy.py"]),
         ("context-routes", [py, "scripts/check_context_routes.py"]),
         ("license-guard", [py, "scripts/license_guard.py"]),

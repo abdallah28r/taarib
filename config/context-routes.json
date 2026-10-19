@@ -14,7 +14,7 @@
     },
     "extraction": {
       "skill": ".agents/skills/game-localization-engineering/SKILL.md",
-      "required": ["references/translation-units.md", "references/extraction-integration.md"],
+      "required": ["adapters/README.md", "references/translation-units.md", "references/extraction-integration.md"],
       "optional": ["engines/<engine>.md"]
     },
     "translation-ui": {
@@ -54,7 +54,7 @@
     },
     "integration": {
       "skill": ".agents/skills/game-localization-engineering/SKILL.md",
-      "required": ["references/translation-units.md", "references/extraction-integration.md", "references/arabic-rendering.md"],
+      "required": ["adapters/README.md", "references/translation-units.md", "references/extraction-integration.md", "references/arabic-rendering.md"],
       "optional": ["references/font-sourcing.md", "engines/<engine>.md", "references/localization-mods.md"]
     },
     "maintenance": {

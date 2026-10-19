@@ -43,9 +43,11 @@ the detected engine/profile, not every option.
 5. Preserve native structure, keys, context, plurals, ordering, encoding, and
    rebuild data. CSV/TSV is an interchange format, not universal truth.
 6. Prove a small no-semantic-change extract/rebuild round trip before bulk
-   translation. Extraction writes one unit per player-visible string to
-   `units/` through `loc_units.new_unit` (stable `id`, native `file`/`key`,
-   context); see `references/translation-units.md`. Back up every game file before mutation and record paths and
+   translation: write or reuse an adapter under `adapters/` and pass
+   `python scripts/adapter_contract.py --adapter <adapter> --game <copy>`.
+   Then `python scripts/loc.py extract` writes one unit per player-visible
+   string to `units/`; see `adapters/README.md` and
+   `references/translation-units.md`. Back up every game file before mutation and record paths and
    checksums.
 7. Merge game updates by stable identity and source state, never row position.
 8. Record exact tool/version and the reproducible command once when a route is

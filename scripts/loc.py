@@ -5,6 +5,8 @@
     python scripts/loc.py search "Save" [--kind image]
     python scripts/loc.py mark --batch batch-003 --status integrated --evidence "build 1.2 patch r4"
     python scripts/loc.py findings work/proofreading/batch-003.jsonl
+    python scripts/loc.py extract --adapter adapters/renpy.py --game <game_root> --out units/game.jsonl
+    python scripts/loc.py rebuild --adapter adapters/renpy.py --game <game_root> --out builds/r1
     python scripts/loc.py progress --format chat|md|html [--out PATH]
 
 Progress is computed only from unit statuses and qa/LQA_MATRIX.csv, never from
@@ -24,15 +26,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _load(name):
-    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+def _load(name, path=None):
+    if name in sys.modules:
+        return sys.modules[name]
+    spec = importlib.util.spec_from_file_location(name, path or ROOT / "scripts" / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
-    sys.modules.setdefault(name, module)
+    sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
 
 
 units = _load("loc_units")
+adapter_base = _load("loc_adapter_base", ROOT / "adapters" / "base.py")
 
 LABELS = {
     "extracted": "مستخرج",
@@ -388,6 +393,63 @@ def check_findings(findings: list[tuple[str, dict]], by_id: dict) -> tuple[list[
     return errors, summary
 
 
+def parse_options(values: list[str]) -> dict:
+    options = {}
+    for value in values:
+        key, sep, item = value.partition("=")
+        if not sep:
+            raise SystemExit(f"ERROR --option needs key=value, got {value!r}")
+        options[key] = item
+    return options
+
+
+def cmd_extract(args) -> int:
+    adapter = adapter_base.load_adapter(args.adapter, args.game, parse_options(args.option))
+    out = args.out or units.UNITS_DIR / f"{Path(args.game).resolve().name}.jsonl"
+    if out.exists() and not args.force:
+        print(f"ERROR {out} exists; use --force to replace it (game updates are merged, not re-extracted)")
+        return 1
+    extracted = adapter.extract()
+    report = units.validate([units.UnitFile(out, extracted)], adapter.token_profile)
+    if report.errors:
+        print_report(report)
+        print("NOT_WRITTEN: the adapter produced invalid units")
+        return 1
+    out.parent.mkdir(parents=True, exist_ok=True)
+    units.write(units.UnitFile(out, extracted))
+    translated = sum(1 for u in extracted if u.get("target"))
+    print(f"EXTRACTED={len(extracted)} ALREADY_TRANSLATED={translated} OUT={out}")
+    return 0
+
+
+def cmd_rebuild(args) -> int:
+    game, out = Path(args.game).resolve(), Path(args.out).resolve()
+    if out == game or out.is_relative_to(game):
+        print("ERROR --out must be outside the game folder; install from it with backups as a separate step")
+        return 2
+    files, report = load_checked(args.path)
+    if report.errors:
+        print_report(report)
+        print("NOT_BUILT: fix unit errors first")
+        return 1
+    minimum = units.STATUSES.index(args.min_status)
+    selected, held_back = [], 0
+    for unit in units.all_units(files):
+        ready = (units.stage(unit) >= minimum and units.decision(unit) == "translate"
+                 and bool(unit.get("target")))
+        held_back += bool(unit.get("target")) and not ready
+        selected.append({**unit, "target": unit.get("target", "") if ready else ""})
+    adapter = adapter_base.load_adapter(args.adapter, game, parse_options(args.option))
+    out.mkdir(parents=True, exist_ok=True)
+    written = adapter.rebuild(selected, out)
+    for rel in written:
+        print(f"WROTE {rel}")
+    included = sum(1 for u in selected if u["target"])
+    print(f"REBUILT_FILES={len(written)} UNITS_INCLUDED={included} HELD_BACK={held_back} "
+          f"MIN_STATUS={args.min_status} OUT={out}")
+    return 0
+
+
 def cmd_findings(args) -> int:
     report = units.Report()
     by_id = {u.get("id"): u for u in units.all_units(units.load(args.path, report))}
@@ -455,6 +517,24 @@ def main(argv=None) -> int:
     p.add_argument("--by", help="agent or person label for translated/proofread")
     p.add_argument("--force", action="store_true", help="allow moving a unit backward")
     p.set_defaults(run=cmd_mark)
+
+    p = sub.add_parser("extract", help="write units from a game through an adapter")
+    p.add_argument("--adapter", required=True, type=Path)
+    p.add_argument("--game", required=True, type=Path)
+    p.add_argument("--out", type=Path, help="default units/<game folder name>.jsonl")
+    p.add_argument("--option", action="append", default=[], help="adapter option key=value")
+    p.add_argument("--force", action="store_true")
+    p.set_defaults(run=cmd_extract)
+
+    p = sub.add_parser("rebuild", help="write localized game files to a separate folder")
+    p.add_argument("--adapter", required=True, type=Path)
+    p.add_argument("--game", required=True, type=Path)
+    p.add_argument("--out", required=True, type=Path)
+    p.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    p.add_argument("--min-status", choices=units.STATUSES[1:], default="proofread",
+                   help="lowest status whose target is built (default proofread)")
+    p.add_argument("--option", action="append", default=[], help="adapter option key=value")
+    p.set_defaults(run=cmd_rebuild)
 
     p = sub.add_parser("findings", help="validate and summarize proofreading findings")
     p.add_argument("files", nargs="+", type=Path)

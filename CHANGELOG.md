@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-19 — Phase 3: adapters and the Ren'Py reference game
+
+- Added the `Adapter` interface (`adapters/base.py`): inventory, extract,
+  rebuild into a separate folder, and read back what the game would show.
+- Added `scripts/adapter_contract.py` with seven checks (inventory, extract,
+  deterministic, read-back, identity, round-trip with pseudo-Arabic, and
+  isolation of the game folder); adapter exceptions fail the step instead of
+  crashing. It runs in `verify_template.py`.
+- Added `adapters/renpy.py` for Ren'Py's native `game/tl/<language>/` files
+  and `examples/renpy-reference`, an original MIT-licensed micro game.
+- Added `loc.py extract` and `loc.py rebuild` (proofread units only by
+  default; never writes inside the game folder).
+
 ## 2026-10-19 — Phase 2: proofreading skill and roles
 
 - Added the `arabic-proofreading` skill with a category/severity checklist,

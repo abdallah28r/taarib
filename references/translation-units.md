@@ -51,7 +51,13 @@ python scripts/loc.py search "Press Start"     # sources and targets, text and i
 python scripts/loc.py mark --batch batch-004 --status translated --by translator-1
 python scripts/loc.py mark --batch batch-004 --status integrated --evidence "1.0.3 patch r2"
 python scripts/loc.py progress --format chat|md|html
+python scripts/loc.py extract --adapter adapters/renpy.py --game <game_root> --out units/game.jsonl
+python scripts/loc.py rebuild --adapter adapters/renpy.py --game <game_root> --out builds/r1
 ```
+
+`extract` and `rebuild` go through an adapter (`adapters/README.md`).
+`rebuild` writes only units at `proofread` or later unless `--min-status` says
+otherwise, and only to a folder outside the game.
 
 `mark` refuses backward moves (unless `--force`) and refuses any change that
 would add a validation error.

@@ -25,6 +25,8 @@ engines/**
 references/**
 requirements/**
 scripts/**
+adapters/**
+examples/**
 tests/**
 tools/**
 qa/**

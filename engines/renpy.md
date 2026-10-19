@@ -47,6 +47,16 @@ an implementation from a proprietary application.
 3. Save/load, history, menus, and dialogue continue to work.
 4. Arabic joining, ordering, mixed text, and line wrapping pass in-game.
 
+## Adapter
+
+`adapters/renpy.py` reads and writes the native `game/tl/<language>/` files
+that Ren'Py's **Generate Translations** creates: dialogue blocks and the
+`strings` block. It never edits the original scripts, so translation IDs always
+come from Ren'Py. It passes the adapter contract on the synthetic
+`examples/renpy-reference` game only; run the contract on each real game's
+generated files before bulk translation. Unsupported constructs (multi-line or
+single-quoted strings) fail with the file and line.
+
 ## Tools
 
 Use the Ren'Py SDK and native translation generator first; use `unrpyc` or
