@@ -16,6 +16,10 @@ is risk-based; do not spend tokens rereading every low-risk approved line.
 
 ## Semantic sampling
 
+Every translated unit is proofread once by an independent agent
+(`arabic-proofreading`). The sampling below is the QA layer on top of that:
+in-game and cross-batch checks, not a replacement for proofreading.
+
 Review all high-risk units: ambiguity, wordplay, sensitive content, dense
 markup, variables affecting grammar, changed source, new terminology, and prior
 failures. For established low-risk UI or repeated patterns, review a

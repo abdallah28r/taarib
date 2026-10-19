@@ -25,6 +25,7 @@ def validate():
       "translation-ui":{"glossary.yaml","references/translation-core.md","references/ui-style.md"},
       "translation-dialogue":{"glossary.yaml","references/translation-core.md","references/dialogue-style.md"},
       "subtitles":{"references/subtitles-style.md"},
+      "proofreading":{"glossary.yaml","references/translation-core.md",".agents/skills/arabic-proofreading/references/proofreading-checklist.md"},
       "qa-rendering":{"references/arabic-rendering.md","references/qa-strategy.md"},
       "delegation":{"MODEL_AND_SUBAGENT_POLICY.md","config/agent-policy.json"},
       "application-research":{"LEGAL_AND_CLEAN_ROOM_POLICY.md"},

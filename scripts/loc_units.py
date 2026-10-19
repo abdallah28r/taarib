@@ -23,7 +23,7 @@ REQUIRED = ("id", "kind", "file", "source", "source_hash", "status")
 KEY_ORDER = (
     "id", "kind", "file", "key", "asset", "box", "source", "target", "status",
     "decision", "batch", "context", "max_length", "translated_by", "proofread_by",
-    "evidence", "notes", "source_hash",
+    "evidence", "notes", "proofread_hash", "source_hash",
 )
 # Evidence a unit must carry before it may claim these stages.
 STAGE_EVIDENCE = {"integrated": "integrated_build", "tested": "tested"}
@@ -147,6 +147,12 @@ def check_unit(unit: dict, where: str, profile: str, report: Report) -> None:
     for status, key in STAGE_EVIDENCE.items():
         if reached >= STATUSES.index(status) and not (unit.get("evidence") or {}).get(key):
             report.errors.append(f"{label}: status {unit['status']} requires evidence.{key}")
+    if decision(unit) != "keep" and reached >= STATUSES.index("proofread"):
+        if "proofread_hash" not in unit:
+            report.errors.append(f"{label}: status {unit['status']} requires proofreading (no proofread_hash); "
+                                 "mark it proofread with loc.py first")
+        elif unit["proofread_hash"] != source_hash(target):
+            report.errors.append(f"{label}: target changed after proofreading; proofread this unit again")
     translator, proofreader = unit.get("translated_by"), unit.get("proofread_by")
     if translator and proofreader and translator == proofreader:
         report.errors.append(f"{label}: proofreader must differ from translator ({translator})")

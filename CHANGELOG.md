@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-19 — Phase 2: proofreading skill and roles
+
+- Added the `arabic-proofreading` skill with a category/severity checklist,
+  a findings file per batch, a one-pass stop rule, and a `proofreading`
+  context route and model route (standard/medium).
+- `loc.py mark --status proofread` now requires `--by` and stores a hash of
+  the proofread target; validation fails if a unit reaches proofread or later
+  without proofreading, or if its target changes afterwards.
+- Added `loc.py findings` to validate findings against units and summarize
+  them by severity, category, and resolution.
+- Added runtime-neutral `translator` and `proofreader` roles in
+  `.agents/roles/`. `scripts/sync_runtime.py` (renamed from
+  `sync_runtime_skills.py`) renders them as Claude Code subagents in
+  `.claude/agents/`; `make_subagent_brief.py --role` gives Codex the same
+  instructions.
+
 ## 2026-10-19 — Phase 1: translation units and measured progress
 
 - Added `units/**/*.jsonl`, one record per string and per image text region,

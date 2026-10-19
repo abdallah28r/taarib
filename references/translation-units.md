@@ -12,10 +12,12 @@ units carry the text, its context, and how far it has travelled.
 | --- | --- | --- |
 | `extracted` | source recorded | `id`, `kind`, `file`, `source`, `source_hash` |
 | `translated` | Arabic exists in the unit | non-empty `target` (unless `decision: keep`), matching tokens |
-| `proofread` | checked by a different reviewer | `proofread_by` ≠ `translated_by` when both are set |
+| `proofread` | checked once by a different agent (`arabic-proofreading`) | `mark --by`; stores `proofread_by` (≠ `translated_by`) and `proofread_hash` of the target |
 | `integrated` | part of a game build | `evidence.integrated_build` (which build) |
 | `tested` | seen working in the game | `evidence.tested` (what was observed, where) |
 
+A unit cannot reach `integrated` without being proofread, and editing its
+target afterwards fails validation until it is proofread again.
 Translated is not integrated, and integrated is not tested. Never mark a unit
 `tested` from a validator pass; only runtime observation by the user or an
 authorized agent launch counts.
@@ -35,7 +37,7 @@ blocking question; keep the unit at `extracted` or `translated` until resolved).
   still lives in the region manifest checked by `check_image_regions.py`.
 - Optional: `key` (native key), `target`, `decision`, `batch`, `context`
   (`speaker`, `scene`, `location`, `function`, …), `max_length`,
-  `translated_by`, `proofread_by`, `evidence`, `notes`.
+  `translated_by`, `proofread_by`, `proofread_hash`, `evidence`, `notes`.
 
 Adapters create units with `loc_units.new_unit(...)`. When a game update
 changes a source, validation fails on the hash: review the target, mark the

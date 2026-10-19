@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_POLICY = ROOT / "config" / "agent-policy.json"
+
+
+def load_roles() -> dict:
+    """Runtime-neutral roles from .agents/roles/, keyed by name."""
+    spec = importlib.util.spec_from_file_location("sync_runtime_for_brief", ROOT / "scripts" / "sync_runtime.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.roles()
 
 
 def load_policy(path: Path = DEFAULT_POLICY) -> dict:
@@ -24,7 +33,7 @@ def model_line(policy: dict, tier: str, runtime: str | None) -> str:
 
 def build_brief(policy: dict, route_name: str, task: str, scope: str,
                 write_mode: str = "read-only", deliverable: str = "Return findings and evidence.",
-                runtime: str | None = None) -> str:
+                runtime: str | None = None, role: tuple[dict, str] | None = None) -> str:
     route = policy["routing"][route_name]
     auth = policy["authorization"]
     providers = policy["providers"]
@@ -35,6 +44,7 @@ def build_brief(policy: dict, route_name: str, task: str, scope: str,
         f"- Deliverable: {deliverable}",
         f"- Scope: {scope}",
         f"- Write mode: {write_mode}",
+        *([f"- Role: {role[0]['name']} (skill: {role[0]['skill']})"] if role else []),
         f"- Requested route: {route_name}",
         model_line(policy, route["tier"], runtime),
         f"- Reasoning effort: {route['effort']}",
@@ -53,13 +63,17 @@ def build_brief(policy: dict, route_name: str, task: str, scope: str,
         lines.append("- Do not modify files.")
     else:
         lines.append("- Modify only the assigned files; one agent must be the sole writer for each file.")
+    if role:
+        lines += ["", "## Role instructions", "", role[1].rstrip()]
     return "\n".join(lines) + "\n"
 
 
 def main(argv=None) -> int:
     policy = load_policy()
+    roles = load_roles()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--route", required=True, choices=sorted(policy["routing"]))
+    parser.add_argument("--role", choices=sorted(roles), help="runtime-neutral role from .agents/roles/")
+    parser.add_argument("--route", choices=sorted(policy["routing"]), help="defaults to the role's route")
     parser.add_argument("--task", required=True)
     parser.add_argument("--scope", required=True)
     parser.add_argument("--write-mode", choices=("read-only", "write"), default="read-only")
@@ -67,8 +81,12 @@ def main(argv=None) -> int:
     parser.add_argument("--runtime", choices=sorted(policy["runtimes"]),
                         help="show only this runtime's model for the tier")
     args = parser.parse_args(argv)
-    print(build_brief(policy, args.route, args.task, args.scope, args.write_mode, args.deliverable,
-                      args.runtime), end="")
+    role = roles[args.role] if args.role else None
+    route = args.route or (role[0]["route"] if role else None)
+    if not route:
+        parser.error("give --role or --route")
+    print(build_brief(policy, route, args.task, args.scope, args.write_mode, args.deliverable,
+                      args.runtime, role), end="")
     return 0
 
 

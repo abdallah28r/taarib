@@ -23,7 +23,7 @@ def main(argv=None) -> int:
         ("unit-tests", [py, "-m", "unittest", "discover", "-s", "tests"]),
         ("compile", [py, "-m", "compileall", "-q", "scripts", "tests"]),
         ("yaml-keys", [py, "scripts/check_yaml.py"]),
-        ("runtime-skills", [py, "scripts/sync_runtime_skills.py", "--check"]),
+        ("runtime-files", [py, "scripts/sync_runtime.py", "--check"]),
         ("translation-units", [py, "scripts/loc.py", "validate"]),
         ("agent-policy", [py, "scripts/check_agent_policy.py"]),
         ("context-routes", [py, "scripts/check_context_routes.py"]),

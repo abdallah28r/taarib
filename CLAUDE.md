@@ -9,8 +9,12 @@
 ## ما يخص Claude Code
 
 - **المهارات:** يقرأ Claude Code المجلد `.claude/skills/`، وهو نسخة مولّدة من `.agents/skills/`.
-  عدّل المهارات في `.agents/skills/` فقط، ثم شغّل `python scripts/sync_runtime_skills.py`.
+  عدّل المهارات في `.agents/skills/` فقط، ثم شغّل `python scripts/sync_runtime.py`.
   يفشل `python scripts/verify_template.py` إذا اختلفت النسختان.
+- **الأدوار:** المترجم والمدقق اللغوي موجودان كوكيلين فرعيين في `.claude/agents/`
+  (`translator` و`proofreader`)، مولَّدين من `.agents/roles/`. استدعِهما باسميهما، ومرّر
+  لكل منهما موجزًا من `python scripts/make_subagent_brief.py --role <role> --runtime claude-code`.
+  لا يدقق الوكيل الدفعة التي ترجمها.
 - **النماذج:** المسارات في `config/agent-policy.json` تحدد فئة (light/standard/deep).
   في Claude Code تقابلها haiku وsonnet وopus. مرّر الفئة المناسبة عند إنشاء وكيل فرعي،
   واستخدم `python scripts/make_subagent_brief.py --runtime claude-code` لكتابة الموجز.

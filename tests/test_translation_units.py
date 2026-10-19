@@ -189,6 +189,81 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("source changed", out)
 
+    def test_proofread_stores_target_hash_and_requires_by(self):
+        code, _ = run("mark", "--path", str(self.units), "--ids", "dlg/ch1#002", "--status", "proofread")
+        self.assertEqual(code, 2)
+        run("mark", "--path", str(self.units), "--ids", "dlg/ch1#002", "--status", "proofread", "--by", "proofreader-2")
+        unit = self.unit("dlg/ch1#002")
+        self.assertEqual(unit["proofread_hash"], units.source_hash(unit["target"]))
+
+    def test_integrated_without_proofreading_is_refused(self):
+        code, out = run("mark", "--path", str(self.units), "--ids", "dlg/ch1#002",
+                        "--status", "integrated", "--evidence", "build 2")
+        self.assertEqual(code, 1)
+        self.assertIn("requires proofreading", out)
+
+    def test_backward_force_clears_proofreading(self):
+        code, _ = run("mark", "--path", str(self.units), "--ids", "dlg/ch1#001", "--status", "translated", "--force")
+        self.assertEqual(code, 0)
+        self.assertNotIn("proofread_hash", self.unit("dlg/ch1#001"))
+
+
+class ProofreadingTests(unittest.TestCase):
+    def setUp(self):
+        self.by_id = {u["id"]: u for u in units.all_units(units.load(FIXTURE))}
+
+    def finding(self, **fields):
+        base = {"id": "dlg/ch1#002", "severity": "minor", "category": "spelling", "issue": "x",
+                "resolution": "applied", "before": "أنتبه.", "after": "انتبه.", "by": "proofreader-1"}
+        base.update(fields)
+        return base
+
+    def check(self, *items):
+        return loc.check_findings([(f"f:{n}", item) for n, item in enumerate(items, 1)], self.by_id)
+
+    def test_changed_target_after_proofreading_fails_validation(self):
+        unit = dict(self.by_id["dlg/ch1#001"])
+        unit["target"] = "أهلًا يا {player}!"
+        self.assertTrue(any("changed after proofreading" in e for e in errors_for(unit)))
+
+    def test_valid_findings_summarize(self):
+        errors, summary = self.check(self.finding())
+        self.assertEqual(errors, [])
+        self.assertEqual(summary["severity"]["minor"], 1)
+        self.assertEqual(summary["resolution"]["applied"], 1)
+
+    def test_translator_cannot_sign_findings(self):
+        errors, _ = self.check(self.finding(by="translator-2"))
+        self.assertTrue(any("signed by the unit's translator" in e for e in errors))
+
+    def test_applied_change_must_match_current_target(self):
+        errors, _ = self.check(self.finding(after="احذر."))
+        self.assertTrue(any("no longer matches" in e for e in errors))
+
+    def test_open_decision_blocks_proofread_unit(self):
+        item = self.finding(id="dlg/ch1#001", category="context", resolution="needs_decision")
+        errors, summary = self.check(item)
+        self.assertEqual(summary["open"], ["dlg/ch1#001"])
+        self.assertTrue(any("open needs_decision" in e for e in errors))
+        resolved = self.finding(id="dlg/ch1#001", resolution="resolved", after="مرحبًا يا {player}!")
+        errors, summary = self.check(item, resolved)
+        self.assertEqual(errors, [])
+        self.assertEqual(summary["open"], [])
+
+    def test_unknown_id_and_bad_enum(self):
+        errors, _ = self.check(self.finding(id="nope"), self.finding(severity="huge"))
+        self.assertTrue(any("unknown unit id" in e for e in errors))
+        self.assertTrue(any("severity must be" in e for e in errors))
+
+    def test_findings_command(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "batch-002.jsonl"
+            path.write_text(json.dumps(self.finding(), ensure_ascii=False) + "\n", encoding="utf-8")
+            code, out = run("findings", str(path), "--path", str(FIXTURE))
+        self.assertEqual(code, 0, out)
+        self.assertIn("SEVERITY: minor=1", out)
+        self.assertIn("FINDINGS=1 ERRORS=0", out)
+
 
 if __name__ == "__main__":
     unittest.main()

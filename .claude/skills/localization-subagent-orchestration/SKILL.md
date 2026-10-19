@@ -21,7 +21,14 @@ Generate each bounded contract with:
 
 ```text
 python scripts/make_subagent_brief.py --route <route> --task <task> --scope <paths> --write-mode read-only|write
+python scripts/make_subagent_brief.py --role translator|proofreader --task <task> --scope <paths> --write-mode write
 ```
+
+Use the `translator` and `proofreader` roles from `.agents/roles/` for text
+batches. In Claude Code they are also native subagents with the same names.
+Run them in sequence per batch (translate, then proofread by a different
+agent); different batches may run in parallel when their unit files are
+disjoint.
 
 - Give writers disjoint files; one writer owns each file at a time.
 - Nested delegation is allowed only when children inherit the complete policy

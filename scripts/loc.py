@@ -4,6 +4,7 @@
     python scripts/loc.py normalize [units/]
     python scripts/loc.py search "Save" [--kind image]
     python scripts/loc.py mark --batch batch-003 --status integrated --evidence "build 1.2 patch r4"
+    python scripts/loc.py findings work/proofreading/batch-003.jsonl
     python scripts/loc.py progress --format chat|md|html [--out PATH]
 
 Progress is computed only from unit statuses and qa/LQA_MATRIX.csv, never from
@@ -15,6 +16,7 @@ import argparse
 import csv
 import html
 import importlib.util
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -298,6 +300,9 @@ def cmd_mark(args) -> int:
     if evidence_key and not args.evidence:
         print(f"ERROR status {args.status} requires --evidence (stored as evidence.{evidence_key})")
         return 2
+    if args.status == "proofread" and not args.by:
+        print("ERROR status proofread requires --by with the proofreader's role label")
+        return 2
     before = set(units.validate(files, token_profile()).errors)
     ids = set(args.ids or [])
     changed = 0
@@ -314,8 +319,12 @@ def cmd_mark(args) -> int:
             unit.setdefault("evidence", {})[evidence_key] = args.evidence
         if args.by and args.status == "translated":
             unit["translated_by"] = args.by
-        if args.by and args.status == "proofread":
+        if args.status == "proofread":
             unit["proofread_by"] = args.by
+            unit["proofread_hash"] = units.source_hash(unit.get("target") or "")
+        elif wanted < units.STATUSES.index("proofread"):
+            unit.pop("proofread_by", None)
+            unit.pop("proofread_hash", None)
         changed += 1
     introduced = [e for e in units.validate(files, token_profile()).errors if e not in before]
     if introduced:
@@ -327,6 +336,79 @@ def cmd_mark(args) -> int:
         units.write(unit_file)
     print(f"MARKED={changed} STATUS={args.status}")
     return 0 if changed else 1
+
+
+SEVERITIES = ("blocker", "critical", "major", "minor")
+CATEGORIES = ("meaning", "omission", "context", "terminology", "grammar", "spelling",
+              "punctuation", "style", "voice", "length", "numbers")
+RESOLUTIONS = ("applied", "needs_decision", "rejected", "resolved")
+
+
+def check_findings(findings: list[tuple[str, dict]], by_id: dict) -> tuple[list[str], dict]:
+    """Validate proofreading findings against the units they refer to."""
+    errors: list[str] = []
+    last_change: dict[str, tuple[str, str]] = {}
+    open_items: dict[str, str] = {}
+    for where, item in findings:
+        missing = [k for k in ("id", "severity", "category", "issue", "resolution", "by") if not item.get(k)]
+        if missing:
+            errors.append(f"{where}: missing {', '.join(missing)}")
+            continue
+        ident = item["id"]
+        unit = by_id.get(ident)
+        if unit is None:
+            errors.append(f"{where}: unknown unit id {ident!r}")
+            continue
+        for key, allowed in (("severity", SEVERITIES), ("category", CATEGORIES), ("resolution", RESOLUTIONS)):
+            if item[key] not in allowed:
+                errors.append(f"{where} [{ident}]: {key} must be one of {allowed}")
+        if item["by"] == unit.get("translated_by"):
+            errors.append(f"{where} [{ident}]: finding signed by the unit's translator ({item['by']})")
+        resolution = item["resolution"]
+        if resolution in ("applied", "resolved"):
+            if "after" not in item or (resolution == "applied" and "before" not in item):
+                errors.append(f"{where} [{ident}]: {resolution} needs before/after")
+            else:
+                last_change[ident] = (where, item["after"])
+        if resolution == "needs_decision":
+            open_items[ident] = where
+        elif resolution == "resolved":
+            open_items.pop(ident, None)
+    for ident, (where, after) in last_change.items():
+        if (by_id[ident].get("target") or "") != after:
+            errors.append(f"{where} [{ident}]: unit target no longer matches the recorded 'after'")
+    for ident, where in open_items.items():
+        if units.stage(by_id[ident]) >= units.STATUSES.index("proofread"):
+            errors.append(f"{where} [{ident}]: marked {by_id[ident]['status']} with an open needs_decision finding")
+    summary = {
+        key: {value: sum(1 for _, f in findings if f.get(key) == value) for value in allowed}
+        for key, allowed in (("severity", SEVERITIES), ("category", CATEGORIES), ("resolution", RESOLUTIONS))
+    }
+    summary["open"] = sorted(open_items)
+    return errors, summary
+
+
+def cmd_findings(args) -> int:
+    report = units.Report()
+    by_id = {u.get("id"): u for u in units.all_units(units.load(args.path, report))}
+    findings = []
+    for file in args.files:
+        for number, line in enumerate(file.read_text(encoding="utf-8-sig").splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                findings.append((f"{file}:{number}", json.loads(line)))
+            except json.JSONDecodeError as exc:
+                report.errors.append(f"{file}:{number}: invalid JSON: {exc.msg}")
+    errors, summary = check_findings(findings, by_id)
+    report.errors += errors
+    print_report(report)
+    for key in ("severity", "category", "resolution"):
+        counts = ", ".join(f"{k}={v}" for k, v in summary[key].items() if v)
+        print(f"{key.upper()}: {counts or 'none'}")
+    print(f"OPEN_DECISIONS={len(summary['open'])} {' '.join(summary['open'])}".rstrip())
+    print(f"FINDINGS={len(findings)} ERRORS={len(report.errors)}")
+    return 1 if report.errors else 0
 
 
 def cmd_progress(args) -> int:
@@ -373,6 +455,11 @@ def main(argv=None) -> int:
     p.add_argument("--by", help="agent or person label for translated/proofread")
     p.add_argument("--force", action="store_true", help="allow moving a unit backward")
     p.set_defaults(run=cmd_mark)
+
+    p = sub.add_parser("findings", help="validate and summarize proofreading findings")
+    p.add_argument("files", nargs="+", type=Path)
+    p.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    p.set_defaults(run=cmd_findings)
 
     p = sub.add_parser("progress", help="report progress as chat text, Markdown, or HTML")
     p.add_argument("--path", type=Path, default=units.UNITS_DIR)

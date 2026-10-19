@@ -41,6 +41,8 @@ ordinary translation batch.
 
 Use a representative pilot only when tone, terminology, text type, or the
 translation route is genuinely new. Do not repeat it for every resumed batch.
+Hand every finished batch to an independent proofreader (`arabic-proofreading`
+skill, `proofreader` role); never proofread your own batch.
 If delegation is useful, invoke `localization-subagent-orchestration`; the root
 agent performs deterministic integration checks and risk-based sampling rather
 than retranslating every line.

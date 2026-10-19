@@ -19,6 +19,7 @@ requirements.txt
 glossary.yaml
 .agents/**
 .claude/skills/**
+.claude/agents/**
 config/**
 engines/**
 references/**
