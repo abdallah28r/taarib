@@ -7,6 +7,8 @@ target/*
 !target/README.md
 units/*
 !units/README.md
+state/*
+!state/README.md
 reports/PROGRESS.md
 reports/progress.html
 backups/*

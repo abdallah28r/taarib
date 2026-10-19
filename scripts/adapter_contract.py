@@ -12,7 +12,8 @@ Checks, in order:
                  with the same ids and untouched files left byte-identical
   isolation      the game root is byte-identical after every step
 
-All work happens in temporary directories. A pass proves the adapter on this
+All work happens in temporary directories, and only the adapter's inventory
+files are copied or hashed, so a multi-gigabyte game stays cheap. A pass proves the adapter on this
 game's files; it does not prove the game renders Arabic correctly.
 """
 from __future__ import annotations
@@ -49,12 +50,18 @@ def pseudo(source: str) -> str:
     return f"{PSEUDO_PREFIX}{source}{PSEUDO_SUFFIX}"
 
 
-def tree_hashes(root: Path) -> dict[str, str]:
-    return {
-        path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in sorted(root.rglob("*"))
-        if path.is_file()
-    }
+def listing(root: Path) -> dict[str, tuple[int, int]]:
+    """Size and modification time of every file: cheap enough for a multi-GB game."""
+    found = {}
+    for path in root.rglob("*"):
+        if path.is_file():
+            stat = path.stat()
+            found[path.relative_to(root).as_posix()] = (stat.st_size, stat.st_mtime_ns)
+    return found
+
+
+def file_hashes(root: Path, paths) -> dict[str, str]:
+    return {rel: hashlib.sha256((root / rel).read_bytes()).hexdigest() for rel in paths if (root / rel).is_file()}
 
 
 class Result:
@@ -74,19 +81,22 @@ def run_contract(adapter_path: Path, game_root: Path, options: dict | None = Non
     """Run every check; an exception inside the adapter fails the step it happened in."""
     result = Result()
     game_root = Path(game_root).resolve()
-    before = tree_hashes(game_root)
+    before = listing(game_root)
+    hashed: dict[str, str] = {}
     try:
-        _run_checks(result, adapter_path, game_root, options, before)
+        _run_checks(result, adapter_path, game_root, options, hashed)
     except Exception as exc:  # the adapter is untrusted code under test
         names = ("inventory", "extract", "deterministic", "read-back", "identity", "round-trip")
         step = names[len(result.checks)] if len(result.checks) < len(names) else "contract"
         result.add(step, False, f"{type(exc).__name__}: {exc}")
-    after = tree_hashes(game_root)
-    result.add("isolation", after == before, "" if after == before else "game root was modified")
+    after = listing(game_root)
+    changed = sorted(set(before) ^ set(after)) + [p for p in before if p in after and before[p] != after[p]]
+    changed += [p for p, digest in file_hashes(game_root, hashed).items() if hashed[p] != digest]
+    result.add("isolation", not changed, "" if not changed else f"game root was modified: {sorted(set(changed))[:3]}")
     return result
 
 
-def _run_checks(result: Result, adapter_path: Path, game_root: Path, options: dict | None, before: dict) -> None:
+def _run_checks(result: Result, adapter_path: Path, game_root: Path, options: dict | None, hashed: dict) -> None:
     adapter = base.load_adapter(adapter_path, game_root, options)
 
     inventory = adapter.inventory()
@@ -94,6 +104,7 @@ def _run_checks(result: Result, adapter_path: Path, game_root: Path, options: di
     if not result.add("inventory", bool(inventory) and not missing,
                       f"{len(inventory)} files" if not missing else f"missing {missing[:3]}"):
         return
+    hashed.update(file_hashes(game_root, inventory))
 
     units = adapter.extract()
     report = loc_units.validate([loc_units.UnitFile(Path("<extract>"), units)], adapter.token_profile)
@@ -121,7 +132,9 @@ def _run_checks(result: Result, adapter_path: Path, game_root: Path, options: di
     with tempfile.TemporaryDirectory() as temporary:
         out, copy = Path(temporary) / "out", Path(temporary) / "game"
         out.mkdir()
-        shutil.copytree(game_root, copy)
+        for rel in inventory:  # only the text files, so huge games stay cheap
+            (copy / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(game_root / rel, copy / rel)
         written = adapter.rebuild([{**u, "target": targets.get(u["id"], "")} for u in units], out)
         escaped = [p for p in written if not (out / p).resolve().is_relative_to(out.resolve())]
         for rel in written:
@@ -130,7 +143,8 @@ def _run_checks(result: Result, adapter_path: Path, game_root: Path, options: di
         expected = {**sources, **targets}
         shown = adapter.read_back(copy)
         after_ids = [u["id"] for u in base.load_adapter(adapter_path, copy, options).extract()]
-        untouched = [p for p in before if p not in written and tree_hashes(copy).get(p) != before[p]]
+        copied = file_hashes(copy, inventory)
+        untouched = [p for p in inventory if p not in written and copied.get(p) != hashed[p]]
         problems = []
         if escaped:
             problems.append(f"wrote outside out_dir: {escaped[:3]}")

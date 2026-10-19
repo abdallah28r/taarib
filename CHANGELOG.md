@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-19 — Phase 4: phase gates and Claude Code hooks
+
+- Added `scripts/loc_pipeline.py` and `loc.py next | gate | reopen | accept`.
+  Seven phases (intake, discovery, extraction, localization, integration,
+  playtest, release) advance only when file-based exit criteria pass; the
+  extraction gate runs the adapter contract and records it against the
+  adapter and game-text fingerprints. State lives in `state/pipeline.json`;
+  `workflow.current_route` was removed so the phase has one source of truth.
+- Added `.claude/settings.json` hooks via `scripts/claude_hooks.py`: block
+  writes to an existing game file without a backup, any write under backups,
+  and shell commands that write into the game folder without a backup-first
+  tool; re-validate units, findings, and YAML after edits; regenerate
+  `.claude/` after skill or role edits; show `loc.py next` at session start.
+- The adapter contract now copies and hashes only inventory files, so it
+  stays cheap on multi-gigabyte games.
+
 ## 2026-10-19 — Phase 3: adapters and the Ren'Py reference game
 
 - Added the `Adapter` interface (`adapters/base.py`): inventory, extract,

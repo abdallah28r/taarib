@@ -6,6 +6,12 @@ format integrity, and a reversible installation. Explicit user instructions and
 
 ## Start here
 
+0. Run `python scripts/loc.py next`: it prints the current phase, what still
+   blocks it, and which route to load. Phases advance only through
+   `python scripts/loc.py gate`, which re-checks files instead of trusting a
+   summary. Record `loc.py accept` only on the user's explicit acceptance in
+   chat, and use `loc.py reopen <phase> --reason ...` for a game update or a
+   finding that sends work back.
 1. Read `PROJECT.yaml`, then `STATUS.md` and only the glossary sections needed.
 2. Select the narrow task route with
    `python scripts/context_plan.py <route>`. Read only the returned files.

@@ -20,6 +20,7 @@ glossary.yaml
 .agents/**
 .claude/skills/**
 .claude/agents/**
+.claude/settings.json
 config/**
 engines/**
 references/**
@@ -36,6 +37,7 @@ knowledge/GENERAL_LOCALIZATION_KNOWLEDGE.md
 source/README.md
 target/README.md
 units/README.md
+state/README.md
 backups/README.md
 fonts/README.md
 fonts/selected/README.md

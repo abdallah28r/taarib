@@ -1,0 +1,43 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "python \"$CLAUDE_PROJECT_DIR/scripts/claude_hooks.py\" pre-tool",
+            "timeout": 30,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "python \"$CLAUDE_PROJECT_DIR/scripts/claude_hooks.py\" post-tool",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "python \"$CLAUDE_PROJECT_DIR/scripts/claude_hooks.py\" session-start",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

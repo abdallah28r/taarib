@@ -18,8 +18,9 @@ game:
   token_profile: "generic"
 
 workflow:
-  current_route: "discovery"
   engine_profile: ""
+  adapter: ""  # e.g. adapters/renpy.py; proven by scripts/adapter_contract.py before bulk translation
+  adapter_options: {}
   tools_path: "C:\\LocTools"
   mode: "continuous"
   approval_checkpoints: false
@@ -39,7 +40,7 @@ workflow:
   batch_size_is_ceiling: true
   review_policy: "structural-100-percent-adaptive-semantic"
   full_text_review: "only-explicit-high-risk-or-release"
-  # أسئلة البداية تُطرح دفعة واحدة. حدّث current_route عند انتقال المرحلة؛ الأسئلة غير المانعة تُجمع في STATUS.md.
+  # أسئلة البداية تُطرح دفعة واحدة. المرحلة الحالية في state/pipeline.json وتتقدم فقط بـ loc.py gate؛ الأسئلة غير المانعة تُجمع في STATUS.md.
 
 image_localization:
   policy_file: "config/image-localization-policy.yaml"

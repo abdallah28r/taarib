@@ -7,6 +7,10 @@
     python scripts/loc.py findings work/proofreading/batch-003.jsonl
     python scripts/loc.py extract --adapter adapters/renpy.py --game <game_root> --out units/game.jsonl
     python scripts/loc.py rebuild --adapter adapters/renpy.py --game <game_root> --out builds/r1
+    python scripts/loc.py next                  # current phase, what blocks it, what to load
+    python scripts/loc.py gate [--check]        # advance when every exit criterion passes
+    python scripts/loc.py reopen extraction --reason "game update 1.1"
+    python scripts/loc.py accept --note "user accepted build r3 on 2026-11-02"
     python scripts/loc.py progress --format chat|md|html [--out PATH]
 
 Progress is computed only from unit statuses and qa/LQA_MATRIX.csv, never from
@@ -38,6 +42,7 @@ def _load(name, path=None):
 
 units = _load("loc_units")
 adapter_base = _load("loc_adapter_base", ROOT / "adapters" / "base.py")
+pipeline = _load("loc_pipeline")
 
 LABELS = {
     "extracted": "مستخرج",
@@ -450,6 +455,76 @@ def cmd_rebuild(args) -> int:
     return 0
 
 
+def project_of(args):
+    return pipeline.Project(project_file=args.project, units_dir=args.units, state_file=args.state, qa_file=args.qa)
+
+
+def print_checks(checks) -> None:
+    for ok, message in checks:
+        print(f"{'PASS' if ok else 'TODO'} {message}")
+
+
+def cmd_next(args) -> int:
+    project = project_of(args)
+    phase, checks = pipeline.evaluate(project)
+    index = pipeline.PHASES.index(phase)
+    print(f"PHASE {index + 1}/{len(pipeline.PHASES)}: {phase}")
+    blocking = [(ok, m) for ok, m in checks if not ok]
+    print_checks(blocking or checks)
+    print(f"LOAD: {pipeline.ROUTES[phase]}")
+    if not blocking and phase != pipeline.PHASES[-1]:
+        print("READY: run python scripts/loc.py gate")
+    return 0
+
+
+def cmd_gate(args) -> int:
+    project = project_of(args)
+    phase = project.state()["phase"]
+    if phase == "extraction":
+        settings = project.settings()
+        flow, game = settings.get("workflow", {}), settings.get("game", {}).get("install_path", "")
+        if pipeline.filled(flow.get("adapter", "")) and pipeline.filled(game):
+            contract = _load("adapter_contract")
+            result = contract.run_contract(project.resolve(flow["adapter"]), Path(game), flow.get("adapter_options") or {})
+            for name, ok, detail in result.checks:
+                print(f"{'PASS' if ok else 'FAIL'} contract {name}{': ' + detail if detail else ''}")
+            if not args.check:
+                pipeline.record_contract(project, result.ok)
+    if args.check:
+        phase, checks = pipeline.evaluate(project)
+        print_checks(checks)
+        ready = all(ok for ok, _ in checks)
+        print(f"GATE {phase}: {'READY' if ready else 'BLOCKED'}")
+        return 0 if ready else 1
+    moved, now_phase, checks = pipeline.advance(project)
+    print_checks(checks)
+    if moved:
+        print(f"GATE {phase}: PASSED -> {now_phase}")
+        return 0
+    print(f"GATE {phase}: BLOCKED")
+    return 1
+
+
+def cmd_reopen(args) -> int:
+    try:
+        pipeline.reopen(project_of(args), args.phase, args.reason)
+    except ValueError as exc:
+        print(f"ERROR {exc}")
+        return 2
+    print(f"REOPENED {args.phase}")
+    return 0
+
+
+def cmd_accept(args) -> int:
+    try:
+        pipeline.accept(project_of(args), args.note)
+    except ValueError as exc:
+        print(f"ERROR {exc}")
+        return 2
+    print("ACCEPTANCE_RECORDED")
+    return 0
+
+
 def cmd_findings(args) -> int:
     report = units.Report()
     by_id = {u.get("id"): u for u in units.all_units(units.load(args.path, report))}
@@ -535,6 +610,25 @@ def main(argv=None) -> int:
                    help="lowest status whose target is built (default proofread)")
     p.add_argument("--option", action="append", default=[], help="adapter option key=value")
     p.set_defaults(run=cmd_rebuild)
+
+    def with_project(p):
+        p.add_argument("--project", type=Path, default=ROOT / "PROJECT.yaml", help=argparse.SUPPRESS)
+        p.add_argument("--units", type=Path, default=units.UNITS_DIR, help=argparse.SUPPRESS)
+        p.add_argument("--state", type=Path, default=ROOT / "state" / "pipeline.json", help=argparse.SUPPRESS)
+        p.add_argument("--qa", type=Path, default=QA_MATRIX, help=argparse.SUPPRESS)
+        return p
+
+    with_project(sub.add_parser("next", help="show the current phase and what blocks it")).set_defaults(run=cmd_next)
+    p = with_project(sub.add_parser("gate", help="advance the phase when every exit criterion passes"))
+    p.add_argument("--check", action="store_true", help="evaluate without advancing or recording")
+    p.set_defaults(run=cmd_gate)
+    p = with_project(sub.add_parser("reopen", help="return to an earlier phase"))
+    p.add_argument("phase", choices=pipeline.PHASES)
+    p.add_argument("--reason", required=True)
+    p.set_defaults(run=cmd_reopen)
+    p = with_project(sub.add_parser("accept", help="record the user's acceptance of the playtest build"))
+    p.add_argument("--note", required=True, help="the user's words, build, and date")
+    p.set_defaults(run=cmd_accept)
 
     p = sub.add_parser("findings", help="validate and summarize proofreading findings")
     p.add_argument("files", nargs="+", type=Path)

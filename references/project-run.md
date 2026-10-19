@@ -37,6 +37,17 @@ boundary. Do not install unless the intended user-owned copy is unambiguous.
 Record answers in `PROJECT.yaml`/`STATUS.md`; do not ask again on
 every resumed session. A user may revise any preference later.
 
+## Phases and gates
+
+`python scripts/loc.py next` shows the phase and its open exit criteria;
+`python scripts/loc.py gate` advances only when all pass. Phases: intake →
+discovery → extraction (adapter contract passed, units extracted) →
+localization (every translatable unit proofread, no open review) →
+integration (every unit integrated into a build) → playtest (no open
+blocker/critical defect, user acceptance recorded) → release. The gates are
+the stop rule: when `next` reports a phase ready, gate it and move on instead
+of reviewing again.
+
 ## Continuous execution after intake
 
 Move through discovery → focused localization-mod research and evidence-based
