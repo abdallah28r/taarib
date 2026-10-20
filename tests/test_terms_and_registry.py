@@ -92,6 +92,20 @@ class GlossaryConformanceTests(unittest.TestCase):
             self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["term_exceptions"], ["Back"])
 
 
+class CommandDocumentationTests(unittest.TestCase):
+    def test_every_loc_command_is_in_the_command_table(self):
+        import re
+        import subprocess
+        help_text = subprocess.run([sys.executable, str(ROOT / "scripts" / "loc.py"), "--help"],
+                                   capture_output=True, text=True, encoding="utf-8").stdout
+        commands = re.search(r"\{([a-z,]+)\}", help_text).group(1).split(",")
+        reference = (ROOT / "references" / "translation-units.md").read_text(encoding="utf-8")
+        table = reference[reference.index("## Commands"):reference.index("## Showing progress")]
+        missing = [c for c in commands if f"| `{c}" not in table]
+        self.assertEqual(missing, [], "add these commands to the table in references/translation-units.md")
+        self.assertGreaterEqual(len(commands), 18)
+
+
 class ScriptRegistryTests(unittest.TestCase):
     def test_template_registry_is_valid_and_empty(self):
         self.assertEqual(registry.validate(), [])

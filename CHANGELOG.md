@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-21 — loc.py commands made discoverable
+
+- One table in `references/translation-units.md` lists all 18 `loc.py`
+  commands with their phase and when to use them; a test fails if a new
+  command is missing from it.
+- Every `--help` line now says when to use the command.
+- `pseudo` is now in the extraction reference and QA skill, `estimate` in the
+  new-game run before the first batch, and `AGENTS.md` tells Codex to run
+  `loc.py dashboard` after editing `PLAN.md` or the LQA matrix.
+
 ## 2026-10-21 — Batch plan rule and reference list
 
 - The full batch plan is written as a checklist under `## الدفعات` in

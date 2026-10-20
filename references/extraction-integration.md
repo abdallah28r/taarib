@@ -17,6 +17,10 @@ and commands unless runtime evidence proves visibility.
 - Prove extract → rebuild without semantic changes before bulk translation by
   passing `python scripts/adapter_contract.py` for the game's adapter on a copy
   of the actual build (see `adapters/README.md`).
+- Then build a pseudo-Arabic copy with `python scripts/loc.py pseudo --adapter
+  <adapter> --game <game_root> --out builds/pseudo` and check it on a copy of
+  the game (with launch authority or by the user): Arabic shaping, direction,
+  fonts, and longer lines show up before any real translation is spent.
 
 ## Updates
 

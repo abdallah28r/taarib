@@ -56,6 +56,8 @@ tool/route selection → extraction and small
 round-trip → contextual translation (including opted-in images) → structural
 and visual QA → validated build → checked installation on the user's copy.
 Parallelize useful independent work under the chosen subagent preference.
+Before the first bulk translation batch, run `python scripts/loc.py estimate`
+to size batches and record the result in `PLAN.md`.
 Run routine tests, fix bounded failures, and resume from `loc.py next` and `PLAN.md` without
 requesting phase-by-phase approval. Report only meaningful progress or a real
 blocker; do not present each completed phase as a question.

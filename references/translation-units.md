@@ -48,16 +48,32 @@ unit `extracted` with `--force`, then run `normalize`.
 
 ## Commands
 
-```text
-python scripts/loc.py validate                 # after every batch; zero errors before integration
-python scripts/loc.py search "Press Start"     # sources and targets, text and images
-python scripts/loc.py mark --batch batch-004 --status translated --by translator-1
-python scripts/loc.py mark --batch batch-004 --status integrated --evidence "1.0.3 patch r2"
-python scripts/loc.py progress --format chat|md|html
-python scripts/loc.py terms                    # glossary conformance; the localization gate needs zero misses
-python scripts/loc.py extract --adapter adapters/renpy.py --game <game_root> --out units/game.jsonl
-python scripts/loc.py rebuild --adapter adapters/renpy.py --game <game_root> --out builds/r1
-```
+Every command is `python scripts/loc.py <command>`; `<command> --help` gives
+its options. This table is the one map of when to use each.
+
+| Phase | Command | When |
+| --- | --- | --- |
+| any | `next` | Session start or when unsure: phase, blockers, what to load. |
+| any | `gate` (`--check`) | When `next` says ready; never skip it to move on. |
+| any | `reopen <phase> --reason` | A game update or finding sends work back. |
+| any | `dashboard` | In Codex after editing `PLAN.md` (Claude Code hooks do it). |
+| any | `progress --format chat\|md\|html` | When the user asks, or per `reporting.progress_in_chat`. |
+| extraction | `extract --adapter --game --out` | Once the adapter contract passes. |
+| extraction | `pseudo --adapter --game --out` | Before translating: install on a copy to test Arabic rendering and length. |
+| extraction | `estimate` | Before the first bulk batch, to size batches; record it in `PLAN.md`. |
+| localization | `mark --status translated --by` | Translator, after writing a batch's targets. |
+| localization | `validate` | After every batch and every edit; zero errors before integration. |
+| localization | `terms` (`--allow <id> <term>`) | Proofreader first step; the gate needs zero misses. |
+| localization | `findings <file>` | Proofreader, after recording findings. |
+| localization | `mark --status proofread --by` | Proofreader, for units with no open finding. |
+| any | `search "<text>"` | Find a string or image text before asking or editing. |
+| integration | `rebuild --adapter --game --out` | Build files from proofread units, outside the game. |
+| integration | `mark --status integrated --evidence` | After installing a build, naming it. |
+| playtest | `mark --status tested --evidence` | Only for what was observed in the running game. |
+| playtest | `accept --note` | Only on the user's explicit acceptance in chat. |
+| maintenance | `update --adapter --game --path` (`--dry-run`) | A new game version arrived; then `reopen`. |
+| maintenance | `normalize` | After resetting a changed unit to `extracted`. |
+| release | `tmx --out <file>` | Keep a translation memory for later games. |
 
 `extract` and `rebuild` go through an adapter (`adapters/README.md`).
 `rebuild` writes only units at `proofread` or later unless `--min-status` says

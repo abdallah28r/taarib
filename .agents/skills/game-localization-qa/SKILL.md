@@ -23,6 +23,8 @@ live in those references and are not repeated here.
 
 - Parse the native format first, then run `loc_qa.py` or `format_qa.py` for the
   supported interchange artifact.
+- For rendering questions before translation exists, use the pseudo-Arabic
+  build from `loc.py pseudo` rather than waiting for real text.
 - Treat lost tokens, duplicate IDs, schema/parse errors, encoding corruption,
   and missing required entries as blockers.
 - Use 100% deterministic structural checks. Use semantic sampling targeted by
