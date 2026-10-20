@@ -29,6 +29,7 @@ def _load(name, path):
 
 
 units = _load("loc_units", ROOT / "scripts" / "loc_units.py")
+tools = _load("loc_tools", ROOT / "scripts" / "loc_tools.py")
 
 PHASES = ("intake", "discovery", "extraction", "localization", "integration", "playtest", "release")
 ROUTES = {
@@ -54,6 +55,7 @@ class Project:
         self.units_dir = units_dir or self.root / "units"
         self.state_file = state_file or self.root / "state" / "pipeline.json"
         self.qa_file = qa_file or self.root / "qa" / "LQA_MATRIX.csv"
+        self.glossary_file = self.root / "glossary.yaml"
 
     def settings(self) -> dict:
         import yaml
@@ -169,11 +171,15 @@ def check_localization(project: Project, settings: dict, state: dict) -> list[tu
     all_units, report = unit_report(project, settings)
     pending = [u for u in all_units if units.decision(u) == "translate" and units.stage(u) < 2]
     review = [u for u in all_units if units.decision(u) == "review"]
+    import yaml
+    glossary = yaml.safe_load(project.glossary_file.read_text(encoding="utf-8")) if project.glossary_file.is_file() else {}
+    terms = tools.check_terms(all_units, glossary or {})
     return [
         (bool(all_units), "توجد وحدات في units/"),
         (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
         (not pending, f"كل وحدة قابلة للترجمة مدققة لغويًا (المتبقي: {len(pending)})"),
         (not review, f"لا وحدة تنتظر قرارًا (بانتظار قرار: {len(review)})"),
+        (not terms, f"المصطلحات تطابق القاموس أو لها استثناء مسجل (المخالفات: {len(terms)})"),
     ]
 
 

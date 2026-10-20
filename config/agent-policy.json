@@ -74,6 +74,16 @@
       "effort": "medium",
       "use_for": "dialogue, narrative, character voice, and contextual bulk translation"
     },
+    "research": {
+      "tier": "light",
+      "effort": "medium",
+      "use_for": "read-only research on engines, tools, mods, and game versions; returns a short evidence-backed answer"
+    },
+    "image_work": {
+      "tier": "standard",
+      "effort": "medium",
+      "use_for": "localizing text baked into an assigned set of images, isolating their visual context from the root agent"
+    },
     "proofreading": {
       "tier": "standard",
       "effort": "medium",

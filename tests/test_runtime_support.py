@@ -63,7 +63,8 @@ class RuntimeSupportTests(unittest.TestCase):
 
     def test_shipped_roles(self):
         roles = sync_runtime.roles()
-        self.assertEqual(sorted(roles), ["proofreader", "translator"])
+        self.assertEqual(sorted(roles), ["image-localizer", "proofreader", "researcher", "translator"])
+        self.assertEqual(roles["researcher"][0]["tools"], ["Read", "Grep", "Glob", "WebSearch", "WebFetch"])
         self.assertEqual(roles["proofreader"][0]["skill"], "arabic-proofreading")
         self.assertEqual(roles["translator"][0]["route"], "contextual_translation")
 

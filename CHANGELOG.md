@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-21 — Phase 6: glossary check, script rule, images, roles
+
+- `loc.py terms` checks every translated unit against `glossary.yaml`
+  (general, game-specific, names, keep-Latin, and context rules), folding
+  Arabic spelling variants and the article/proclitics. A deliberate variant is
+  recorded per unit with `--allow <id> <term>`. The localization gate now
+  requires zero open misses, and the proofreading skill runs it first.
+- Explicit rule in `AGENTS.md` for when agents write scripts, with a registry
+  (`tools/project-scripts.json`, validated by `check_project_scripts.py`)
+  listed at every session start so later sessions and models reuse them.
+- `references/image-localization.md` condensed from 218 to 145 lines and the
+  skill from 66 to 33 without dropping a rule; the policy YAML is now optional
+  context. The images route went from 7,521 to 4,765 estimated tokens.
+- New roles: `researcher` (read-only, light tier, web tools) and
+  `image-localizer` (standard tier), with `research` and `image_work` routes.
+
 ## 2026-10-21 — Phase 5: efficiency, PLAN.md, and the dashboard
 
 - Token waste: `context_plan.py` no longer lists the skill file it was invoked

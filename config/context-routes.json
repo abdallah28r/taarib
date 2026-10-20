@@ -49,8 +49,8 @@
     },
     "images": {
       "skill": ".agents/skills/game-image-localization/SKILL.md",
-      "required": ["references/translation-units.md", "config/image-localization-policy.yaml", "references/image-localization.md"],
-      "optional": ["references/font-sourcing.md", "glossary.yaml", "engines/<engine>.md"]
+      "required": ["references/translation-units.md", "references/image-localization.md"],
+      "optional": ["references/font-sourcing.md", "glossary.yaml", "engines/<engine>.md", "config/image-localization-policy.yaml"]
     },
     "integration": {
       "skill": ".agents/skills/game-localization-engineering/SKILL.md",

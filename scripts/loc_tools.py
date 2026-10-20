@@ -137,3 +137,60 @@ PSEUDO_PREFIX = "نص عربي تجريبي: "
 def pseudo_targets(all_units: list[dict]) -> list[dict]:
     """Arabic-looking, longer targets that keep every token, for testing rendering before translating."""
     return [{**u, "target": PSEUDO_PREFIX + u["source"]} if units.decision(u) != "keep" else u for u in all_units]
+
+
+# ----- glossary conformance ---------------------------------------------------
+
+TASHKEEL_RE = re.compile(r"[\u064B-\u0652\u0670\u0640]")
+ARTICLE_RE = re.compile(r"^(?:[وفبك]?ال|لل)(?=\w{2})")
+
+
+def normalize_arabic(text: str) -> str:
+    """Fold spelling variants so a glossary form matches inflected text."""
+    text = TASHKEEL_RE.sub("", text)
+    text = text.translate(str.maketrans({"أ": "ا", "إ": "ا", "آ": "ا", "ى": "ي", "ة": "ه"}))
+    return " ".join(ARTICLE_RE.sub("", word) for word in text.split())
+
+
+def glossary_entries(glossary: dict) -> list[tuple[str, list[str], str]]:
+    """(English term, accepted Arabic forms, 'translate' | 'keep_latin'), longest terms first."""
+    entries: dict[str, set[str]] = {}
+    for section in ("general", "game_specific", "names"):
+        for term, arabic in (glossary.get(section) or {}).items():
+            if isinstance(term, str) and isinstance(arabic, str) and arabic.strip() and not term.startswith("["):
+                entries.setdefault(term, set()).add(arabic)
+    for rule in glossary.get("context_rules") or []:
+        forms = {v for v in (rule.get("contexts") or {}).values() if isinstance(v, str)}
+        if rule.get("term") and forms:
+            entries[rule["term"]] = forms  # any documented context form is acceptable
+    result = [(term, sorted(forms), "translate") for term, forms in entries.items()]
+    result += [(term, [term], "keep_latin") for term in glossary.get("keep_latin") or []
+               if isinstance(term, str) and not term.startswith("[")]
+    return sorted(result, key=lambda entry: -len(entry[0]))
+
+
+def check_terms(all_units: list[dict], glossary: dict) -> list[tuple[str, str, str]]:
+    """(unit id, term, expected) for every translated unit whose target misses an approved term."""
+    entries = glossary_entries(glossary)
+    patterns = [(re.compile(rf"(?<![\w]){re.escape(term)}(?![\w])", re.IGNORECASE), term, forms, kind)
+                for term, forms, kind in entries]
+    problems = []
+    for unit in all_units:
+        target = unit.get("target") or ""
+        if not target or units.decision(unit) != "translate" or units.stage(unit) < 1:
+            continue
+        exceptions = set(unit.get("term_exceptions") or [])
+        source = unit["source"]
+        folded_target = normalize_arabic(target)
+        for pattern, term, forms, kind in patterns:
+            match = pattern.search(source)
+            if not match or term in exceptions:
+                continue
+            source = source[:match.start()] + " " * len(match.group(0)) + source[match.end():]
+            if kind == "keep_latin":
+                ok = term in target
+            else:
+                ok = any(normalize_arabic(form) in folded_target for form in forms)
+            if not ok:
+                problems.append((unit["id"], term, " | ".join(forms)))
+    return problems

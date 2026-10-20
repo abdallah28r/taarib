@@ -23,7 +23,7 @@ REQUIRED = ("id", "kind", "file", "source", "source_hash", "status")
 KEY_ORDER = (
     "id", "kind", "file", "key", "asset", "box", "source", "target", "status",
     "decision", "batch", "context", "max_length", "translated_by", "proofread_by",
-    "evidence", "notes", "previous_target", "proofread_hash", "source_hash",
+    "evidence", "notes", "term_exceptions", "previous_target", "proofread_hash", "source_hash",
 )
 # Evidence a unit must carry before it may claim these stages.
 STAGE_EVIDENCE = {"integrated": "integrated_build", "tested": "tested"}

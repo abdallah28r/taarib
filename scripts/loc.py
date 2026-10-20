@@ -5,6 +5,7 @@
     python scripts/loc.py search "Save" [--kind image]
     python scripts/loc.py mark --batch batch-003 --status integrated --evidence "build 1.2 patch r4"
     python scripts/loc.py findings work/proofreading/batch-003.jsonl
+    python scripts/loc.py terms [--allow <id> <term>]   # glossary conformance
     python scripts/loc.py extract --adapter adapters/renpy.py --game <game_root> --out units/game.jsonl
     python scripts/loc.py rebuild --adapter adapters/renpy.py --game <game_root> --out builds/r1
     python scripts/loc.py update --adapter adapters/renpy.py --game <game_root> --path units/game.jsonl
@@ -770,6 +771,40 @@ def cmd_pseudo(args) -> int:
     return 0
 
 
+def load_glossary(path: Path) -> dict:
+    import yaml
+    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+
+
+def cmd_terms(args) -> int:
+    """Check approved glossary terms in translated units, or record a deliberate exception."""
+    report = units.Report()
+    files = units.load(args.path, report)
+    if args.allow:
+        ident, term = args.allow
+        for unit_file in files:
+            for unit in unit_file.units:
+                if unit.get("id") == ident:
+                    unit["term_exceptions"] = sorted(set(unit.get("term_exceptions") or []) | {term})
+                    units.write(unit_file)
+                    auto_dashboard(args.path)
+                    print(f"EXCEPTION_RECORDED {ident} {term}")
+                    return 0
+        print(f"ERROR unknown unit id {ident!r}")
+        return 2
+    problems = tools.check_terms(units.all_units(files), load_glossary(args.glossary))
+    for ident, term, expected in problems[:args.limit]:
+        print(f"WARN  [{ident}] {term!r} should read: {expected}")
+    if len(problems) > args.limit:
+        counts = Counter(term for _, term, _ in problems)
+        print(f"WARN  ... {len(problems) - args.limit} more; by term: "
+              + "; ".join(f"{n}x {t}" for t, n in counts.most_common(8)))
+    print(f"TERM_PROBLEMS={len(problems)}")
+    if problems:
+        print("Fix the target, or if the variant is correct here: loc.py terms --allow <id> <term>")
+    return 1 if problems else 0
+
+
 def cmd_dashboard(args) -> int:
     out = write_dashboard(args.units, args.qa, args.out, project_of(args))
     print(f"DASHBOARD={out}")
@@ -847,6 +882,14 @@ def main(argv=None) -> int:
     p = with_project(sub.add_parser("accept", help="record the user's acceptance of the playtest build"))
     p.add_argument("--note", required=True, help="the user's words, build, and date")
     p.set_defaults(run=cmd_accept)
+
+    p = sub.add_parser("terms", help="check glossary terms in translated units")
+    p.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    p.add_argument("--glossary", type=Path, default=ROOT / "glossary.yaml")
+    p.add_argument("--limit", type=int, default=LINE_LIMIT)
+    p.add_argument("--allow", nargs=2, metavar=("ID", "TERM"),
+                   help="record that this unit deliberately uses another form of TERM")
+    p.set_defaults(run=cmd_terms)
 
     p = sub.add_parser("update", help="merge a game update into an existing units file")
     p.add_argument("--adapter", required=True, type=Path)

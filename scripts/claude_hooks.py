@@ -187,6 +187,11 @@ def _post_tool_problem(event: dict, root: Path) -> str | None:
         if lines > PLAN_MAX_LINES:
             return (f"PLAN.md has {lines} lines (limit {PLAN_MAX_LINES}). Remove finished items and anything "
                     "that lives elsewhere (counts, phase, backups, command logs) so every session reads less.")
+    elif rel == "tools/project-scripts.json":
+        registry = _load("check_project_scripts", ROOT / "scripts" / "check_project_scripts.py")
+        errors = registry.validate(path, root)
+        if errors:
+            return "tools/project-scripts.json has problems:\n" + "\n".join(errors)
     elif rel in YAML_FILES:
         check_yaml = _load("check_yaml", ROOT / "scripts" / "check_yaml.py")
         problems = check_yaml.check_file(path)
@@ -210,6 +215,9 @@ def session_start(root: Path = ROOT) -> str:
     with contextlib.redirect_stdout(out):
         loc.main(["next"])
         loc.main(["dashboard"])
+    scripts = _load("check_project_scripts", ROOT / "scripts" / "check_project_scripts.py").summary()
+    if scripts:
+        out.write("Project scripts already written (reuse before writing new ones):\n" + "\n".join(scripts) + "\n")
     return "Localization project status (python scripts/loc.py next):\n" + out.getvalue()
 
 

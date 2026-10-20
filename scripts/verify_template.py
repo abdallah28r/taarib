@@ -23,6 +23,7 @@ def main(argv=None) -> int:
         ("unit-tests", [py, "-m", "unittest", "discover", "-s", "tests"]),
         ("compile", [py, "-m", "compileall", "-q", "scripts", "tests"]),
         ("yaml-keys", [py, "scripts/check_yaml.py"]),
+        ("project-scripts", [py, "scripts/check_project_scripts.py"]),
         ("runtime-files", [py, "scripts/sync_runtime.py", "--check"]),
         ("translation-units", [py, "scripts/loc.py", "validate"]),
         ("renpy-adapter-contract", [py, "scripts/adapter_contract.py", "--adapter", "adapters/renpy.py",

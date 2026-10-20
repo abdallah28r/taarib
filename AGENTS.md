@@ -108,6 +108,23 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
   missing authority, an unresolved meaning-changing choice, a safety blocker,
   or the planned user playtest/acceptance gate.
 
+## Scripts you write
+
+You may write scripts whenever they help; no approval is needed. Write one when
+an operation will repeat (three or more times, or once per batch or file), is
+deterministic (parsing, counting, converting, checking, hashing), or a mistake
+would be costly. Do not write one for one-off exploration. First look in
+`tools/project-scripts.json` and `scripts/` for one that already exists.
+
+Put game-specific scripts in `work/tools/` (an adapter goes in `adapters/`),
+with a docstring, `--help`, and one real run on project data. Register each in
+`tools/project-scripts.json` (`python scripts/check_project_scripts.py`
+validates it); session start lists them, so later sessions and other models
+reuse them instead of rebuilding. Scripts never install packages, download
+models, or write into the game folder except through the backup-first tools.
+If one would help other games, set `reusable: true` and propose promoting it,
+with a test, through `localization-project-maintenance`.
+
 ## Records
 
 - `units/**/*.jsonl`: one translation unit per string and per image text

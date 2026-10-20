@@ -29,8 +29,11 @@ Add `references/ui-style.md`, `references/dialogue-style.md`, or
 ## One pass per batch
 
 1. Select the batch's units at `translated` (`loc.py search` or the batch
-   file). Run `python scripts/loc.py validate` first; structural errors go
-   back to the translator, not into proofreading.
+   file). Run `python scripts/loc.py validate` and `python scripts/loc.py
+   terms --path <batch file>` first; structural errors go back to the
+   translator. Each glossary miss is either fixed (a `terminology` finding)
+   or, when the inflected variant is right, allowed with `loc.py terms
+   --allow <id> <term>`. The localization gate requires zero open misses.
 2. Read **every** unit in the batch once against its source and context, using
    `references/proofreading-checklist.md`. Units flagged as high risk
    (ambiguity, wordplay, sensitive scenes, grammar driven by variables) use the

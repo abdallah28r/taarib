@@ -37,7 +37,10 @@ blocking question; keep the unit at `extracted` or `translated` until resolved).
   still lives in the region manifest checked by `check_image_regions.py`.
 - Optional: `key` (native key), `target`, `decision`, `batch`, `context`
   (`speaker`, `scene`, `location`, `function`, …), `max_length`,
-  `translated_by`, `proofread_by`, `proofread_hash`, `evidence`, `notes`.
+  `translated_by`, `proofread_by`, `proofread_hash`, `evidence`, `notes`,
+  `term_exceptions` (glossary terms this unit deliberately inflects or varies;
+  set with `loc.py terms --allow <id> <term>`), `previous_target` (set by
+  `loc.py update` when a game update changed the source).
 
 Adapters create units with `loc_units.new_unit(...)`. When a game update
 changes a source, validation fails on the hash: review the target, mark the
@@ -51,6 +54,7 @@ python scripts/loc.py search "Press Start"     # sources and targets, text and i
 python scripts/loc.py mark --batch batch-004 --status translated --by translator-1
 python scripts/loc.py mark --batch batch-004 --status integrated --evidence "1.0.3 patch r2"
 python scripts/loc.py progress --format chat|md|html
+python scripts/loc.py terms                    # glossary conformance; the localization gate needs zero misses
 python scripts/loc.py extract --adapter adapters/renpy.py --game <game_root> --out units/game.jsonl
 python scripts/loc.py rebuild --adapter adapters/renpy.py --game <game_root> --out builds/r1
 ```

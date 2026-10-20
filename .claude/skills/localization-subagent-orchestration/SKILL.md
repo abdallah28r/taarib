@@ -24,8 +24,12 @@ python scripts/make_subagent_brief.py --route <route> --task <task> --scope <pat
 python scripts/make_subagent_brief.py --role translator|proofreader --task <task> --scope <paths> --write-mode write
 ```
 
-Use the `translator` and `proofreader` roles from `.agents/roles/` for text
-batches. In Claude Code they are also native subagents with the same names.
+Roles in `.agents/roles/` (native subagents with the same names in Claude
+Code): `translator` and `proofreader` for text batches, `researcher` for
+read-only discovery and mod questions (keeps web pages out of the root
+context), and `image-localizer` for image sets (keeps heavy visual context
+out of the root). Skip delegation for small games, adapter work, integration,
+and glossary decisions; the root agent owns those.
 Run them in sequence per batch (translate, then proofread by a different
 agent); different batches may run in parallel when their unit files are
 disjoint.

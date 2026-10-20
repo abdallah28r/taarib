@@ -61,7 +61,7 @@ def validate(root: Path = ROOT, policy_path: Path | None = None) -> list[str]:
 
     routing = policy.get("routing", {})
     for route in ("mechanical", "scoped_edit", "ui_translation", "contextual_translation",
-                  "proofreading", "deep_review", "architecture", "exceptional"):
+                  "proofreading", "research", "image_work", "deep_review", "architecture", "exceptional"):
         if route not in routing:
             errors.append(f"missing routing entry: {route}")
         elif routing[route].get("tier") not in TIERS:
