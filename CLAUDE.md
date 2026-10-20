@@ -12,8 +12,8 @@
   عدّل المهارات في `.agents/skills/` فقط، ثم شغّل `python scripts/sync_runtime.py`.
   يفشل `python scripts/verify_template.py` إذا اختلفت النسختان.
 - **الأدوار:** أربعة وكلاء فرعيين في `.claude/agents/` مولَّدين من `.agents/roles/`:
-  `translator` و`proofreader` و`researcher` (قراءة فقط) و`image-localizer`. استدعِهما باسميهما، ومرّر
-  لكل منهما موجزًا من `python scripts/make_subagent_brief.py --role <role> --runtime claude-code`.
+  `translator` و`proofreader` و`researcher` (قراءة فقط) و`image-localizer`. استدعِ كل وكيل باسمه،
+  ومرّر له موجزًا من `python scripts/make_subagent_brief.py --role <role> --runtime claude-code`.
   لا يدقق الوكيل الدفعة التي ترجمها.
 - **النماذج:** المسارات في `config/agent-policy.json` تحدد فئة (light/standard/deep).
   في Claude Code تقابلها haiku وsonnet وopus. مرّر الفئة المناسبة عند إنشاء وكيل فرعي،
