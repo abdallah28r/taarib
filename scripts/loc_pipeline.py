@@ -12,6 +12,7 @@ import csv
 import hashlib
 import importlib.util
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,13 +50,14 @@ class Project:
     """Paths and settings one gate evaluation reads; tests point these at temp files."""
 
     def __init__(self, root: Path = ROOT, project_file: Path | None = None, units_dir: Path | None = None,
-                 state_file: Path | None = None, qa_file: Path | None = None):
+                 state_file: Path | None = None, qa_file: Path | None = None, plan_file: Path | None = None):
         self.root = Path(root)
         self.project_file = project_file or self.root / "PROJECT.yaml"
         self.units_dir = units_dir or self.root / "units"
         self.state_file = state_file or self.root / "state" / "pipeline.json"
         self.qa_file = qa_file or self.root / "qa" / "LQA_MATRIX.csv"
         self.glossary_file = self.root / "glossary.yaml"
+        self.plan_file = plan_file or self.root / "PLAN.md"
 
     def settings(self) -> dict:
         import yaml
@@ -149,6 +151,25 @@ def unit_report(project: Project, settings: dict):
     return units.all_units(files), report
 
 
+BATCHES_HEADING = "## الدفعات"
+BATCH_ITEM = re.compile(r"^\s*[-*] \[( |x|X)\]\s+\S")
+
+
+def plan_batches(project: Project) -> list[bool]:
+    """Done flags of the checklist items under PLAN.md's batches section."""
+    if not project.plan_file.is_file():
+        return []
+    flags, inside = [], False
+    for line in project.plan_file.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            inside = line.strip() == BATCHES_HEADING
+            continue
+        match = BATCH_ITEM.match(line) if inside else None
+        if match:
+            flags.append(match.group(1).lower() == "x")
+    return flags
+
+
 def check_extraction(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
     recorded = state.get("contract") or {}
     try:
@@ -164,6 +185,7 @@ def check_extraction(project: Project, settings: dict, state: dict) -> list[tupl
         (bool(proven), "عقد المحوّل نجح على المحوّل الحالي ونصوص اللعبة الحالية" + error),
         (bool(all_units), "توجد وحدات مستخرجة في units/"),
         (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
+        (bool(plan_batches(project)), f"خطة الدفعات كاملة مكتوبة في PLAN.md تحت «الدفعات» (الآن: {len(plan_batches(project))})"),
     ]
 
 
@@ -174,12 +196,14 @@ def check_localization(project: Project, settings: dict, state: dict) -> list[tu
     import yaml
     glossary = yaml.safe_load(project.glossary_file.read_text(encoding="utf-8")) if project.glossary_file.is_file() else {}
     terms = tools.check_terms(all_units, glossary or {})
+    batches = plan_batches(project)
     return [
         (bool(all_units), "توجد وحدات في units/"),
         (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
         (not pending, f"كل وحدة قابلة للترجمة مدققة لغويًا (المتبقي: {len(pending)})"),
         (not review, f"لا وحدة تنتظر قرارًا (بانتظار قرار: {len(review)})"),
         (not terms, f"المصطلحات تطابق القاموس أو لها استثناء مسجل (المخالفات: {len(terms)})"),
+        (bool(batches) and all(batches), f"كل دفعات PLAN.md مؤشّرة ☑ (المتبقي: {batches.count(False)})"),
     ]
 
 

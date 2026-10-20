@@ -134,7 +134,13 @@ with a test, through `localization-project-maintenance`.
   `PROJECT.yaml` → `reporting.progress_in_chat` says (default: when asked).
 - `PLAN.md` (at most 150 lines): goal, batches, decisions, open questions,
   localization notes, the current blocker, and one resumable next action.
-  Never counts, the phase, intake answers, backup paths, or command logs:
+  **Batch plan:** before leaving extraction, write every batch as one
+  checklist line under `## الدفعات` (`- [ ] batch-001 — scope — translator /
+  proofreader`); tick it `- [x]` when that batch is proofread. The extraction
+  gate needs the list and the localization gate needs every box ticked, and
+  the dashboard shows it live. Add a batch line if new text appears; never
+  delete one to pass a gate.
+- `PLAN.md` never holds counts, the phase, intake answers, backup paths, or command logs:
   those live in units, `state/pipeline.json`, `PROJECT.yaml`, backup
   manifests, and Git. Write at batch or phase boundaries, one line per item.
 - `reports/dashboard.html`: generated from the files above after every change

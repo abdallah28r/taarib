@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-21 — Batch plan rule and reference list
+
+- The full batch plan is written as a checklist under `## الدفعات` in
+  `PLAN.md` before extraction closes, and each batch is ticked when proofread.
+  The extraction gate requires the list and the localization gate requires
+  every box ticked; the dashboard shows it live.
+- `اقرأني.md` gained a short reference list for human readers and the
+  proofreading, images, and release route commands.
+
 ## 2026-10-21 — Phase 6: glossary check, script rule, images, roles
 
 - `loc.py terms` checks every translated unit against `glossary.yaml`

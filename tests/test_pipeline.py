@@ -44,6 +44,9 @@ class PipelineWalkthrough(unittest.TestCase):
         self.state = self.dir / "state" / "pipeline.json"
         self.qa = self.dir / "LQA.csv"
         self.qa.write_text("id,severity,status\ncase-1,major,not-run\n", encoding="utf-8")
+        self.plan = self.dir / "PLAN.md"
+        self.plan.write_text("# خطة\n\n## الدفعات\n<!-- مثال: - [ ] batch-x -->\n\n## القرارات\n- [ ] not a batch\n",
+                             encoding="utf-8")
 
     def tearDown(self):
         self.temporary.cleanup()
@@ -56,7 +59,7 @@ class PipelineWalkthrough(unittest.TestCase):
 
     def project_args(self):
         return ["--project", str(self.project_file), "--units", str(self.units),
-                "--state", str(self.state), "--qa", str(self.qa)]
+                "--state", str(self.state), "--qa", str(self.qa), "--plan", str(self.plan)]
 
     def gate(self, check=False):
         return self.run_loc("gate", *(["--check"] if check else []), *self.project_args())
@@ -101,6 +104,11 @@ class PipelineWalkthrough(unittest.TestCase):
         self.assertIn("TODO توجد وحدات مستخرجة في units/", out)
         self.run_loc("extract", "--adapter", str(ROOT / "adapters" / "renpy.py"), "--game", str(self.game),
                      "--out", str(self.units_file()))
+        code, out = self.gate()
+        self.assertEqual(code, 1)
+        self.assertIn("TODO خطة الدفعات كاملة مكتوبة في PLAN.md", out)
+        self.plan.write_text(self.plan.read_text(encoding="utf-8").replace(
+            "## الدفعات\n", "## الدفعات\n- [ ] batch-001 — الكل — translator-1 / proofreader-1\n"), encoding="utf-8")
         self.assertEqual(self.gate()[0], 0)
         self.assertEqual(self.phase(), "localization")
 
@@ -114,6 +122,10 @@ class PipelineWalkthrough(unittest.TestCase):
         path = ["--path", str(self.units_file())]
         self.assertEqual(self.run_loc("mark", *path, "--ids", *ids, "--status", "translated", "--by", "translator-1")[0], 0)
         self.assertEqual(self.run_loc("mark", *path, "--ids", *ids, "--status", "proofread", "--by", "proofreader-1")[0], 0)
+        code, out = self.gate()
+        self.assertIn("TODO كل دفعات PLAN.md مؤشّرة ☑ (المتبقي: 1)", out)
+        self.plan.write_text(self.plan.read_text(encoding="utf-8").replace("- [ ] batch-001", "- [x] batch-001"),
+                             encoding="utf-8")
         self.assertEqual(self.gate()[0], 0)
         self.assertEqual(self.phase(), "integration")
 
@@ -162,6 +174,11 @@ class PipelineWalkthrough(unittest.TestCase):
         code, _ = self.run_loc("reopen", "intake", "--reason", "user changed the install target", *self.project_args())
         self.assertEqual(code, 0)
         self.assertEqual(self.phase(), "intake")
+
+    def test_plan_batches_reads_only_the_batches_section(self):
+        self.plan.write_text("## الدفعات\n- [x] a\n* [ ] b\n- not a box\n## القرارات\n- [ ] c\n", encoding="utf-8")
+        project = pipeline.Project(plan_file=self.plan)
+        self.assertEqual(pipeline.plan_batches(project), [True, False])
 
     def test_open_critical_defect_blocks_playtest(self):
         self.qa.write_text("id,severity,status\ncase-9,critical,fail\n", encoding="utf-8")

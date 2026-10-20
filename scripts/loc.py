@@ -587,7 +587,8 @@ def cmd_rebuild(args) -> int:
 
 
 def project_of(args):
-    return pipeline.Project(project_file=args.project, units_dir=args.units, state_file=args.state, qa_file=args.qa)
+    return pipeline.Project(project_file=args.project, units_dir=args.units, state_file=args.state, qa_file=args.qa,
+                            plan_file=args.plan)
 
 
 def print_checks(checks) -> None:
@@ -866,6 +867,7 @@ def main(argv=None) -> int:
         p.add_argument("--units", type=Path, default=units.UNITS_DIR, help=argparse.SUPPRESS)
         p.add_argument("--state", type=Path, default=ROOT / "state" / "pipeline.json", help=argparse.SUPPRESS)
         p.add_argument("--qa", type=Path, default=QA_MATRIX, help=argparse.SUPPRESS)
+        p.add_argument("--plan", type=Path, default=PLAN_FILE, help=argparse.SUPPRESS)
         return p
 
     with_project(sub.add_parser("next", help="show the current phase and what blocks it")).set_defaults(run=cmd_next)
