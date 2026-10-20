@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
-    "license_guard", ROOT / "scripts" / "license_guard.py"
+    "license_guard", ROOT / "scripts" / "maintainer" / "license_guard.py"
 )
 license_guard = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader

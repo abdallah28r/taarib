@@ -23,9 +23,13 @@ python scripts/context_plan.py release --engine <engine-id>
 - For updates, compare stable ID, source, and available context fields. Carry
   only previously approved targets; send unapproved or context-changed targets
   to review rather than silently reusing them.
-- Use `project_stats.py` for coverage, `merge_game_update.py` where compatible,
-  and `export_tmx.py` only for rows with `status=approved`, a stable ID, and
-  non-empty source/target. Exported TMX records game, file, ID, and context.
+- After a game update, run `loc.py update --adapter ... --game ... --path
+  units/<file>.jsonl` (try `--dry-run` first): unchanged units keep their
+  translation; changed ones return to `extracted` with `previous_target`;
+  removed ones are saved under `work/updates/`. Then `loc.py reopen` the
+  phase the change affects.
+- Coverage is `loc.py progress`; a translation memory is `loc.py tmx --out
+  <file>.tmx` (proofread units by default).
 - Promote only generalized, evidenced improvements through
   `localization-knowledge-capture`; a proposal is not authority to install a
   model, call a service, or alter the master template.

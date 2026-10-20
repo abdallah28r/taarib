@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse, fnmatch, json, zipfile
 from pathlib import Path
 
-ROOT=Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[2]
 def patterns(path): return [x.strip() for x in path.read_text(encoding="utf-8").splitlines() if x.strip() and not x.lstrip().startswith("#")]
 def included(rel,pats):
     value=rel.as_posix()
@@ -19,9 +19,8 @@ def main(argv=None):
         data = json.loads((ROOT / "fonts" / name).read_text(encoding="utf-8"))
         if data.get(field):
             print(f"ERROR public template release requires an empty {name}");return 2
-    context_csv=(ROOT/"loc-kit"/"STRING_CONTEXT.csv").read_text(encoding="utf-8-sig").splitlines()
-    if len(context_csv)!=1:
-        print("ERROR public template release requires an empty STRING_CONTEXT.csv");return 2
+    if any((ROOT/"units").glob("**/*.jsonl")):
+        print("ERROR public template release requires an empty units/ folder");return 2
     pats=patterns(ROOT/".releaseinclude");files=[]
     for file in sorted(ROOT.rglob("*")):
         if not file.is_file() or file.resolve()==out:continue

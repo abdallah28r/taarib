@@ -102,16 +102,16 @@ def check_intake(project: Project, settings: dict, state: dict) -> list[tuple[bo
     images = settings.get("image_localization", {}).get("external_image_editing", {})
     path = game.get("install_path", "")
     checks = [
-        (filled(game.get("name")), "PROJECT.yaml game.name is set"),
-        (filled(path) and Path(path).is_dir(), "PROJECT.yaml game.install_path is set and exists"),
-        (yes_no(flow.get("install_to_user_copy")) is not None, "workflow.install_to_user_copy answered yes/no"),
-        (yes_no(flow.get("subagent_preference")) is not None, "workflow.subagent_preference answered yes/no"),
-        (yes_no(flow.get("image_scope")) is not None, "workflow.image_scope answered yes/no"),
-        (isinstance(flow.get("allow_launch_game"), bool), "workflow.allow_launch_game is true/false"),
+        (filled(game.get("name")), "اسم اللعبة محدد (game.name)"),
+        (filled(path) and Path(path).is_dir(), "مسار اللعبة محدد وموجود (game.install_path)"),
+        (yes_no(flow.get("install_to_user_copy")) is not None, "أُجيب سؤال التثبيت على نسختك بنعم/لا (install_to_user_copy)"),
+        (yes_no(flow.get("subagent_preference")) is not None, "أُجيب سؤال الوكلاء الفرعيين بنعم/لا (subagent_preference)"),
+        (yes_no(flow.get("image_scope")) is not None, "أُجيب سؤال تعريب الصور بنعم/لا (image_scope)"),
+        (isinstance(flow.get("allow_launch_game"), bool), "حُدد السماح بتشغيل اللعبة (allow_launch_game)"),
     ]
     if yes_no(flow.get("image_scope")) == "yes":
         checks.append((yes_no(images.get("enabled")) is not None,
-                       "image_localization.external_image_editing.enabled answered yes/no"))
+                       "أُجيب سؤال تحرير الصور عبر OpenAI بنعم/لا (external_image_editing)"))
     return checks
 
 
@@ -135,8 +135,8 @@ def check_discovery(project: Project, settings: dict, state: dict) -> list[tuple
     flow = settings.get("workflow", {})
     adapter = flow.get("adapter", "")
     return [
-        (filled(flow.get("engine_profile")), "workflow.engine_profile is set"),
-        (filled(adapter) and project.resolve(adapter).is_file(), "workflow.adapter names an existing adapter file"),
+        (filled(flow.get("engine_profile")), "المحرك محدد (engine_profile)"),
+        (filled(adapter) and project.resolve(adapter).is_file(), "المحوّل محدد وملفه موجود (workflow.adapter)"),
     ]
 
 
@@ -159,9 +159,9 @@ def check_extraction(project: Project, settings: dict, state: dict) -> list[tupl
     proven = bool(current) and recorded.get("passed") and all(recorded.get(k) == v for k, v in current.items())
     all_units, report = unit_report(project, settings)
     return [
-        (bool(proven), "adapter contract passed on the current adapter and game text" + error),
-        (bool(all_units), "units/ holds extracted units"),
-        (not report.errors, f"loc.py validate has no errors ({len(report.errors)} now)"),
+        (bool(proven), "عقد المحوّل نجح على المحوّل الحالي ونصوص اللعبة الحالية" + error),
+        (bool(all_units), "توجد وحدات مستخرجة في units/"),
+        (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
     ]
 
 
@@ -170,10 +170,10 @@ def check_localization(project: Project, settings: dict, state: dict) -> list[tu
     pending = [u for u in all_units if units.decision(u) == "translate" and units.stage(u) < 2]
     review = [u for u in all_units if units.decision(u) == "review"]
     return [
-        (bool(all_units), "units/ holds units"),
-        (not report.errors, f"loc.py validate has no errors ({len(report.errors)} now)"),
-        (not pending, f"every translatable unit is proofread ({len(pending)} not yet)"),
-        (not review, f"no unit waits on a decision ({len(review)} marked review)"),
+        (bool(all_units), "توجد وحدات في units/"),
+        (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
+        (not pending, f"كل وحدة قابلة للترجمة مدققة لغويًا (المتبقي: {len(pending)})"),
+        (not review, f"لا وحدة تنتظر قرارًا (بانتظار قرار: {len(review)})"),
     ]
 
 
@@ -181,8 +181,8 @@ def check_integration(project: Project, settings: dict, state: dict) -> list[tup
     all_units, report = unit_report(project, settings)
     pending = [u for u in all_units if units.decision(u) != "keep" and units.stage(u) < 3]
     return [
-        (not report.errors, f"loc.py validate has no errors ({len(report.errors)} now)"),
-        (not pending, f"every unit is integrated into a build ({len(pending)} not yet)"),
+        (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
+        (not pending, f"كل الوحدات مدمجة في بناء (المتبقي: {len(pending)})"),
     ]
 
 
@@ -199,14 +199,14 @@ def check_playtest(project: Project, settings: dict, state: dict) -> list[tuple[
     _, report = unit_report(project, settings)
     severe = open_severe_defects(project)
     return [
-        (not report.errors, f"loc.py validate has no errors ({len(report.errors)} now)"),
-        (not severe, f"no open blocker/critical defect in qa/LQA_MATRIX.csv ({', '.join(severe[:3]) or 'none'})"),
-        (bool(state.get("acceptance")), "the user's acceptance is recorded (loc.py accept)"),
+        (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
+        (not severe, f"لا أخطاء حرجة مفتوحة في qa/LQA_MATRIX.csv ({', '.join(severe[:3]) or 'لا شيء'})"),
+        (bool(state.get("acceptance")), "قبولك للنسخة مسجل (loc.py accept)"),
     ]
 
 
 def check_release(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
-    return [(False, "release is the final phase; follow references/release.md")]
+    return [(False, "النشر هو المرحلة الأخيرة؛ اتبع references/release.md")]
 
 
 CRITERIA = {

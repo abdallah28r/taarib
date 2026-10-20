@@ -76,6 +76,13 @@ class RuntimeSupportTests(unittest.TestCase):
         self.assertIn("## Role instructions", brief)
         self.assertIn("another agent translated", brief)
 
+    def test_claude_brief_does_not_repeat_the_agent_file(self):
+        role = make_subagent_brief.load_roles()["proofreader"]
+        brief = make_subagent_brief.build_brief(POLICY, role[0]["route"], "t", "s", "write",
+                                                runtime="claude-code", role=role)
+        self.assertNotIn("## Role instructions", brief)
+        self.assertIn("subagent definition", brief)
+
     def test_claude_entry_imports_shared_instructions(self):
         text = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         self.assertIn("@AGENTS.md", text)

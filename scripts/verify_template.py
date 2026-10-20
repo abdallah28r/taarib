@@ -27,9 +27,9 @@ def main(argv=None) -> int:
         ("translation-units", [py, "scripts/loc.py", "validate"]),
         ("renpy-adapter-contract", [py, "scripts/adapter_contract.py", "--adapter", "adapters/renpy.py",
                                     "--game", "examples/renpy-reference"]),
-        ("agent-policy", [py, "scripts/check_agent_policy.py"]),
-        ("context-routes", [py, "scripts/check_context_routes.py"]),
-        ("license-guard", [py, "scripts/license_guard.py"]),
+        ("agent-policy", [py, "scripts/maintainer/check_agent_policy.py"]),
+        ("context-routes", [py, "scripts/maintainer/check_context_routes.py"]),
+        ("license-guard", [py, "scripts/maintainer/license_guard.py"]),
         ("engine-knowledge", [py, "scripts/check_knowledge.py", "engines"]),
         ("tool-provenance-structure", [py, "scripts/check_tool_provenance.py"]),
         ("font-records", [py, "scripts/check_font_records.py"]),
@@ -39,7 +39,7 @@ def main(argv=None) -> int:
         with tempfile.TemporaryDirectory() as temporary:
             archive = Path(temporary) / "arabic-loc-template.zip"
             sbom = Path(temporary) / "SBOM.cdx.json"
-            built = run("release-archive", [py, "scripts/build_release.py", str(archive)])
+            built = run("release-archive", [py, "scripts/maintainer/build_release.py", str(archive)])
             results.append(built)
             if built["exit_code"] == 0:
                 results.append(run("artifact-sbom", [py, "scripts/generate_sbom.py", str(sbom), "--artifact", str(archive)]))

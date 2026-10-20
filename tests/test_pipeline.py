@@ -82,7 +82,7 @@ class PipelineWalkthrough(unittest.TestCase):
     def test_template_starts_blocked_at_intake(self):
         code, out = self.gate()
         self.assertEqual(code, 1)
-        self.assertIn("TODO PROJECT.yaml game.name is set", out)
+        self.assertIn("TODO اسم اللعبة محدد", out)
         self.assertEqual(self.phase(), "intake")
 
     def test_full_walkthrough(self):
@@ -98,14 +98,14 @@ class PipelineWalkthrough(unittest.TestCase):
         code, out = self.gate()
         self.assertEqual(code, 1)
         self.assertIn("PASS contract round-trip", out)
-        self.assertIn("TODO units/ holds extracted units", out)
+        self.assertIn("TODO توجد وحدات مستخرجة في units/", out)
         self.run_loc("extract", "--adapter", str(ROOT / "adapters" / "renpy.py"), "--game", str(self.game),
                      "--out", str(self.units_file()))
         self.assertEqual(self.gate()[0], 0)
         self.assertEqual(self.phase(), "localization")
 
         code, out = self.gate()
-        self.assertIn("TODO every translatable unit is proofread (8 not yet)", out)
+        self.assertIn("TODO كل وحدة قابلة للترجمة مدققة لغويًا (المتبقي: 8)", out)
         rows = [json.loads(line) for line in self.units_file().read_text(encoding="utf-8").splitlines()]
         for row in rows:
             row["target"] = "عربي " + row["source"]
@@ -123,7 +123,7 @@ class PipelineWalkthrough(unittest.TestCase):
         self.assertEqual(self.phase(), "playtest")
 
         code, out = self.gate()
-        self.assertIn("TODO the user's acceptance is recorded", out)
+        self.assertIn("TODO قبولك للنسخة مسجل", out)
         self.assertEqual(self.run_loc("accept", "--note", "user accepted r1", *self.project_args())[0], 0)
         self.assertEqual(self.gate()[0], 0)
         self.assertEqual(self.phase(), "release")
@@ -167,7 +167,7 @@ class PipelineWalkthrough(unittest.TestCase):
         self.qa.write_text("id,severity,status\ncase-9,critical,fail\n", encoding="utf-8")
         project = pipeline.Project(project_file=self.project_file, units_dir=self.units, state_file=self.state, qa_file=self.qa)
         checks = pipeline.check_playtest(project, project.settings(), {"acceptance": {"note": "x"}})
-        self.assertIn((False, "no open blocker/critical defect in qa/LQA_MATRIX.csv (case-9)"), checks)
+        self.assertIn((False, "لا أخطاء حرجة مفتوحة في qa/LQA_MATRIX.csv (case-9)"), checks)
 
     def test_next_reports_phase_and_route(self):
         code, out = self.run_loc("next", *self.project_args())

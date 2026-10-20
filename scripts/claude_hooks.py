@@ -110,7 +110,7 @@ def check_file_write(target: str, root: Path = ROOT) -> str | None:
         return None
     return (f"No backup of game file {rel} yet. Back it up first: "
             f"python scripts/safe_backup.py \"{game}\" \"{rel}\" (or use safe_replace.py / "
-            "apply_patch_package.py, which back up before writing). Record the backup path in STATUS.md.")
+            "apply_patch_package.py, which back up before writing).")
 
 
 def check_shell(command: str, root: Path = ROOT) -> str | None:
@@ -139,14 +139,33 @@ def pre_tool(event: dict, root: Path = ROOT) -> str | None:
     return None
 
 
+DASHBOARD_SOURCES = ("units/", "PLAN.md", "qa/LQA_MATRIX.csv", "PROJECT.yaml")
+PLAN_MAX_LINES = 150
+
+
 def post_tool(event: dict, root: Path = ROOT) -> str | None:
-    """Problems with what was just written, or None."""
+    """Check what was just written, refresh the dashboard, and return problems or None."""
+    problem = _post_tool_problem(event, root)
+    target = (event.get("tool_input") or {}).get("file_path") or ""
+    try:
+        rel = Path(os.path.relpath(os.path.abspath(target), os.path.abspath(root))).as_posix() if target else ""
+    except ValueError:
+        rel = ""
+    if rel.startswith(DASHBOARD_SOURCES) and norm(root) == norm(ROOT):
+        try:
+            _load("loc", ROOT / "scripts" / "loc.py").write_dashboard()
+        except Exception:  # the page is a convenience; never block an edit on it
+            pass
+    return problem
+
+
+def _post_tool_problem(event: dict, root: Path) -> str | None:
     target = (event.get("tool_input") or {}).get("file_path")
     if not target:
         return None
     path = Path(target)
     try:
-        rel = Path(os.path.relpath(norm(path), norm(root))).as_posix()
+        rel = Path(os.path.relpath(os.path.abspath(path), os.path.abspath(root))).as_posix()
     except ValueError:  # another drive
         return None
     if rel.startswith("../"):
@@ -163,6 +182,11 @@ def post_tool(event: dict, root: Path = ROOT) -> str | None:
             code = loc.main(["findings", str(path), "--path", str(root / "units")])
         if code:
             return "loc.py findings reported problems:\n" + out.getvalue()[-2000:]
+    elif rel == "PLAN.md":
+        lines = len(path.read_text(encoding="utf-8").splitlines())
+        if lines > PLAN_MAX_LINES:
+            return (f"PLAN.md has {lines} lines (limit {PLAN_MAX_LINES}). Remove finished items and anything "
+                    "that lives elsewhere (counts, phase, backups, command logs) so every session reads less.")
     elif rel in YAML_FILES:
         check_yaml = _load("check_yaml", ROOT / "scripts" / "check_yaml.py")
         problems = check_yaml.check_file(path)
@@ -185,6 +209,7 @@ def session_start(root: Path = ROOT) -> str:
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
         loc.main(["next"])
+        loc.main(["dashboard"])
     return "Localization project status (python scripts/loc.py next):\n" + out.getvalue()
 
 

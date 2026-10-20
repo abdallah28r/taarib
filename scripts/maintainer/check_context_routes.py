@@ -4,7 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 
-ROOT=Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[2]
 def validate():
     data=json.loads((ROOT/"config/context-routes.json").read_text(encoding="utf-8"));errors=[]
     if data.get("schema_version")!=1: errors.append("schema_version must be 1")

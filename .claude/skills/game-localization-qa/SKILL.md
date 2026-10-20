@@ -40,4 +40,4 @@ live in those references and are not repeated here.
 
 Update `reports/QA.md` at a QA milestone, blocker, or handoff with concise
 counts, blockers, and untested areas; do not rewrite a full report after every
-clean translation batch. `STATUS.md` gets only the blocker and next action.
+clean translation batch. `PLAN.md` gets only the blocker and next action.

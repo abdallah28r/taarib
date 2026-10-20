@@ -1,10 +1,6 @@
 .tools/
 **/__pycache__/
 *.pyc
-source/*
-!source/README.md
-target/*
-!target/README.md
 units/*
 !units/README.md
 state/*
@@ -20,3 +16,7 @@ fonts/selected/*
 !fonts/selected/README.md
 fonts/licenses/*
 !fonts/licenses/README.md
+# Generated on demand; never commit (stale snapshots mislead agents)
+reports/*.json
+reports/dashboard.html
+work/updates/

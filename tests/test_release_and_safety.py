@@ -14,7 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def load(name):
-    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    path = ROOT / "scripts" / f"{name}.py"
+    if not path.exists():
+        path = ROOT / "scripts" / "maintainer" / f"{name}.py"
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -40,7 +43,7 @@ class ReleaseAndSafetyTests(unittest.TestCase):
     def test_release_allowlist_omits_notes_and_reports(self):
         with tempfile.TemporaryDirectory() as temporary:
             archive = Path(temporary) / "template.zip"
-            result = subprocess.run([sys.executable, "-B", str(ROOT / "scripts" / "build_release.py"), str(archive)],
+            result = subprocess.run([sys.executable, "-B", str(ROOT / "scripts" / "maintainer" / "build_release.py"), str(archive)],
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             with zipfile.ZipFile(archive) as package:

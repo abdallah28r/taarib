@@ -51,7 +51,7 @@
   "mixed_runtime": {
     "shared_state": "files_only",
     "single_writer_per_file_across_runtimes": true,
-    "record_active_scope_in": "STATUS.md"
+    "record_active_scope_in": "PLAN.md"
   },
   "routing": {
     "mechanical": {

@@ -19,7 +19,7 @@ python scripts/context_plan.py subtitles
 ```
 
 Add `--engine <engine-id>` only when engine behavior affects the text. Do not
-load `GUIDE.md`, `STYLE.md`, every engine profile, or legal/model policy for an
+load every engine profile, style reference, or legal/model policy for an
 ordinary translation batch.
 
 ## Work contract

@@ -24,7 +24,7 @@ The workspace runs under Codex, Claude Code, or both on the same project.
 
 - **Codex** reads `AGENTS.md` and `.agents/skills/`.
 - **Claude Code** reads `CLAUDE.md`, which imports `AGENTS.md`, and `.claude/skills/`, a generated copy of `.agents/skills/` (`python scripts/sync_runtime.py`). Edit skills only under `.agents/skills/`.
-- **Both:** all shared state lives in files (`PROJECT.yaml`, `STATUS.md`, `glossary.yaml`, work products), so either runtime can resume the other's work. The one-writer-per-file rule holds across runtimes: before writing, record the runtime and the files it owns under the active-work note in `STATUS.md`, and do not write files another runtime has claimed.
+- **Both:** all shared state lives in files (`PROJECT.yaml`, `PLAN.md`, `glossary.yaml`, units, `state/`), so either runtime can resume the other's work. The one-writer-per-file rule holds across runtimes: before writing, record the runtime and the files it owns under the active-work note in `PLAN.md`, and do not write files another runtime has claimed.
 
 ## Roles
 
@@ -71,8 +71,8 @@ justify the highest model.
 ## Usage planning
 
 Before a bulk translation, run
-`python scripts/estimate_tokens.py <csv-or-tsv>` and record the estimate in
-`STATUS.md`. The estimate is for shard planning, not billing. If the available
+`python scripts/loc.py estimate` and record the estimate in
+`PLAN.md`. The estimate is for shard planning, not billing. If the available
 quota is insufficient for two estimated batches or repeated rate-limit/quota
 errors persist after bounded retries, finish or checkpoint the current batch,
 record resumable state, and stop. Never switch model, tier, or runtime silently.
@@ -96,7 +96,7 @@ Only one agent may write a given file at a time. Prefer read-only subagents for 
 
 - Treat a subagent result as an untrusted contribution until the root agent checks its scope, diffs, protected tokens, glossary, format, encoding, and relevant tests.
 - For translation, require zero structural/token errors. Review a representative semantic sample and escalate only the ambiguous or failing subset.
-- Keep one compact delegation summary per batch in `STATUS.md`: assigned scope,
+- Keep one compact delegation line per batch in `PLAN.md` → batches: assigned scope,
   outputs, checks, and unfinished work. Record per-agent model/effort or retry
   details only when they affect quality, cost, a policy exception, or resumption;
   use the actual run output as the detailed source when available. Do not request
@@ -107,4 +107,4 @@ Only one agent may write a given file at a time. Prefer read-only subagents for 
 
 When work reveals a useful subagent tool, skill, script, evaluator, prompt contract, or routing improvement, add it locally when it is safe, deterministic, relevant, and permitted. Otherwise record it in `reports/IMPROVEMENT_PROPOSALS.md` with evidence and an acceptance test. Never use this permission to install a model, contact an unapproved service, weaken this policy, or expand the user's task.
 
-The machine-readable contract is `config/agent-policy.json`. Validate it with `python scripts/check_agent_policy.py`. Generate a bounded delegation brief with `python scripts/make_subagent_brief.py --route <route> --task <task> --scope <scope> [--runtime codex|claude-code]`.
+The machine-readable contract is `config/agent-policy.json`. Validate it with `python scripts/maintainer/check_agent_policy.py`. Generate a bounded delegation brief with `python scripts/make_subagent_brief.py --route <route> --task <task> --scope <scope> [--runtime codex|claude-code]`.

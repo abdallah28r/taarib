@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_POLICY = ROOT / "config" / "agent-policy.json"
 CATALOG = ROOT / "tools" / "open-source-tools.json"
 SETUP = ROOT / "scripts" / "setup_tools.ps1"

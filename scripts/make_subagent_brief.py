@@ -63,7 +63,10 @@ def build_brief(policy: dict, route_name: str, task: str, scope: str,
         lines.append("- Do not modify files.")
     else:
         lines.append("- Modify only the assigned files; one agent must be the sole writer for each file.")
-    if role:
+    if role and runtime == "claude-code":
+        # The .claude/agents/<role>.md subagent already carries these instructions.
+        lines += ["", f"Role instructions: in the `{role[0]['name']}` subagent definition; not repeated here."]
+    elif role:
         lines += ["", "## Role instructions", "", role[1].rstrip()]
     return "\n".join(lines) + "\n"
 

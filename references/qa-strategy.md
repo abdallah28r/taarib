@@ -38,7 +38,7 @@ Its fields are `id`, `category`, `build`, `scene_or_key`, `locale`,
 `reproduction`, `evidence`, `status`, and `retest`. Enter `n/a` when a field
 does not apply; do not invent evidence. The starter rows are test cases, not
 claims of completed in-game checks. Keep `reports/QA.md` to the summary and
-`STATUS.md` to blockers/next action; do not copy the full defect into all
+`PLAN.md` to blockers/next action; do not copy the full defect into all
 three. Fix the smallest responsible layer and retest the same case plus a
 mixed-text regression.
 

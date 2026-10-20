@@ -104,4 +104,4 @@ An implementation is eligible for the core only when:
 - no prohibited source material was consulted while implementing it;
 - names, structure, messages, constants, and tests are original;
 - relevant format/tool sources and licenses are recorded;
-- `python scripts/license_guard.py` and repository tests pass.
+- `python scripts/maintainer/license_guard.py` and repository tests pass.

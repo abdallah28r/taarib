@@ -64,14 +64,16 @@ would add a validation error.
 
 ## Showing progress
 
-`PROJECT.yaml` → `reporting.progress_display`:
+`reports/dashboard.html` is always current: code regenerates it from units,
+`state/pipeline.json`, `qa/LQA_MATRIX.csv`, and `PLAN.md` after every change
+(Claude Code hooks, and every `loc.py` command that changes state). It refreshes
+itself in the browser every 15 seconds. Never write it by hand.
 
-- `on_request` (default): run `progress` only when the user asks.
-- `chat`: print `--format chat` at a batch or phase boundary.
-- `html`: regenerate `reports/progress.html` at a batch or phase boundary.
-
-`--format md` writes `reports/PROGRESS.md` for any of these. `STATUS.md` keeps
-only the phase, blockers, and next action; it does not repeat counts.
+In the conversation, `PROJECT.yaml` → `reporting.progress_in_chat` decides:
+`on_request` (default) prints `loc.py progress` only when the user asks;
+`batch` prints it at each batch or phase boundary. `--format md` writes
+`reports/PROGRESS.md` when a Markdown copy is wanted. `PLAN.md` never repeats
+counts.
 
 ## Versions in Git
 

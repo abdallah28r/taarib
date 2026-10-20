@@ -22,7 +22,7 @@ Use when discovery, engineering, QA, or release work produces reusable evidence.
    - engine/version/archive/renderer-specific knowledge to
      `engines/<engine-id>.md`, including verified mod compatibility and
      uninstall behavior that could aid a later game on the same engine.
-3. Leave current progress and the single resumable next action in `STATUS.md`.
+3. Leave the single resumable next action in `PLAN.md`; progress comes from units.
    Use `reports/IMPROVEMENT_PROPOSALS.md` only for a proposed template change,
    not as another knowledge copy.
 

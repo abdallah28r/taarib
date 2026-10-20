@@ -12,7 +12,7 @@ format integrity, and a reversible installation. Explicit user instructions and
    summary. Record `loc.py accept` only on the user's explicit acceptance in
    chat, and use `loc.py reopen <phase> --reason ...` for a game update or a
    finding that sends work back.
-1. Read `PROJECT.yaml`, then `STATUS.md` and only the glossary sections needed.
+1. Read `PROJECT.yaml`, then `PLAN.md` and only the glossary sections needed.
 2. Select the narrow task route with
    `python scripts/context_plan.py <route>`. Read only the returned files.
 3. Use the matching skill. Do not read every guide, engine profile, report, or
@@ -38,8 +38,9 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
 ## Invariants
 
 - Discovery is read-only. Never overwrite the only source or extracted copy.
-- Back up a game file with its relative path before changing it; record the
-  original, backup, and modified path in `STATUS.md`.
+- Back up a game file with its relative path before changing it
+  (`safe_backup.py`, `safe_replace.py`, or a patch package). Each backup's
+  manifest is the record; do not copy backup paths into `PLAN.md`.
 - Prefer native localization and removable patch mechanisms. Do not bypass DRM,
   anti-cheat, encryption, signatures, or access controls.
 - Preserve IDs, keys, placeholders, markup, escapes, plural/select branches,
@@ -112,11 +113,16 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
 - `units/**/*.jsonl`: one translation unit per string and per image text
   region, with its status (extracted → translated → proofread → integrated →
   tested). It is the only source for counts and progress percentages; see
-  `references/translation-units.md`. Show progress only as
-  `PROJECT.yaml` → `reporting.progress_display` says (default: when asked).
-- `STATUS.md`: a short current snapshot: phase, last completed batch, blockers,
-  and one resumable next action. Record backup paths and consequential choices,
-  not every tool command, agent turn, or historical count.
+  `references/translation-units.md`. Print progress in chat only as
+  `PROJECT.yaml` → `reporting.progress_in_chat` says (default: when asked).
+- `PLAN.md` (at most 150 lines): goal, batches, decisions, open questions,
+  localization notes, the current blocker, and one resumable next action.
+  Never counts, the phase, intake answers, backup paths, or command logs:
+  those live in units, `state/pipeline.json`, `PROJECT.yaml`, backup
+  manifests, and Git. Write at batch or phase boundaries, one line per item.
+- `reports/dashboard.html`: generated from the files above after every change
+  (hooks in Claude Code; every `loc.py` command that changes state, in both
+  runtimes). Never write it by hand.
 - `glossary.yaml`: approved terminology, names, context variants, and voices.
 - `work/NOTES.md`: temporary findings during a phase.
 - `knowledge/PROJECT_DISCOVERIES.md`: promoted cross-game findings only.

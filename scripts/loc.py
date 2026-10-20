@@ -7,11 +7,14 @@
     python scripts/loc.py findings work/proofreading/batch-003.jsonl
     python scripts/loc.py extract --adapter adapters/renpy.py --game <game_root> --out units/game.jsonl
     python scripts/loc.py rebuild --adapter adapters/renpy.py --game <game_root> --out builds/r1
+    python scripts/loc.py update --adapter adapters/renpy.py --game <game_root> --path units/game.jsonl
+    python scripts/loc.py estimate | tmx --out memory.tmx | pseudo --adapter ... --game ... --out builds/pseudo
     python scripts/loc.py next                  # current phase, what blocks it, what to load
     python scripts/loc.py gate [--check]        # advance when every exit criterion passes
     python scripts/loc.py reopen extraction --reason "game update 1.1"
     python scripts/loc.py accept --note "user accepted build r3 on 2026-11-02"
     python scripts/loc.py progress --format chat|md|html [--out PATH]
+    python scripts/loc.py dashboard             # reports/dashboard.html (also refreshed automatically)
 
 Progress is computed only from unit statuses and qa/LQA_MATRIX.csv, never from
 an agent's estimate.
@@ -23,7 +26,9 @@ import csv
 import html
 import importlib.util
 import json
+import re
 import sys
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -43,6 +48,7 @@ def _load(name, path=None):
 units = _load("loc_units")
 adapter_base = _load("loc_adapter_base", ROOT / "adapters" / "base.py")
 pipeline = _load("loc_pipeline")
+tools = _load("loc_tools")
 
 LABELS = {
     "extracted": "مستخرج",
@@ -52,7 +58,7 @@ LABELS = {
     "tested": "مختبر داخل اللعبة",
 }
 KIND_LABELS = {"all": "الكل", "text": "النصوص", "image": "نصوص الصور"}
-DEFAULT_OUT = {"md": ROOT / "reports" / "PROGRESS.md", "html": ROOT / "reports" / "progress.html"}
+DEFAULT_OUT = {"md": ROOT / "reports" / "PROGRESS.md"}
 QA_MATRIX = ROOT / "qa" / "LQA_MATRIX.csv"
 MEANING_NOTE = (
     "مترجم = النص العربي موجود في الملفات. مدمج = أصبح جزءًا من نسخة اللعبة. "
@@ -192,47 +198,152 @@ main{max-width:760px;margin:0 auto;padding:24px 16px}h1{font-size:1.5rem;margin:
 .row{display:grid;grid-template-columns:9rem 1fr 4.5rem;gap:12px;align-items:center;padding:6px 0}
 .track{height:12px;background:var(--track);border-radius:6px;overflow:hidden}.fill{height:100%;background:var(--fill)}
 .num{text-align:left;font-variant-numeric:tabular-nums}table{width:100%;border-collapse:collapse}
+.card+.card{margin-top:12px}.phases{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:0 0 12px}
+.phases li{padding:4px 10px;border-radius:999px;border:1px solid var(--line);font-size:.9rem;color:var(--muted)}
+.phases li.done{color:var(--fill);border-color:var(--fill)}.phases li.now{background:var(--fill);color:var(--card);border-color:var(--fill)}
+.plan h2,.plan h3,.plan h4{font-size:1rem;margin:16px 0 6px}.plan p{margin:4px 0}
+.checks{list-style:none;padding:0;margin:0}.checks li{padding:4px 0}.checks li.ok{color:var(--fill)}
+bdi{unicode-bidi:isolate}
 td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right}ul{padding-inline-start:20px}
 @media (max-width:480px){.row{grid-template-columns:6.5rem 1fr 3.5rem}}
 """
 
 
-def render_html(groups: dict, qa: dict, generated: str) -> str:
-    g = groups["all"]
+PHASE_LABELS = {
+    "intake": "الاستقبال", "discovery": "الاكتشاف", "extraction": "الاستخراج", "localization": "التعريب",
+    "integration": "الدمج", "playtest": "التجربة", "release": "النشر",
+}
+DASHBOARD = ROOT / "reports" / "dashboard.html"
+PLAN_FILE = ROOT / "PLAN.md"
+PLAN_MAX_LINES = 150
+
+
+def markdown_html(text: str) -> str:
+    """Just enough Markdown for PLAN.md: headings, checklists, bullets, paragraphs. Everything is escaped."""
+    esc, out, in_list = html.escape, [], False
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+    for raw in text.splitlines():
+        line = raw.strip()
+        item = re.match(r"^[-*] (\[( |x|X)\] )?(.*)$", line)
+        if item and not in_list:
+            out.append("<ul>")
+            in_list = True
+        if not item and in_list:
+            out.append("</ul>")
+            in_list = False
+        if item:
+            box = item.group(2)
+            mark = "" if box is None else ("☑ " if box.lower() == "x" else "☐ ")
+            out.append(f"<li>{mark}{esc(item.group(3))}</li>")
+        elif line.startswith("#"):
+            level = min(len(line) - len(line.lstrip("#")) + 1, 4)
+            out.append(f"<h{level}>{esc(line.lstrip('#').strip())}</h{level}>")
+        elif line:
+            out.append(f"<p>{esc(line)}</p>")
+    if in_list:
+        out.append("</ul>")
+    return "".join(out)
+
+
+def progress_html(groups: dict, qa: dict) -> str:
+    g, esc = groups["all"], html.escape
+    if not g["total"]:
+        return f'<div class="card"><p>لا توجد وحدات ترجمة بعد.</p><p>{esc(qa_line(qa))}</p></div>'
+    parts = [f'<div class="card"><p class="muted">عدد الوحدات: {g["total"]}</p>']
+    for status in units.STATUSES:
+        done = g["reached"][status]
+        width = percent(done, g["applicable"]) or 0
+        parts.append(
+            f'<div class="row"><span>{LABELS[status]}</span>'
+            f'<div class="track" role="progressbar" aria-valuenow="{width}" aria-valuemin="0" aria-valuemax="100">'
+            f'<div class="fill" style="width:{width}%"></div></div>'
+            f'<span class="num">{pct_text(done, g["applicable"])}</span></div>'
+        )
+    parts.append('</div><div class="card"><table><tr><th>المرحلة</th><th>النصوص</th><th>نصوص الصور</th></tr>')
+    for status in units.STATUSES:
+        cells = "".join(
+            f"<td>{pct_text(groups[k]['reached'][status], groups[k]['applicable'])} "
+            f"<span class=\"muted\">({groups[k]['reached'][status]}/{groups[k]['applicable']})</span></td>"
+            for k in ("text", "image")
+        )
+        parts.append(f"<tr><td>{LABELS[status]}</td>{cells}</tr>")
+    items = "".join(f"<li>{esc(line)}</li>" for line in [qa_line(qa), *extra_lines(g)])
+    parts.append(f'</table></div><div class="card"><ul>{items}</ul></div>')
+    return "".join(parts)
+
+
+def phase_html(state: dict, checks) -> str:
+    esc, current = html.escape, state.get("phase", pipeline.PHASES[0])
+    passed = {event["phase"] for event in state.get("history", []) if event.get("event") == "passed"}
+    steps = []
+    for phase in pipeline.PHASES:
+        cls = "now" if phase == current else ("done" if phase in passed else "")
+        steps.append(f'<li class="{cls}">{PHASE_LABELS[phase]}</li>')
+    parts = [f'<ol class="phases">{"".join(steps)}</ol>']
+    if checks:
+        rows = "".join(f'<li class="{"ok" if ok else "todo"}">{"✓" if ok else "○"} <bdi>{esc(message)}</bdi></li>'
+                       for ok, message in checks)
+        parts.append(f'<div class="card"><p class="muted">شروط إغلاق مرحلة {PHASE_LABELS[current]}</p>'
+                     f'<ul class="checks">{rows}</ul></div>')
+    recent = state.get("history", [])[-5:]
+    if recent:
+        rows = "".join(
+            f'<li>{esc(e.get("at", ""))} — {esc(e.get("event", ""))} {PHASE_LABELS.get(e.get("phase"), "")}'
+            f'{esc(" — " + e["reason"]) if e.get("reason") else ""}</li>'
+            for e in reversed(recent)
+        )
+        parts.append(f'<div class="card"><p class="muted">آخر الأحداث</p><ul>{rows}</ul></div>')
+    return "".join(parts)
+
+
+def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, state: dict, checks, title: str) -> str:
     esc = html.escape
-    parts = [
+    return "".join([
         '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width,initial-scale=1">',
-        f"<title>تقدم التعريب</title><style>{HTML_STYLE}</style></head><body><main>",
-        "<h1>تقدم التعريب</h1>",
-        f'<p class="muted">مولَّد من units/ وqa/LQA_MATRIX.csv في {esc(generated)}. {esc(MEANING_NOTE)}</p>',
-    ]
-    if not g["total"]:
-        parts.append(f'<div class="card"><p>لا توجد وحدات ترجمة بعد.</p><p>{esc(qa_line(qa))}</p></div>')
-    else:
-        parts.append(f'<h2>الكل — عدد الوحدات: {g["total"]}</h2><div class="card">')
-        for status in units.STATUSES:
-            done = g["reached"][status]
-            width = percent(done, g["applicable"]) or 0
-            parts.append(
-                f'<div class="row"><span>{LABELS[status]}</span>'
-                f'<div class="track" role="progressbar" aria-valuenow="{width}" aria-valuemin="0" aria-valuemax="100">'
-                f'<div class="fill" style="width:{width}%"></div></div>'
-                f'<span class="num">{pct_text(done, g["applicable"])}</span></div>'
-            )
-        parts.append("</div><h2>حسب النوع</h2><div class=\"card\"><table><tr><th>المرحلة</th><th>النصوص</th><th>نصوص الصور</th></tr>")
-        for status in units.STATUSES:
-            cells = "".join(
-                f"<td>{pct_text(groups[k]['reached'][status], groups[k]['applicable'])} "
-                f"<span class=\"muted\">({groups[k]['reached'][status]}/{groups[k]['applicable']})</span></td>"
-                for k in ("text", "image")
-            )
-            parts.append(f"<tr><td>{LABELS[status]}</td>{cells}</tr>")
-        parts.append("</table></div>")
-        items = "".join(f"<li>{esc(line)}</li>" for line in [qa_line(qa), *extra_lines(g)])
-        parts.append(f'<h2>الاختبار والقرارات</h2><div class="card"><ul>{items}</ul></div>')
-    parts.append("</main></body></html>\n")
-    return "".join(parts)
+        '<meta http-equiv="refresh" content="15">',
+        f"<title>{esc(title)} — لوحة التعريب</title><style>{HTML_STYLE}</style></head><body><main>",
+        f"<h1>{esc(title)}</h1>",
+        f'<p class="muted">تُولَّد آليًا من الملفات وتتحدث كل 15 ثانية. آخر توليد: {esc(generated)}. {esc(MEANING_NOTE)}</p>',
+        "<h2>المرحلة</h2>", phase_html(state, checks),
+        "<h2>التقدم</h2>", progress_html(groups, qa),
+        '<h2>الخطة والملاحظات</h2><div class="card plan">', markdown_html(plan_text), "</div>",
+        "</main></body></html>\n",
+    ])
+
+
+def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX, out: Path = DASHBOARD,
+                    project=None, plan_file: Path = PLAN_FILE) -> Path:
+    """Regenerate the dashboard from units, state, the LQA matrix, and PLAN.md. Costs no model tokens."""
+    project = project or pipeline.Project(units_dir=units_dir, qa_file=qa_file)
+    groups = compute(units.all_units(units.load(units_dir, units.Report())))
+    state = project.state()
+    try:
+        _, checks = pipeline.evaluate(project)
+    except Exception as exc:  # the page must still render with a broken setting
+        checks = [(False, f"تعذر تقييم المرحلة: {exc}")]
+    try:
+        title = project.settings().get("game", {}).get("name") or ""
+        title = title if pipeline.filled(title) else "مشروع التعريب"
+    except Exception:
+        title = "مشروع التعريب"
+    plan_text = plan_file.read_text(encoding="utf-8") if plan_file.is_file() else ""
+    page = render_dashboard(groups, qa_cases(qa_file), datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            plan_text, state, checks, str(title))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(page, encoding="utf-8", newline="\n")
+    return out
+
+
+def auto_dashboard(*paths_in_use) -> None:
+    """Refresh the dashboard after a state change, only for the real project, never for test paths."""
+    unit_root = units.UNITS_DIR.resolve()
+    defaults = {unit_root, (ROOT / "state" / "pipeline.json").resolve(), QA_MATRIX.resolve()}
+    if all(Path(p).resolve() in defaults or Path(p).resolve().is_relative_to(unit_root) for p in paths_in_use):
+        try:
+            write_dashboard()
+        except Exception as exc:  # never fail the real command because of the page
+            print(f"WARN  dashboard not refreshed: {exc}")
 
 
 # ----- commands -------------------------------------------------------------
@@ -244,16 +355,30 @@ def load_checked(path: Path):
     return files, report
 
 
-def print_report(report) -> None:
-    for line in report.errors:
-        print(f"ERROR {line}")
-    for line in report.warnings:
-        print(f"WARN  {line}")
+LINE_LIMIT = 20
+
+
+def problem_kind(line: str) -> str:
+    """The message without its file, line, and unit id, so repeated problems group together."""
+    text = re.sub(r"^.*?\]: ", "", line)
+    text = re.sub(r"^\S+:\d+: ", "", text)
+    return re.split(r"[(:{=]", text, maxsplit=1)[0].strip()
+
+
+def print_report(report, limit: int = LINE_LIMIT) -> None:
+    """Print at most `limit` lines per level, then counts by kind: output stays small for any project size."""
+    for level, lines in (("ERROR", report.errors), ("WARN ", report.warnings)):
+        for line in lines[:limit]:
+            print(f"{level} {line}")
+        if len(lines) > limit:
+            kinds = Counter(problem_kind(line) for line in lines)
+            print(f"{level} ... {len(lines) - limit} more; by kind: "
+                  + "; ".join(f"{count}x {kind}" for kind, count in kinds.most_common(8)))
 
 
 def cmd_validate(args) -> int:
     files, report = load_checked(args.path)
-    print_report(report)
+    print_report(report, args.limit)
     print(f"FILES={len(files)} UNITS={len(units.all_units(files))} "
           f"ERRORS={len(report.errors)} WARNINGS={len(report.warnings)}")
     return 1 if report.errors else 0
@@ -291,11 +416,14 @@ def cmd_search(args) -> int:
                   "both": [unit.get("source", ""), unit.get("target", "")]}[args.field]
         if any(needle in (value or "").casefold() for value in fields):
             hits += 1
+            if hits > args.limit:
+                continue
             where = unit.get("asset") or unit.get("file")
             print(f"{unit.get('id')}\t{unit.get('kind')}\t{unit.get('status')}\t{where}\t"
                   f"{unit.get('source', '')}\t{unit.get('target', '')}")
     print_report(report)
-    print(f"MATCHES={hits}")
+    shown = f" SHOWN={args.limit}" if hits > args.limit else ""
+    print(f"MATCHES={hits}{shown}")
     return 0
 
 
@@ -344,6 +472,7 @@ def cmd_mark(args) -> int:
         return 1
     for unit_file in files:
         units.write(unit_file)
+    auto_dashboard(args.path)
     print(f"MARKED={changed} STATUS={args.status}")
     return 0 if changed else 1
 
@@ -422,6 +551,7 @@ def cmd_extract(args) -> int:
         return 1
     out.parent.mkdir(parents=True, exist_ok=True)
     units.write(units.UnitFile(out, extracted))
+    auto_dashboard(out)
     translated = sum(1 for u in extracted if u.get("target"))
     print(f"EXTRACTED={len(extracted)} ALREADY_TRANSLATED={translated} OUT={out}")
     return 0
@@ -497,6 +627,7 @@ def cmd_gate(args) -> int:
         print(f"GATE {phase}: {'READY' if ready else 'BLOCKED'}")
         return 0 if ready else 1
     moved, now_phase, checks = pipeline.advance(project)
+    auto_dashboard(args.state, args.units, args.qa)
     print_checks(checks)
     if moved:
         print(f"GATE {phase}: PASSED -> {now_phase}")
@@ -511,6 +642,7 @@ def cmd_reopen(args) -> int:
     except ValueError as exc:
         print(f"ERROR {exc}")
         return 2
+    auto_dashboard(args.state, args.units, args.qa)
     print(f"REOPENED {args.phase}")
     return 0
 
@@ -521,6 +653,7 @@ def cmd_accept(args) -> int:
     except ValueError as exc:
         print(f"ERROR {exc}")
         return 2
+    auto_dashboard(args.state, args.units, args.qa)
     print("ACCEPTANCE_RECORDED")
     return 0
 
@@ -556,11 +689,90 @@ def cmd_progress(args) -> int:
     if args.format == "chat":
         print(render_chat(groups, qa), end="")
         return 0
-    text = render_md(groups, qa, generated) if args.format == "md" else render_html(groups, qa, generated)
+    if args.format == "html":
+        out = write_dashboard(args.path, args.qa, args.out or DASHBOARD)
+        print(f"DASHBOARD={out}")
+        return 0
+    text = render_md(groups, qa, generated)
     out = args.out or DEFAULT_OUT[args.format]
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(text, encoding="utf-8", newline="\n")
     print(f"PROGRESS_REPORT={out}")
+    return 0
+
+
+def cmd_update(args) -> int:
+    """Re-extract after a game update and merge into the existing units file."""
+    adapter = adapter_base.load_adapter(args.adapter, args.game, parse_options(args.option))
+    report = units.Report()
+    files = units.load(args.path, report)
+    if report.errors or len(files) != 1:
+        print_report(report)
+        print("ERROR --path must name one valid units file")
+        return 1
+    merged, summary = tools.merge_update(files[0].units, adapter.extract(), set(adapter.inventory()))
+    print(f"UNCHANGED={summary['unchanged']} CHANGED={len(summary['changed'])} ADDED={len(summary['added'])} "
+          f"REMOVED={len(summary['removed'])} KEPT_OTHER={summary['kept_other']}")
+    for label in ("changed", "added", "removed"):
+        if summary[label]:
+            print(f"{label.upper()}: {' '.join(summary[label][:LINE_LIMIT])}"
+                  + (" ..." if len(summary[label]) > LINE_LIMIT else ""))
+    if args.dry_run:
+        print("DRY_RUN: nothing written")
+        return 0
+    if summary["removed"]:
+        stamp = datetime.now().strftime("%Y%m%dT%H%M%S")
+        removed = ROOT / "work" / "updates" / f"removed-{stamp}.jsonl"
+        removed.parent.mkdir(parents=True, exist_ok=True)
+        gone = set(summary["removed"])
+        units.write(units.UnitFile(removed, [u for u in files[0].units if u["id"] in gone]))
+        print(f"REMOVED_UNITS_SAVED={removed}")
+    units.write(units.UnitFile(files[0].path, merged))
+    auto_dashboard(args.path)
+    return 0
+
+
+def cmd_tmx(args) -> int:
+    files, report = load_checked(args.path)
+    if report.errors:
+        print_report(report)
+        print("NOT_WRITTEN: fix unit errors first")
+        return 1
+    game = ""
+    try:
+        game = pipeline.Project().settings().get("game", {}).get("name") or ""
+    except Exception:
+        pass
+    tree = tools.tmx(units.all_units(files), args.min_status, args.source_lang, args.target_lang, game)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    tree.write(args.out, encoding="utf-8", xml_declaration=True)
+    print(f"TMX_UNITS={len(tree.getroot().find('body'))} OUT={args.out}")
+    return 0
+
+
+def cmd_estimate(args) -> int:
+    all_units = units.all_units(units.load(args.path, units.Report()))
+    print(json.dumps(tools.estimate(all_units, args.batch_tokens, args.overhead, args.output_ratio),
+                     ensure_ascii=False))
+    return 0
+
+
+def cmd_pseudo(args) -> int:
+    game, out = Path(args.game).resolve(), Path(args.out).resolve()
+    if out == game or out.is_relative_to(game):
+        print("ERROR --out must be outside the game folder")
+        return 2
+    adapter = adapter_base.load_adapter(args.adapter, game, parse_options(args.option))
+    out.mkdir(parents=True, exist_ok=True)
+    written = adapter.rebuild(tools.pseudo_targets(adapter.extract()), out)
+    print(f"PSEUDO_FILES={len(written)} OUT={out}")
+    print("Install the files on a copy of the game to check Arabic rendering, RTL, and line length before translating.")
+    return 0
+
+
+def cmd_dashboard(args) -> int:
+    out = write_dashboard(args.units, args.qa, args.out, project_of(args))
+    print(f"DASHBOARD={out}")
     return 0
 
 
@@ -572,7 +784,9 @@ def main(argv=None) -> int:
         p.add_argument("path", nargs="?", type=Path, default=units.UNITS_DIR)
         return p
 
-    with_path(sub.add_parser("validate", help="check every unit")).set_defaults(run=cmd_validate)
+    p = with_path(sub.add_parser("validate", help="check every unit"))
+    p.add_argument("--limit", type=int, default=LINE_LIMIT, help="lines shown per level (counts cover all)")
+    p.set_defaults(run=cmd_validate)
     with_path(sub.add_parser("normalize", help="fill hashes and canonical key order")).set_defaults(run=cmd_normalize)
 
     p = sub.add_parser("search", help="find text in sources and targets, including image text")
@@ -580,6 +794,7 @@ def main(argv=None) -> int:
     with_path(p)
     p.add_argument("--field", choices=("both", "source", "target"), default="both")
     p.add_argument("--kind", choices=units.KINDS)
+    p.add_argument("--limit", type=int, default=50, help="matches printed (the count covers all)")
     p.set_defaults(run=cmd_search)
 
     p = sub.add_parser("mark", help="advance the status of selected units")
@@ -619,6 +834,9 @@ def main(argv=None) -> int:
         return p
 
     with_project(sub.add_parser("next", help="show the current phase and what blocks it")).set_defaults(run=cmd_next)
+    p = with_project(sub.add_parser("dashboard", help="regenerate reports/dashboard.html"))
+    p.add_argument("--out", type=Path, default=DASHBOARD)
+    p.set_defaults(run=cmd_dashboard)
     p = with_project(sub.add_parser("gate", help="advance the phase when every exit criterion passes"))
     p.add_argument("--check", action="store_true", help="evaluate without advancing or recording")
     p.set_defaults(run=cmd_gate)
@@ -629,6 +847,36 @@ def main(argv=None) -> int:
     p = with_project(sub.add_parser("accept", help="record the user's acceptance of the playtest build"))
     p.add_argument("--note", required=True, help="the user's words, build, and date")
     p.set_defaults(run=cmd_accept)
+
+    p = sub.add_parser("update", help="merge a game update into an existing units file")
+    p.add_argument("--adapter", required=True, type=Path)
+    p.add_argument("--game", required=True, type=Path)
+    p.add_argument("--path", required=True, type=Path, help="the units file this adapter produced")
+    p.add_argument("--option", action="append", default=[], help="adapter option key=value")
+    p.add_argument("--dry-run", action="store_true")
+    p.set_defaults(run=cmd_update)
+
+    p = sub.add_parser("tmx", help="export translated units to a TMX memory")
+    p.add_argument("--out", required=True, type=Path)
+    p.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    p.add_argument("--min-status", choices=units.STATUSES[1:], default="proofread")
+    p.add_argument("--source-lang", default="en")
+    p.add_argument("--target-lang", default="ar")
+    p.set_defaults(run=cmd_tmx)
+
+    p = sub.add_parser("estimate", help="estimate tokens and batches for untranslated units")
+    p.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    p.add_argument("--batch-tokens", type=int, default=4000)
+    p.add_argument("--overhead", type=int, default=1200)
+    p.add_argument("--output-ratio", type=float, default=1.35)
+    p.set_defaults(run=cmd_estimate)
+
+    p = sub.add_parser("pseudo", help="build pseudo-Arabic files to test rendering before translating")
+    p.add_argument("--adapter", required=True, type=Path)
+    p.add_argument("--game", required=True, type=Path)
+    p.add_argument("--out", required=True, type=Path)
+    p.add_argument("--option", action="append", default=[], help="adapter option key=value")
+    p.set_defaults(run=cmd_pseudo)
 
     p = sub.add_parser("findings", help="validate and summarize proofreading findings")
     p.add_argument("files", nargs="+", type=Path)

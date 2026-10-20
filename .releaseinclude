@@ -2,15 +2,13 @@ AGENTS.md
 CHANGELOG.md
 CLAUDE.md
 CONTRIBUTING.md
-GUIDE.md
 LEGAL_AND_CLEAN_ROOM_POLICY.md
 LICENSE
 MODEL_AND_SUBAGENT_POLICY.md
 PROJECT.yaml
 RELEASE_COMPLIANCE.md
 SECURITY.md
-STATUS.md
-STYLE.md
+PLAN.md
 THIRD_PARTY_NOTICES.md
 اقرأني.md
 .gitignore
@@ -34,8 +32,6 @@ qa/**
 loc-kit/**
 knowledge/README.md
 knowledge/GENERAL_LOCALIZATION_KNOWLEDGE.md
-source/README.md
-target/README.md
 units/README.md
 state/README.md
 backups/README.md

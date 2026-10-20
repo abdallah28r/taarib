@@ -34,7 +34,7 @@ options have a meaningful aesthetic tradeoff it cannot resolve objectively.
 If a required answer is missing, continue read-only discovery and reversible
 preparation, then ask once for the unresolved choice before crossing its
 boundary. Do not install unless the intended user-owned copy is unambiguous.
-Record answers in `PROJECT.yaml`/`STATUS.md`; do not ask again on
+Record answers in `PROJECT.yaml` only; do not ask again on
 every resumed session. A user may revise any preference later.
 
 ## Phases and gates
@@ -55,7 +55,7 @@ tool/route selection → extraction and small
 round-trip → contextual translation (including opted-in images) → structural
 and visual QA → validated build → checked installation on the user's copy.
 Parallelize useful independent work under the chosen subagent preference.
-Run routine tests, fix bounded failures, and resume from `STATUS.md` without
+Run routine tests, fix bounded failures, and resume from `loc.py next` and `PLAN.md` without
 requesting phase-by-phase approval. Report only meaningful progress or a real
 blocker; do not present each completed phase as a question.
 

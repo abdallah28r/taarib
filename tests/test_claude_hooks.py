@@ -91,6 +91,20 @@ class HookTests(unittest.TestCase):
         reason = hooks.post_tool({"tool_input": {"file_path": str(path)}}, self.root)
         self.assertIn("requires a target", reason)
 
+    def test_post_tool_caps_plan_length(self):
+        plan = self.root / "PLAN.md"
+        plan.write_text("\n".join(f"- line {i}" for i in range(200)), encoding="utf-8")
+        reason = hooks.post_tool({"tool_input": {"file_path": str(plan)}}, self.root)
+        self.assertIn("PLAN.md has 200 lines", reason)
+        plan.write_text("- short\n", encoding="utf-8")
+        self.assertIsNone(hooks.post_tool({"tool_input": {"file_path": str(plan)}}, self.root))
+
+    def test_post_tool_checks_project_yaml_despite_windows_case_folding(self):
+        project = self.root / "PROJECT.yaml"
+        project.write_text("game:\n  On: 1\n", encoding="utf-8")
+        reason = hooks.post_tool({"tool_input": {"file_path": str(project)}}, self.root)
+        self.assertIn("YAML key problems", reason)
+
     def test_post_tool_flags_generated_files(self):
         reason = hooks.post_tool({"tool_input": {"file_path": str(self.root / ".claude" / "agents" / "x.md")}}, self.root)
         self.assertIn("is generated", reason)

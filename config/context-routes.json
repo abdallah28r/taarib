@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "always": ["PROJECT.yaml", "STATUS.md"],
+  "always": ["PROJECT.yaml", "PLAN.md"],
   "routes": {
     "discovery": {
       "skill": ".agents/skills/game-localization-engineering/SKILL.md",

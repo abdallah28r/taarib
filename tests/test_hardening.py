@@ -12,14 +12,6 @@ class HardeningTests(unittest.TestCase):
     def test_icu_requires_other(self):
         errors,_=fmt.check_pair("{n, plural, one {one} other {many}}","{n, plural, one {واحد}}","x")
         self.assertTrue(any("other" in x for x in errors))
-    def test_pseudo_preserves_tokens(self):
-        script=ROOT/"scripts"/"pseudo_localize.py"
-        with tempfile.TemporaryDirectory() as d:
-            d=Path(d);source=d/"x.csv";output=d/"y.csv";source.write_text('id,source,target\n1,"Hello {player} <b>HP</b>",\n',encoding="utf-8")
-            subprocess.run([sys.executable,str(script),str(source),str(output)],check=True)
-            with output.open(encoding="utf-8") as stream:
-                row=next(csv.DictReader(stream))
-            self.assertIn("{player}",row["target"]);self.assertIn("<b>",row["target"])
     def test_patch_hash_is_enforced(self):
         script=ROOT/"scripts"/"apply_patch_package.py"
         with tempfile.TemporaryDirectory() as d:

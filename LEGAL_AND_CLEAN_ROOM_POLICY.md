@@ -83,7 +83,7 @@ permission as authorization to bypass game protection or distribute game assets.
   applicable license explicitly requires a more prominent location.
 - A dependency name does not need to appear in marketing merely because it is
   used; its license may still require a notice in the distributed package.
-- Before release, run `python scripts/license_guard.py` and package only entries
+- Before release, run `python scripts/maintainer/license_guard.py` and package only entries
   with an approved handling class.
 - Do not publish extracted game text, original archives, fonts, images, audio,
   keys, or other game assets without permission from their copyright owner.
