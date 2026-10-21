@@ -63,6 +63,17 @@ section.part { padding-top: 44px; display: grid; gap: 22px }
 .say b { color: var(--you) }
 .tagrow { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px }
 .tag { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--surface); color: var(--muted) }
+.tree { display: grid; gap: 8px; max-width: 760px }
+.tree .row { display: grid; grid-template-columns: 64px minmax(0, 15em) minmax(0, 1fr); gap: 4px 12px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px }
+.tree .kind { font-size: 12.5px; font-weight: 700; text-align: center; border-radius: 999px; padding: 1px 0; border: 1.5px solid currentColor }
+.tree .path { overflow-wrap: anywhere; text-align: start }
+.tree .what { color: var(--muted) }
+.tree .origin .kind { color: var(--muted) }
+.tree .copy { border: 2px solid var(--you) }
+.tree .copy .kind { color: var(--you) }
+.tree .game .kind { color: var(--file) }
+@media (max-width: 620px) { .tree .row { grid-template-columns: 64px minmax(0, 1fr) } .tree .what { grid-column: 1 / -1 } }
 .auto { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 16px }
 .auto .rail .stem { background: repeating-linear-gradient(var(--muted) 0 6px, transparent 6px 12px); width: 3px }
 .auto .ring { width: 30px; height: 30px; border-radius: 50%; border: 3px dashed var(--muted); flex: none }
@@ -177,7 +188,8 @@ td .dot { width: 28px; height: 28px; display: inline-grid; vertical-align: middl
   <header class="top">
     <span class="eyebrow">قالب تعريب الألعاب بالوكلاء — Claude Code وCodex</span>
     <h1>خريطة قالب التعريب</h1>
-    <p class="lead">صفحتان في صفحة واحدة. الأولى لمن يريد تعريب لعبة فقط: ماذا تفعل أنت، ومتى. الثانية لمن يريد أن يفهم ما يجري في الداخل، ويتتبّع مشكلة إلى مكانها، دون أن يقرأ ملفات القالب.</p>
+    <p class="lead">هذه الصفحة هي نقطة البداية لفهم القالب. فيها مخططان: الأول لمن يريد تعريب لعبة فقط، ماذا تفعل أنت ومتى. الثاني لمن يريد أن يفهم ما يجري في الداخل، ويتتبّع مشكلة إلى مكانها، دون أن يقرأ ملفات القالب.</p>
+    <p class="muted" style="font-size:13.5px">للمطوّرين: قواعد الوكيل في <code>AGENTS.md</code>، وكل أوامر <code>loc.py</code> في <code>references/translation-units.md</code>، وخطوات نشر القالب في <code>references/release.md</code>.</p>
     <nav class="jump" aria-label="أقسام الصفحة">
       <a href="#user">١. أنت كمستخدم</a>
       <a href="#system">٢. كيف يعمل من الداخل</a>
@@ -191,7 +203,7 @@ td .dot { width: 28px; height: 28px; display: inline-grid; vertical-align: middl
   <section class="part" id="user">
     <div class="part-head">
       <span class="eyebrow">المخطط الأول</span>
-      <h2>أنت كمستخدم: خمس لحظات فقط</h2>
+      <h2>أنت كمستخدم: تحضير واحد، ثم خمس لحظات</h2>
       <p class="lead">الدوائر الممتلئة هي ما تفعله أنت. الدوائر المتقطعة هي ما يفعله الوكيل وحده بينها، دون أن ينتظرك.</p>
     </div>
 
@@ -206,6 +218,7 @@ td .dot { width: 28px; height: 28px; display: inline-grid; vertical-align: middl
           <li>اختيار الأدوات أو الخطوط أو حجم الدفعات.</li>
           <li>الموافقة بعد كل مرحلة. الوكيل لا يتوقف ليستأذن في كل خطوة.</li>
           <li>نسخ ملفات اللعبة احتياطيًا. الوكيل ينسخ كل ملف قبل أن يلمسه.</li>
+          <li>نقل اللعبة إلى داخل القالب، أو تثبيت أدوات بنفسك. الوكيل يجهّز ما تحتاجه اللعبة.</li>
         </ul>
       </div>
       <div class="panel stop">
@@ -297,9 +310,18 @@ const rich = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
 
 /* ---------- Part 1 data ---------- */
 const JOURNEY = [
-  { you: true, title: "افتح مجلد القالب واطلب التعريب",
-    text: "افتح المجلد في Claude Code أو Codex، واكتب طلبك بكلامك.",
-    say: "<b>أنت:</b> عرّب لعبة «اسم اللعبة»، وهي مثبتة في المسار …",
+  { you: true, title: "جهّز نسخة من القالب لهذه اللعبة",
+    text: "انسخ مجلد القالب <code>arabic-loc-template</code> كاملًا، لا ملفًا منه. احتفظ بالأصل نظيفًا واعمل في النسخة. سمِّ النسخة كما تحب؛ الاسم للتمييز فقط، ولا يعرّف اللعبة. ثم افتح <b>مجلد النسخة نفسه</b> في Claude Code أو Codex: المجلد الذي تجد فيه مباشرة <code>AGENTS.md</code> و<code>CLAUDE.md</code> و<code>PROJECT.yaml</code>.",
+    tree: [
+      ["origin", "الأصل", "arabic-loc-template", "لا تعمل فيه. انسخ منه لكل لعبة جديدة."],
+      ["copy", "نسختك", "Station-عربي", "افتح هذا المجلد في Claude Code أو Codex. هنا كل العمل والسجلات."],
+      ["game", "اللعبة", "…\\steamapps\\common\\Station", "تبقى في مكانها. لا تنقلها إلى القالب، ولا تضع القالب داخلها."],
+    ],
+    note: "لماذا هذا المجلد بالذات؟ الوكيل يقرأ قواعده من <code>AGENTS.md</code> و<code>CLAUDE.md</code> في المجلد المفتوح، والحراس التي تمنع الكتابة في اللعبة قبل النسخ الاحتياطي لا تعمل إلا من هنا.",
+    tags: ["دقيقتان", "مرة لكل لعبة"] },
+  { you: true, title: "اطلب التعريب بكلامك",
+    text: "اكتب طلبك في المحادثة، ومعه مسار اللعبة إن عرفته. الوكيل يتولى الباقي.",
+    say: "<b>أنت:</b> عرّب لعبة Station، وهي مثبتة في <code>C:\\…\\Station</code>. نفّذ المراحل دون انتظار موافقتي بعد كل مرحلة، وأعطني اللعبة لأجربها قبل أي حزمة.",
     tags: ["دقيقة واحدة"] },
   { you: true, title: "أجب أسئلة البداية مرة واحدة",
     text: "يسألك الوكيل مجموعة واحدة من الأسئلة، ويحفظ إجاباتك فلا يكررها في الجلسات القادمة.",
@@ -326,8 +348,10 @@ document.getElementById("journey").innerHTML = JOURNEY.map(s => {
   if (s.auto) return `<div class="auto"><div class="rail"><span class="ring" aria-hidden="true"></span><span class="stem"></span></div>
     <div class="auto-body"><p>${rich(s.text)}</p><div class="agent-chips">${s.chips.map(c => `<span>${c}</span>`).join("")}</div></div></div>`;
   n += 1;
-  return `<div class="step"><div class="rail"><span class="big">${"١٢٣٤٥"[n - 1]}</span><span class="stem"></span></div>
-    <div class="step-body"><h3>${s.title}</h3><p>${s.text}</p>${s.say ? `<p class="say">${s.say}</p>` : ""}
+  const tree = s.tree ? `<div class="tree">${s.tree.map(r => `<div class="row ${r[0]}"><span class="kind">${r[1]}</span>
+    <code class="path">${esc(r[2])}</code><span class="what">${r[3]}</span></div>`).join("")}</div><p class="muted">${s.note}</p>` : "";
+  return `<div class="step"><div class="rail"><span class="big">${"٠١٢٣٤٥"[n - 1]}</span><span class="stem"></span></div>
+    <div class="step-body"><h3>${s.title}</h3><p>${s.text}</p>${tree}${s.say ? `<p class="say">${s.say}</p>` : ""}
     <div class="tagrow">${s.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div></div></div>`;
 }).join("");
 
@@ -481,6 +505,7 @@ document.getElementById("agent-table").innerHTML =
   AGENTS.map(a => `<tr><td><span class="dot ${a[0]}">${KIND[a[0]]}</span><b>${a[1]}</b></td><td>${a[2]}</td><td>${a[3]}</td><td>${a[4]}</td><td>${a[5]}</td></tr>`).join("") + "</tbody>";
 
 const TROUBLE = [
+  ["الوكيل لا يعرف القواعد، أو لا يسأل أسئلة البداية", "٠ التحضير", "فُتح مجلد خاطئ. افتح مجلد النسخة الذي فيه `AGENTS.md` مباشرة، ثم ابدأ جلسة جديدة."],
   ["الحروف العربية في اللعبة مفككة أو مقلوبة", "٢ الاستكشاف", "قرار عرض العربية كان خاطئًا لهذا المحرك. يُغيَّر في المحوّل إلى «يحتاج تشكيلًا مسبقًا» ثم يُعاد البناء."],
   ["نص مقصوص أو خارج الإطار", "٦ تجربتك", "يُفتح إصلاح لتلك الجمل وحدها: صياغة أقصر أو تعديل حجم الخط."],
   ["جملة خاطئة المعنى أو الجنس", "٦ تجربتك", "إصلاح صغير لتلك الجملة، ثم تدقيق جديد، ثم إعادة بناء."],

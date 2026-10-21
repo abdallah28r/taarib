@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-21 — The template map is the starting point
+
+- `خريطة-القالب.html` replaces `اقرأني.md` as the human entry point. It adds
+  step zero: copy the whole template folder per game, open that copy itself in
+  Claude Code or Codex, and leave the game where it is. Release commands stay
+  in `references/release.md`; tool setup stays in the engineering skill.
+
 ## 2026-10-21 — Roadmap phase 5: fix lane, needs-rewrite, RTL rendering
 
 - Fix lane: `loc.py fix open|close|list`. A fix records what happens now,
