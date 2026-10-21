@@ -34,7 +34,6 @@ tools/**
 qa/**
 loc-kit/**
 knowledge/README.md
-knowledge/GENERAL_LOCALIZATION_KNOWLEDGE.md
 units/README.md
 state/README.md
 backups/README.md

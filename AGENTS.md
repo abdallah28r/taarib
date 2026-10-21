@@ -149,7 +149,8 @@ with a test, through `localization-project-maintenance`.
   localization notes, the current blocker, and one resumable next action.
   **Batch plan:** before leaving extraction, write every batch as one
   checklist line under `## الدفعات` (`- [ ] batch-001 — scope — translator /
-  proofreader`); tick it `- [x]` when that batch is proofread, and append
+  proofreader`), cut along scenes or screens and never splitting one between
+  writers; tick it `- [x]` when that batch is proofread, and append
   `— unfinished: ...` only while a batch is stopped midway. The extraction
   gate needs the list and the localization gate needs every box ticked, and
   the dashboard shows it live. Add a batch line if new text appears; never
@@ -164,15 +165,13 @@ with a test, through `localization-project-maintenance`.
   Every `loc.py` command and when to use it: `references/translation-units.md`.
 - `glossary.yaml`: approved terminology, names, context variants, and voices.
 - `work/NOTES.md`: temporary findings during a phase.
-- `knowledge/PROJECT_DISCOVERIES.md`: promoted cross-game findings only.
-- `engines/<engine>.md`: promoted engine/version evidence only.
-- `reports/archive/`: historical reports; never read during ordinary work.
+- `engines/<engine>.md`: the one place for knowledge that outlives a game;
+  discovery loads it for the next game on that engine.
 
 Capture raw discoveries in `work/NOTES.md`; promote reusable findings once at
 the phase boundary, or immediately only if a verified fact changes a safety or
-tool decision. Keep detailed QA defects in `qa/LQA_MATRIX.csv`, the QA summary
-in `reports/QA.md`, and only blockers/next action in STATUS. Do not repeat the
-same finding across all records.
+tool decision. Keep QA defects in `qa/LQA_MATRIX.csv` and only blockers/next
+action in `PLAN.md`. Do not repeat the same finding across records.
 
 ## Verification
 

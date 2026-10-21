@@ -71,8 +71,6 @@ Follow the normal QA and user-playtest gate before shipping. A recipient-facing
 package must state mod dependencies and licenses, verify its supported build,
 and include only files that may be redistributed.
 
-At the phase boundary, promote transferable general methods to
-`knowledge/PROJECT_DISCOVERIES.md` and tested engine/build-specific mod
-knowledge to `engines/<engine>.md`: chosen route, alternatives rejected,
+At the phase boundary, promote tested mod knowledge to `engines/<engine>.md`: chosen route, alternatives rejected,
 version, evidence, conflicts, rollback, and what must be rechecked in another
 game. Do not copy a game's assets or private install paths into the template.

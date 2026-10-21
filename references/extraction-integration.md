@@ -10,6 +10,12 @@ and commands unless runtime evidence proves visibility.
 ## Extraction
 
 - Prefer the engine's localization system and existing proven tools.
+- Build every time from the verified original, never from a previously
+  patched file, so changes cannot pile up.
+- Garbled Arabic in a terminal is not proof of corruption: check the bytes
+  and read with an explicit encoding before any bulk replace.
+- Never commit game files to Git or tests; use a small synthetic fixture or
+  hashes and structural reports.
 - Preserve the native format as source of truth. CSV/TSV is an interchange
   format only when every key, namespace, context, plural, comment, ordering,
   escape, encoding requirement, and rebuild field survives the round trip.

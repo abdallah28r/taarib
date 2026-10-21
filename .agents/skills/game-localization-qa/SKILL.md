@@ -44,6 +44,4 @@ live in those references and are not repeated here.
 - Record each distinct defect once in `qa/LQA_MATRIX.csv` with screen/key,
   environment, observed/expected result, severity, evidence, and retest.
 
-Update `reports/QA.md` at a QA milestone, blocker, or handoff with concise
-counts, blockers, and untested areas; do not rewrite a full report after every
-clean translation batch. `PLAN.md` gets only the blocker and next action.
+`PLAN.md` gets only the blocker and next action; the dashboard shows the counts.

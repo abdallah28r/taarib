@@ -4,6 +4,7 @@ Use only for a new game/build, an unknown format, or a failed existing route.
 
 1. Inspect read-only. Inventory names, extensions, sizes, magic bytes when
    useful, locales, localization containers, fonts, and existing loaders.
+   Visible text can also live in data tables, scripts, fonts, and images.
 2. Run `detect_engine.py` and `detect_protection.py`. Filename detection is a
    hypothesis; a clean protection scan is not proof. A protection hit stops
    mutation and never authorizes bypass.
@@ -35,8 +36,7 @@ is stale, the selected tool/mod fails, a mod conflict appears, or a concrete
 question remains unanswered. Do not search all community mods indiscriminately.
 Do not perform broad recurring searches merely because a session resumed.
 
-Promote general reusable findings to `knowledge/PROJECT_DISCOVERIES.md` and
-engine-specific evidence to `engines/<engine>.md` at the phase boundary. Keep
+Promote reusable evidence to `engines/<engine>.md` at the phase boundary. Keep
 temporary notes in `work/NOTES.md`; do not duplicate them across every report.
 
 Before studying another application, follow `LEGAL_AND_CLEAN_ROOM_POLICY.md`.

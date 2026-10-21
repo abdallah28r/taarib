@@ -66,8 +66,8 @@ Check the models the current runtime exposes when you start a subagent, and pick
 ## Usage planning
 
 Before a bulk translation, run
-`python scripts/loc.py estimate` and record the estimate in
-`PLAN.md`. The estimate is for shard planning, not billing. If the available
+`python scripts/loc.py estimate` to size batches; it is for shard planning, not
+billing, and is recomputed on demand, so do not record it. If the available
 quota is insufficient for two estimated batches or repeated rate-limit/quota
 errors persist after bounded retries, finish or checkpoint the current batch,
 record resumable state, and stop.
@@ -96,6 +96,6 @@ Only one agent may write a given file at a time. Prefer read-only subagents for 
 
 ## Reusable improvements
 
-When work reveals a useful subagent tool, skill, script, evaluator, prompt contract, or routing improvement, add it locally when it is safe, deterministic, relevant, and permitted. Otherwise record it in `reports/IMPROVEMENT_PROPOSALS.md` with evidence and an acceptance test. Never use this permission to install a model, contact an unapproved service, weaken this policy, or expand the user's task.
+When work reveals a useful subagent tool, skill, script, evaluator, prompt contract, or routing improvement, add it locally when it is safe, deterministic, relevant, and permitted. Otherwise tell the user in one line in chat. Never use this permission to install a model, contact an unapproved service, weaken this policy, or expand the user's task.
 
 The machine-readable contract is `config/agent-policy.json`. Validate it with `python scripts/maintainer/check_agent_policy.py`. Generate a bounded delegation brief with `python scripts/make_subagent_brief.py --route <route> --task <task> --scope <scope> [--runtime codex|claude-code]`.

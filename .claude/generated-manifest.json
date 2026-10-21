@@ -6,18 +6,14 @@
     ".claude/agents/researcher.md": "596d8d867f158ef4380e96b159bb5c5fb80424c22acf28ae153e5c27a54b994e",
     ".claude/agents/translator.md": "ded172c63d69539c942431292e060891792c1dccd7eb36833372be3f5ec2f8a9",
     ".claude/skills/arabic-game-translation/SKILL.md": "a346dd49ca3fd1e5bb9393e69243560043e41d356a6d92fce02710b778426181",
-    ".claude/skills/arabic-game-translation/references/ai-localization-workflow.md": "d6061143814a88070bc2080591121286e5058e419e1107d459009a497e46862a",
     ".claude/skills/arabic-proofreading/SKILL.md": "cdd56de7a3c6e534d68de884b31f9af79c4db5a968b0a017a081d87b6f0ac8ac",
     ".claude/skills/arabic-proofreading/references/proofreading-checklist.md": "332e1bc74107a6dbcaba4d1ce6a0ae5980e031220f62c0d5277ed9396e95f8a1",
     ".claude/skills/game-image-localization/SKILL.md": "b5693adfbe1a7fd934b7aa2eecc700ff1353e17a92848d1751b6f40f4b1e15c2",
     ".claude/skills/game-localization-engineering/SKILL.md": "26ea30bf582339804d5878b0b64b072e811ec71a89e9f8318d140c153274efa9",
-    ".claude/skills/game-localization-engineering/references/engine-playbooks.md": "6d5ecb6d3d4f7ac987c6a5c7767f5028850761b2f525a6aa662f5e1a519f8d4e",
-    ".claude/skills/game-localization-engineering/references/tool-catalog.md": "feb45ced90f6fb295510b845e29f0f7329c82544f6acf097f781a879fe144bdc",
-    ".claude/skills/game-localization-qa/SKILL.md": "a1f55621bb3a5c74b1de43b4c2a75fdaad15a3ae33b9cfee93ed1455a327776d",
+    ".claude/skills/game-localization-qa/SKILL.md": "ae339780113501accd6414f46237d151c143804bf6c2106cff2c7dca289ced21",
     ".claude/skills/game-localization-qa/references/lqa-severity.md": "a0ac103af69217c1b0a3621917798a11cf8ce4ad0faa3d1986f74358b7800178",
-    ".claude/skills/localization-knowledge-capture/SKILL.md": "e1a80f4806c3fcc6791587fb60a46e81ef9590db6a04463e0f41ab75a4742872",
+    ".claude/skills/localization-knowledge-capture/SKILL.md": "094be7f4775413c79f684504281ac10052ca85c89a5a6f2de493dc12398dd3f3",
     ".claude/skills/localization-project-maintenance/SKILL.md": "91f65f6dba1c5dddf1399d0e65d3ce29cc07a06c823d33e83be20197d979eca3",
-    ".claude/skills/localization-project-maintenance/references/improvement-proposals.md": "fd768d2d3432b2c84cc5e96d1cedfb2b42ae54efb78a839f6d70e501890b21f7",
     ".claude/skills/localization-subagent-orchestration/SKILL.md": "c61d39f2a6195e084ce14282211dc793c8715632f4ba1a43f160ebb5e6f5d09e"
   }
 }

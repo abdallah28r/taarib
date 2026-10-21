@@ -62,7 +62,7 @@ its options. This table is the one map of when to use each.
 | any | `progress --format chat\|md\|html` | When the user asks, or per `reporting.progress_in_chat`. |
 | extraction | `extract --adapter --game --out` | Once the adapter contract passes. |
 | extraction | `pseudo --adapter --game --out` | Before translating: install on a copy to test Arabic rendering and length. |
-| extraction | `estimate` | Before the first bulk batch, to size batches; record it in `PLAN.md`. |
+| extraction | `estimate` | Before the first bulk batch, to size batches (not recorded anywhere). |
 | localization | `brief --batch --role --runtime` | Before sending a batch to a translator or proofreader. |
 | localization | `apply <answer.json> --batch --by` | Translator: write a batch answer keyed by unit id; refused unless every id matches. |
 | localization | `mark --status translated --by` | Only for units whose target was written another way (images). |

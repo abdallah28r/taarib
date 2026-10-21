@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-21 — Remove what nobody reads
+
+- Deleted files no route loads and no skill links: four skill references
+  (`ai-localization-workflow`, `engine-playbooks`, `tool-catalog`,
+  `improvement-proposals`), `qa/RTL_TEST_MATRIX.md`, the empty
+  `loc-kit/GAME_CONTEXT.md` and `SYSTEMS.md`, `scripts/build_manifest.py`,
+  `scripts/translation_map_stats.py` with its test, and `reports/archive/`.
+- Deleted records nobody reads: `knowledge/PROJECT_DISCOVERIES.md`,
+  `knowledge/GENERAL_LOCALIZATION_KNOWLEDGE.md` (its unique lessons moved
+  into the references that are loaded), `reports/QA.md`, and
+  `reports/IMPROVEMENT_PROPOSALS.md`. `engines/<engine>.md` is now the one
+  place knowledge carries between games; template ideas go to the user in
+  chat. The `loc.py estimate` result is no longer written to `PLAN.md`.
+
 ## 2026-10-21 — Record only what someone uses
 
 - No more recording of each subagent's model, reasoning effort, outputs, or
