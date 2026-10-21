@@ -94,6 +94,24 @@ section.part { padding-top: 44px; display: grid; gap: 22px }
 .panel.never h3 { color: var(--gate) }
 .panel.stop h3 { color: var(--accent) }
 
+/* ---------- Questions ---------- */
+.qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px }
+.q { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; min-width: 0 }
+.q .qhead { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start }
+.q .qn { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--you); color: var(--bg);
+  font-family: var(--display); font-size: 18px; font-weight: 700 }
+.q h3 { font-size: 17px; font-family: var(--body) }
+.q .opts { display: flex; flex-wrap: wrap; gap: 6px }
+.q .opts span { border: 1.5px solid var(--you); color: var(--you); border-radius: 999px; padding: 1px 12px; font-size: 13.5px; font-weight: 600 }
+.q .opts span.def { background: color-mix(in srgb, var(--you) 14%, transparent) }
+.q dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; font-size: 14px }
+.q dt { color: var(--muted); font-weight: 600; font-size: 13px }
+.q dd { margin: 0; min-width: 0; overflow-wrap: anywhere }
+.q .follow { border-top: 1px dashed var(--line); padding-top: 10px; display: grid; gap: 8px; font-size: 14px }
+.q .follow b { color: var(--you) }
+.side-grid.two-col { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+@media (max-width: 860px) { .side-grid.two-col { grid-template-columns: 1fr } }
+
 /* ---------- Legend ---------- */
 .legend { display: flex; flex-wrap: wrap; gap: 10px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px }
 .legend div { display: flex; align-items: center; gap: 8px; font-size: 14px }
@@ -198,6 +216,7 @@ td .dot { width: 28px; height: 28px; display: inline-grid; vertical-align: middl
     <p class="muted" style="font-size:13.5px">للمطوّرين: قواعد الوكيل في <code>AGENTS.md</code>، وكل أوامر <code>loc.py</code> في <code>references/translation-units.md</code>، وخطوات نشر القالب في <code>references/release.md</code>.</p>
     <nav class="jump" aria-label="أقسام الصفحة">
       <a href="#user">١. أنت كمستخدم</a>
+      <a href="#questions">كل الأسئلة</a>
       <a href="#system">٢. كيف يعمل من الداخل</a>
       <a href="#life">رحلة الجملة الواحدة</a>
       <a href="#agents">الوكلاء الفرعيون</a>
@@ -244,6 +263,32 @@ td .dot { width: 28px; height: 28px; display: inline-grid; vertical-align: middl
           <li>«اللعبة تحدّثت، حدّث الترجمة.»</li>
           <li>«أعد ملفات اللعبة الأصلية.»</li>
           <li>«قبلت النسخة.» (فقط عندما تكون راضيًا)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="part" id="questions">
+    <div class="part-head">
+      <span class="eyebrow">ما سيسألك عنه الوكيل</span>
+      <h2>كل الأسئلة: ستة في البداية، وقليل بعدها عند الحاجة فقط</h2>
+      <p class="lead">أسئلة البداية تأتي كلها في رسالة واحدة بعد «عرّب اللعبة». تُحفظ إجاباتك في <code>PROJECT.yaml</code> داخل مجلد اللعبة، فلا تُسأل مرة أخرى، ويمكنك تغيير أي إجابة لاحقًا بأن تطلب ذلك في المحادثة. إذا تأخرت في إجابة، يكمل الوكيل العمل الآمن ويسألك عنها مرة واحدة قبل الخطوة التي تحتاجها.</p>
+    </div>
+    <div class="qgrid" id="intake-questions"></div>
+    <div class="side-grid two-col">
+      <div class="panel stop">
+        <h3>أسئلة قد تأتي لاحقًا، عند الحاجة فقط</h3>
+        <ul id="later-questions"></ul>
+      </div>
+      <div class="panel never">
+        <h3>لن يسألك عنها أبدًا</h3>
+        <ul>
+          <li>أي أداة يستخدم، أو كيف يستخرج النصوص.</li>
+          <li>حجم الدفعات وعددها.</li>
+          <li>الفحوص الروتينية ونتائجها.</li>
+          <li>كل خط مرشح على حدة.</li>
+          <li>هل يكمل بعد كل مرحلة.</li>
+          <li>أي شيء أجبت عنه في البداية.</li>
         </ul>
       </div>
     </div>
@@ -342,7 +387,7 @@ const JOURNEY = [
   { you: true, title: "أجب أسئلة البداية مرة واحدة",
     text: "يسألك الوكيل مجموعة واحدة من الأسئلة، ويحفظ إجاباتك فلا يكررها في الجلسات القادمة.",
     say: "<b>الوكيل:</b><ol class=\"qs\"><li>ما اسم اللعبة؟ أقترح «Station» من اسم المجلد.</li><li>أين هي مثبتة؟ تكتب المسار أنت، أو أبحث عنها بنفسي في مكتبات Steam وEpic وGOG وغيرها وأعرض عليك ما وجدت لتؤكده.</li><li>هل أثبّت التعريب على نسختك من اللعبة؟</li><li>هل أستعين بوكلاء فرعيين؟</li><li>هل نعرّب النص المرسوم داخل الصور؟</li><li>هل أشغّل اللعبة لفحص سريع؟</li></ol>",
-    tags: ["نحو ٥ دقائق", "تُحفظ في PROJECT.yaml"] },
+    tags: ["نحو ٥ دقائق", "تُحفظ في PROJECT.yaml", "التفاصيل في «كل الأسئلة» أدناه"] },
   { auto: true, text: "الوكيل يعمل وحده: يستكشف اللعبة، يستخرج نصوصها، يترجمها دفعةً دفعة، يدققها بوكيل آخر، يبني النسخة العربية ويثبّتها إن سمحت. قد يستغرق هذا ساعات أو أيامًا بحسب حجم اللعبة.",
     chips: ["الاستكشاف", "الاستخراج", "الترجمة والتدقيق", "البناء والتثبيت"] },
   { you: true, optional: true, title: "تابع اللوحة إن أحببت",
@@ -372,6 +417,45 @@ document.getElementById("journey").innerHTML = JOURNEY.map(s => {
     <div class="step-body"><h3>${s.title}</h3><p>${s.text}</p>${sub}${howto}${tree}${s.say ? `<div class="say">${s.say}</div>` : ""}
     <div class="tagrow">${s.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div></div></div>`;
 }).join("");
+
+/* ---------- Intake questions ---------- */
+const QUESTIONS = [
+  { q: "ما اسم اللعبة؟", opts: [["يقترح اسم المجلد", true], ["تؤكده أو تصححه"]],
+    key: "game.name", why: "يظهر عنوانًا في لوحة التقدم، وبه يبحث الوكيل عن مكان اللعبة." },
+  { q: "أين اللعبة مثبتة؟", opts: [["تكتب المسار أنت"], ["يبحث عنها الوكيل", true]],
+    key: "game.install_path",
+    why: "منها يقرأ الوكيل ملفات اللعبة. البحث للقراءة فقط في مكتبات Steam وEpic وGOG وXbox وProgram Files، ثم يعرض ما وجده لتؤكده.",
+    follow: "<b>إن وجد أكثر من نسخة أو إصدار:</b> يعرضها ويسألك أيها. <b>إن لم يجد شيئًا:</b> يطلب منك المسار." },
+  { q: "هل أثبّت التعريب على نسختك من اللعبة؟", opts: [["نعم"], ["لا"]],
+    key: "workflow.install_to_user_copy",
+    why: "نعم: يثبّت النسخة المفحوصة بعد نسخ الأصل احتياطيًا، ويمكن التراجع عنها. لا: يجهّز الملفات ولا يلمس لعبتك." },
+  { q: "هل أستعين بوكلاء فرعيين؟", opts: [["نعم"], ["لا"]],
+    key: "workflow.subagent_preference",
+    why: "نعم: مترجم ومدقق وباحث ومعرّب صور منفصلون. لا: الوكيل الرئيسي يعمل وحده، ويدقق في جولة منفصلة باسم دور مختلف." },
+  { q: "هل نعرّب النص المرسوم داخل الصور؟", opts: [["نعم"], ["لا"]],
+    key: "workflow.image_scope",
+    why: "يخص الأزرار والعناوين والشعارات المرسومة صورًا. «نعم» لا تعني تعريب كل علامة تظهر في اللعبة.",
+    follow: "<b>إن أجبت نعم، يأتي سؤال إضافي:</b> هل يجوز إرسال هذه الصور إلى أداة تحرير الصور الرسمية من OpenAI؟ (نعم / لا) — يُحفظ في <code>image_localization.external_image_editing.enabled</code>. نتائجها مسودات تُراجع بالعين، لا نسخ نهائية." },
+  { q: "هل أشغّل اللعبة لفحص سريع؟", opts: [["نعم"], ["لا", true]],
+    key: "workflow.allow_launch_game",
+    why: "يساعد على كشف عطل واضح مبكرًا. الافتراضي «لا»، وتجربتك أنت تبقى مطلوبة في كل الأحوال." },
+];
+document.getElementById("intake-questions").innerHTML = QUESTIONS.map((q, i) => `<div class="q">
+  <div class="qhead"><span class="qn">${"١٢٣٤٥٦"[i]}</span><h3>${q.q}</h3></div>
+  <div class="opts">${q.opts.map(o => `<span class="${o[1] ? "def" : ""}">${o[0]}${o[1] ? " (المقترح)" : ""}</span>`).join("")}</div>
+  <dl><dt>لماذا</dt><dd>${q.why}</dd><dt>يُحفظ في</dt><dd><code>${q.key}</code></dd></dl>
+  ${q.follow ? `<div class="follow">${q.follow}</div>` : ""}</div>`).join("");
+
+const LATER = [
+  "قرار يغيّر المعنى ولا تحسمه اللعبة: جنس شخصية، أو هل المخاطَب واحد أم جماعة، أو صلة قرابة، أو حل لغز.",
+  "النبرة أو اللهجة أو الألفاظ الناضجة أو الإتاحة، فقط إن تركت اللعبة أو كلامك خيارًا مؤثرًا. الافتراضي: فصحى، وبحدة ألفاظ الأصل نفسها.",
+  "الخط، فقط إن تساوت خطوط مرخصة مناسبة وكان الفرق بينها ذوقيًا.",
+  "صلاحية لم تعطها، قبل الخطوة التي تحتاجها.",
+  "مانع يتعلق بالأمان، مثل حماية أو تشفير في اللعبة.",
+  "بعد تجربتك: هل تقبل النسخة؟ ولا يسجل القبول إلا بكلامك.",
+  "بعد القبول، إن طلبت: هل تريد حزمة تعريب للمشاركة؟",
+];
+document.getElementById("later-questions").innerHTML = LATER.map(x => `<li>${x}</li>`).join("");
 
 /* ---------- Part 2 data ---------- */
 const STATIONS = [
