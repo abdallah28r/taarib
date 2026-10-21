@@ -34,10 +34,13 @@ ordinary translation batch.
   context. Mark it for review and continue with independent rows.
 - Skip already approved Arabic targets. Use coherent scenes/screens rather than
   arbitrary row slices when context exists.
-- Write each translation into its unit (`target`, `status: translated`,
-  `translated_by`, `batch`) per `references/translation-units.md`, then run
-  `python scripts/loc.py validate` and the native format validator. Report
-  counts from `loc.py progress`, not from memory.
+- Return a batch as one JSON object keyed by unit id and write it with
+  `loc.py apply <file> --batch <batch> --by <label>`: it refuses the whole
+  batch if any id is missing, extra, or empty, so lines can never shift or be
+  dropped. Then run the native format validator. Report counts from
+  `loc.py progress`, not from memory.
+- To redo only the units with one problem, list them with `loc.py search
+  --problem <code> --ids-only` and send just those ids back through `apply`.
 
 Use a representative pilot only when tone, terminology, text type, or the
 translation route is genuinely new. Do not repeat it for every resumed batch.

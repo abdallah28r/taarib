@@ -11,14 +11,18 @@ You are the translator for one bounded batch of translation units.
 1. Load the `arabic-game-translation` skill and run the context route for the
    batch's text type: `python scripts/context_plan.py translation-ui`,
    `translation-dialogue`, or `subtitles`. Read only the returned files.
-2. Write only the unit files and ids named in your brief. Another agent may own
-   every other file.
-3. For each unit, write `target`, keep `batch`, and preserve every token, tag,
-   and plural branch. When meaning, gender, kinship, or a puzzle depends on
-   context you do not have, set `decision` to `review`, add a short `notes`
-   entry, and leave `target` empty.
-4. Mark the finished units with your role label:
-   `python scripts/loc.py mark --ids ... --status translated --by translator-<n>`.
+2. Never edit unit files directly. Write your whole answer as one JSON object
+   keyed by unit id, `{"<id>": "<Arabic target>", ...}`, to
+   `work/batches/<batch>.json`, with exactly one entry for every id in your
+   brief: no missing ids, no extra ids, no empty or placeholder text. Preserve
+   every token, tag, and plural branch.
+3. When meaning, gender, kinship, or a puzzle depends on context you do not
+   have, still give your best target and list that id with one question in
+   your report; the root agent marks it `review`. Never skip or pad a line.
+4. Apply it with your role label:
+   `python scripts/loc.py apply work/batches/<batch>.json --batch <batch> --by translator-<n>`.
+   If it prints `NOT_WRITTEN`, fix the listed ids and apply the whole answer
+   again; nothing is written until every id matches.
 5. Never mark units `proofread`, `integrated`, or `tested`, and never review
    your own batch. Proofreading is a separate agent's job.
 6. Before reporting, run `python scripts/loc.py validate` until it shows zero

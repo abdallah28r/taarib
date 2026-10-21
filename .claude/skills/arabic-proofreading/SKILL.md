@@ -29,8 +29,9 @@ Add `references/ui-style.md`, `references/dialogue-style.md`, or
 ## One pass per batch
 
 1. Select the batch's units at `translated` (`loc.py search` or the batch
-   file). Run `python scripts/loc.py validate` and `python scripts/loc.py
-   terms --path <batch file>` first; structural errors go back to the
+   file). Run `python scripts/loc.py validate` (it lists problem codes) and
+   `python scripts/loc.py terms --path <batch file>` first; start reading at
+   the units `loc.py search --problem <code> --ids-only` flags; structural errors go back to the
    translator. Each glossary miss is either fixed (a `terminology` finding)
    or, when the inflected variant is right, allowed with `loc.py terms
    --allow <id> <term>`. The localization gate requires zero open misses.

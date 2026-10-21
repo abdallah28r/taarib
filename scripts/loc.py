@@ -4,6 +4,8 @@
     python scripts/loc.py normalize [units/]
     python scripts/loc.py search "Save" [--kind image]
     python scripts/loc.py mark --batch batch-003 --status integrated --evidence "build 1.2 patch r4"
+    python scripts/loc.py apply work/batches/batch-003.json --batch batch-003 --by translator-1
+    python scripts/loc.py search --problem latin_leak --ids-only
     python scripts/loc.py findings work/proofreading/batch-003.jsonl
     python scripts/loc.py terms [--allow <id> <term>]   # glossary conformance
     python scripts/loc.py extract --adapter adapters/renpy.py --game <game_root> --out units/game.jsonl
@@ -204,7 +206,7 @@ main{max-width:760px;margin:0 auto;padding:24px 16px}h1{font-size:1.5rem;margin:
 .phases li.done{color:var(--fill);border-color:var(--fill)}.phases li.now{background:var(--fill);color:var(--card);border-color:var(--fill)}
 .plan h2,.plan h3,.plan h4{font-size:1rem;margin:16px 0 6px}.plan p{margin:4px 0}
 .checks{list-style:none;padding:0;margin:0}.checks li{padding:4px 0}.checks li.ok{color:var(--fill)}
-bdi{unicode-bidi:isolate}
+bdi{unicode-bidi:isolate}.checks li.err{color:#c0392b}
 td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right}ul{padding-inline-start:20px}
 @media (max-width:480px){.row{grid-template-columns:6.5rem 1fr 3.5rem}}
 """
@@ -246,7 +248,7 @@ def markdown_html(text: str) -> str:
     return "".join(out)
 
 
-def progress_html(groups: dict, qa: dict) -> str:
+def progress_html(groups: dict, qa: dict, problems: dict | None = None) -> str:
     g, esc = groups["all"], html.escape
     if not g["total"]:
         return f'<div class="card"><p>لا توجد وحدات ترجمة بعد.</p><p>{esc(qa_line(qa))}</p></div>'
@@ -270,6 +272,11 @@ def progress_html(groups: dict, qa: dict) -> str:
         parts.append(f"<tr><td>{LABELS[status]}</td>{cells}</tr>")
     items = "".join(f"<li>{esc(line)}</li>" for line in [qa_line(qa), *extra_lines(g)])
     parts.append(f'</table></div><div class="card"><ul>{items}</ul></div>')
+    if problems:
+        rows = "".join(f'<li class="{"err" if tools.PROBLEM_CODES[c][0] == "error" else ""}"><bdi>{c}</bdi>: {n}</li>'
+                       for c, n in problems.items())
+        parts.append(f'<div class="card"><p class="muted">المشكلات حسب الكود (loc.py search --problem)</p>'
+                     f'<ul class="checks">{rows}</ul></div>')
     return "".join(parts)
 
 
@@ -297,7 +304,8 @@ def phase_html(state: dict, checks) -> str:
     return "".join(parts)
 
 
-def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, state: dict, checks, title: str) -> str:
+def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, state: dict, checks, title: str,
+                     problems: dict | None = None) -> str:
     esc = html.escape
     return "".join([
         '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">',
@@ -307,7 +315,7 @@ def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, sta
         f"<h1>{esc(title)}</h1>",
         f'<p class="muted">تُولَّد آليًا من الملفات وتتحدث كل 15 ثانية. آخر توليد: {esc(generated)}. {esc(MEANING_NOTE)}</p>',
         "<h2>المرحلة</h2>", phase_html(state, checks),
-        "<h2>التقدم</h2>", progress_html(groups, qa),
+        "<h2>التقدم</h2>", progress_html(groups, qa, problems),
         '<h2>الخطة والملاحظات</h2><div class="card plan">', markdown_html(plan_text), "</div>",
         "</main></body></html>\n",
     ])
@@ -317,7 +325,12 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
                     project=None, plan_file: Path = PLAN_FILE) -> Path:
     """Regenerate the dashboard from units, state, the LQA matrix, and PLAN.md. Costs no model tokens."""
     project = project or pipeline.Project(units_dir=units_dir, qa_file=qa_file)
-    groups = compute(units.all_units(units.load(units_dir, units.Report())))
+    all_units = units.all_units(units.load(units_dir, units.Report()))
+    groups = compute(all_units)
+    try:
+        problems = tools.problem_counts(tools.unit_problems(all_units, project_glossary(), token_profile()))
+    except Exception:  # the page must render even with a broken glossary
+        problems = {}
     state = project.state()
     try:
         _, checks = pipeline.evaluate(project)
@@ -330,7 +343,7 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
         title = "مشروع التعريب"
     plan_text = plan_file.read_text(encoding="utf-8") if plan_file.is_file() else ""
     page = render_dashboard(groups, qa_cases(qa_file), datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            plan_text, state, checks, str(title))
+                            plan_text, state, checks, str(title), problems)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8", newline="\n")
     return out
@@ -380,6 +393,10 @@ def print_report(report, limit: int = LINE_LIMIT) -> None:
 def cmd_validate(args) -> int:
     files, report = load_checked(args.path)
     print_report(report, args.limit)
+    counts = tools.problem_counts(tools.unit_problems(units.all_units(files), project_glossary(), token_profile()))
+    if counts:
+        print("PROBLEMS: " + " ".join(f"{code}={n}" for code, n in counts.items())
+              + "  (list them: loc.py search --problem <code>)")
     print(f"FILES={len(files)} UNITS={len(units.all_units(files))} "
           f"ERRORS={len(report.errors)} WARNINGS={len(report.warnings)}")
     return 1 if report.errors else 0
@@ -406,18 +423,38 @@ def cmd_normalize(args) -> int:
     return 1 if refused else 0
 
 
+def project_glossary() -> dict:
+    path = ROOT / "glossary.yaml"
+    return load_glossary(path) if path.is_file() else {}
+
+
 def cmd_search(args) -> int:
     report = units.Report()
-    needle = args.query.casefold()
+    if args.path_option:
+        args.path = args.path_option
+    if not args.query and not args.problem:
+        print("ERROR give a text query, --problem <code>, or both")
+        return 2
+    if args.problem and args.problem not in tools.PROBLEM_CODES:
+        print("ERROR unknown problem code. Codes: " + ", ".join(tools.PROBLEM_CODES))
+        return 2
+    all_units = units.all_units(units.load(args.path, report))
+    flagged = tools.unit_problems(all_units, project_glossary(), token_profile()) if args.problem else {}
+    needle = (args.query or "").casefold()
     hits = 0
-    for unit in units.all_units(units.load(args.path, report)):
+    for unit in all_units:
         if args.kind and unit.get("kind") != args.kind:
+            continue
+        if args.problem and args.problem not in flagged.get(unit.get("id"), []):
             continue
         fields = {"source": [unit.get("source", "")], "target": [unit.get("target", "")],
                   "both": [unit.get("source", ""), unit.get("target", "")]}[args.field]
         if any(needle in (value or "").casefold() for value in fields):
             hits += 1
             if hits > args.limit:
+                continue
+            if args.ids_only:
+                print(unit.get("id"))
                 continue
             where = unit.get("asset") or unit.get("file")
             print(f"{unit.get('id')}\t{unit.get('kind')}\t{unit.get('status')}\t{where}\t"
@@ -777,6 +814,61 @@ def load_glossary(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
+def cmd_apply(args) -> int:
+    """Write a translated batch only if its ids match the requested units exactly."""
+    try:
+        given = tools.parse_batch_output(args.answer.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError) as exc:
+        print(f"ERROR cannot read the batch answer: {exc}")
+        return 2
+    report = units.Report()
+    files = units.load(args.path, report)
+    if report.errors:
+        print_report(report)
+        return 1
+    ids = set(args.ids or [])
+    selected = [u for u in units.all_units(files)
+                if (u.get("id") in ids or (args.batch and u.get("batch") == args.batch))
+                and units.decision(u) != "keep"]
+    expected = [u["id"] for u in selected]
+    if not expected:
+        print("ERROR no units selected; give --batch or --ids")
+        return 2
+    gaps = tools.alignment(expected, given)
+    if any(gaps.values()):
+        for label, values in gaps.items():
+            if values:
+                print(f"ERROR {label.upper()} ({len(values)}): {' '.join(values[:LINE_LIMIT])}"
+                      + (" ..." if len(values) > LINE_LIMIT else ""))
+        print(f"NOT_WRITTEN: the answer must contain exactly these {len(expected)} ids, each with a non-empty "
+              "target, and nothing else. Re-run the whole batch; never pad or guess missing lines.")
+        return 1
+    before = set(units.validate(files, token_profile()).errors)
+    for unit in selected:
+        if unit.get("target") == given[unit["id"]] and units.stage(unit) >= units.STATUSES.index("translated"):
+            continue  # unchanged text keeps its status and any proofreading
+        unit["target"] = given[unit["id"]]
+        unit["status"] = "translated"
+        unit["translated_by"] = args.by
+        unit.pop("proofread_by", None)
+        unit.pop("proofread_hash", None)
+    introduced = [e for e in units.validate(files, token_profile()).errors if e not in before]
+    if introduced:
+        rejected = units.Report()
+        rejected.errors = introduced
+        print_report(rejected)
+        print("NOT_WRITTEN: fix these units in the answer and apply the whole batch again")
+        return 1
+    for unit_file in files:
+        units.write(unit_file)
+    auto_dashboard(args.path)
+    found = tools.unit_problems(selected, project_glossary(), token_profile())
+    counts = tools.problem_counts(found)
+    print(f"APPLIED={len(selected)} STATUS=translated BY={args.by}"
+          + (" WARNINGS: " + " ".join(f"{c}={n}" for c, n in counts.items()) if counts else ""))
+    return 0
+
+
 def cmd_terms(args) -> int:
     """Check approved glossary terms in translated units, or record a deliberate exception."""
     report = units.Report()
@@ -825,8 +917,11 @@ def main(argv=None) -> int:
     p.set_defaults(run=cmd_validate)
     with_path(sub.add_parser("normalize", help="fill hashes and key order; after resetting a changed unit to extracted")).set_defaults(run=cmd_normalize)
 
-    p = sub.add_parser("search", help="find text in sources and targets, including image text, before asking or editing")
-    p.add_argument("query")
+    p = sub.add_parser("search", help="find text, or units with a problem code (--problem), including image text")
+    p.add_argument("query", nargs="?", default="")
+    p.add_argument("--problem", help="only units with this problem code, e.g. latin_leak (see references/translation-units.md)")
+    p.add_argument("--ids-only", action="store_true", help="print ids only, one per line, for mark --ids or a re-translation brief")
+    p.add_argument("--path", dest="path_option", type=Path, help="units file or folder (use this with --problem and no query)")
     with_path(p)
     p.add_argument("--field", choices=("both", "source", "target"), default="both")
     p.add_argument("--kind", choices=units.KINDS)
@@ -884,6 +979,14 @@ def main(argv=None) -> int:
     p = with_project(sub.add_parser("accept", help="record the user's acceptance of the playtest build; only on their explicit words"))
     p.add_argument("--note", required=True, help="the user's words, build, and date")
     p.set_defaults(run=cmd_accept)
+
+    p = sub.add_parser("apply", help="write a translator's batch answer (JSON keyed by unit id) only if every id matches")
+    p.add_argument("answer", type=Path, help="JSON {id: target} or [{id, target}]")
+    p.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    p.add_argument("--batch")
+    p.add_argument("--ids", nargs="+")
+    p.add_argument("--by", required=True, help="translator role label, e.g. translator-1")
+    p.set_defaults(run=cmd_apply)
 
     p = sub.add_parser("terms", help="check glossary terms in translated units; proofreader first step, gate needs zero")
     p.add_argument("--path", type=Path, default=units.UNITS_DIR)

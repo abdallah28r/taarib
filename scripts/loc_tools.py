@@ -194,3 +194,116 @@ def check_terms(all_units: list[dict], glossary: dict) -> list[tuple[str, str, s
             if not ok:
                 problems.append((unit["id"], term, " | ".join(forms)))
     return problems
+
+
+# ----- problem codes ------------------------------------------------------------
+
+# Stable codes so agents can find and re-translate exactly the units with one
+# problem. They are computed from the unit each time, never stored, so they
+# can never go stale. Errors block integration; warnings go to the proofreader.
+PROBLEM_CODES = {
+    "missing_target": ("error", "status says translated or later but the target is empty"),
+    "token_mismatch": ("error", "placeholders, tags, or escapes differ from the source"),
+    "source_changed": ("error", "the source changed after this unit was recorded"),
+    "proofread_stale": ("error", "the target changed after proofreading"),
+    "untranslated": ("warning", "the target is identical to the source"),
+    "lost_newline": ("warning", "the number of line breaks differs from the source"),
+    "latin_leak": ("warning", "Latin words left in the Arabic target (not a placeholder or a keep_latin term)"),
+    "too_long": ("warning", "longer than max_length, or more than 3x the source"),
+    "glossary_term_missing": ("warning", "an approved glossary term is not used"),
+    "unicode_form": ("warning", "presentation forms, tatweel, BiDi overrides, or non-NFC text"),
+    "persian_letters": ("warning", "Persian ی or ک instead of Arabic ي or ك"),
+}
+LATIN_WORD_RE = re.compile(r"[A-Za-z][A-Za-z'-]{2,}")
+CODE_SPAN_RE = re.compile(r"\[[^\]]*\]|\{[^}]*\}|<[^>]*>|%\w+")
+PRESENTATION_RE = re.compile(r"[\uFB50-\uFDFF\uFE70-\uFEFF\u0640\u202A\u202B\u202D\u202E]")
+
+
+def unit_problems(all_units: list[dict], glossary: dict | None = None, profile: str = "generic") -> dict[str, list[str]]:
+    """Problem codes per unit id, for every unit that has at least one."""
+    import unicodedata
+    keep_latin = {t.lower() for t in (glossary or {}).get("keep_latin") or [] if isinstance(t, str)}
+    missing_terms: dict[str, list[str]] = {}
+    if glossary:
+        for ident, _, _ in check_terms(all_units, glossary):
+            missing_terms.setdefault(ident, []).append("glossary_term_missing")
+    found: dict[str, list[str]] = {}
+    for unit in all_units:
+        ident, source, target = unit.get("id"), unit.get("source") or "", unit.get("target") or ""
+        codes = []
+        translatable = units.decision(unit) == "translate"
+        if translatable and units.stage(unit) >= 1 and not target.strip():
+            codes.append("missing_target")
+        if unit.get("source_hash") and unit["source_hash"] != units.source_hash(source):
+            codes.append("source_changed")
+        if units.stage(unit) >= 2 and "proofread_hash" in unit and unit["proofread_hash"] != units.source_hash(target):
+            codes.append("proofread_stale")
+        if target and translatable:
+            source_tokens, target_tokens = units.tokens(source, profile), units.tokens(target, profile)
+            if unit.get("kind") == "text" and source_tokens != target_tokens:
+                codes.append("token_mismatch")
+            if target.strip() == source.strip() and LATIN_WORD_RE.search(source):
+                codes.append("untranslated")
+            if source.count("\n") != target.count("\n"):
+                codes.append("lost_newline")
+            bare = target
+            for token in target_tokens:
+                bare = bare.replace(token, " ")
+            bare = CODE_SPAN_RE.sub(" ", bare)  # bracketed, braced, or tagged spans are code, not prose
+            for term in keep_latin:
+                bare = re.sub(re.escape(term), " ", bare, flags=re.IGNORECASE)
+            if LATIN_WORD_RE.search(bare):
+                codes.append("latin_leak")
+            limit = unit.get("max_length")
+            if (isinstance(limit, int) and len(target) > limit) or (len(source) >= 8 and len(target) > 3 * len(source)):
+                codes.append("too_long")
+            if PRESENTATION_RE.search(target) or unicodedata.normalize("NFC", target) != target:
+                codes.append("unicode_form")
+            if "\u06CC" in target or "\u06A9" in target:
+                codes.append("persian_letters")
+        codes += missing_terms.get(ident, [])
+        if codes:
+            found[ident] = codes
+    return found
+
+
+def problem_counts(found: dict[str, list[str]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for codes in found.values():
+        for code in codes:
+            counts[code] = counts.get(code, 0) + 1
+    return dict(sorted(counts.items(), key=lambda item: (PROBLEM_CODES[item[0]][0] != "error", -item[1])))
+
+
+# ----- applying a translated batch ------------------------------------------------
+
+def parse_batch_output(text: str) -> dict[str, str]:
+    """A model's batch answer: a JSON object {id: target} or a list of {"id", "target"}."""
+    import json
+    data = json.loads(text)
+    if isinstance(data, list):
+        pairs = [(item.get("id"), item.get("target")) for item in data if isinstance(item, dict)]
+        if len(pairs) != len(data):
+            raise ValueError("every list item must be an object with id and target")
+    elif isinstance(data, dict):
+        pairs = list(data.items())
+    else:
+        raise ValueError("expected a JSON object {id: target} or a list of {id, target}")
+    result: dict[str, str] = {}
+    for ident, target in pairs:
+        if not isinstance(ident, str) or not isinstance(target, str):
+            raise ValueError(f"id and target must be strings: {ident!r}")
+        if ident in result:
+            raise ValueError(f"id appears twice: {ident}")
+        result[ident] = target
+    return result
+
+
+def alignment(expected: list[str], given: dict[str, str]) -> dict[str, list[str]]:
+    """Missing, extra, and empty ids between a batch and the model's answer."""
+    expected_set = set(expected)
+    return {
+        "missing": [i for i in expected if i not in given],
+        "extra": sorted(i for i in given if i not in expected_set),
+        "empty": [i for i in expected if i in given and not given[i].strip()],
+    }

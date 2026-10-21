@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-21 — Roadmap phase 1: batch alignment and problem codes
+
+- `loc.py apply <answer.json> --batch|--ids --by`: writes a translator's
+  batch answer (JSON keyed by unit id) only when every expected id is present,
+  non-empty, and nothing extra came back; otherwise nothing is written and the
+  missing/extra/empty ids are listed. Unchanged targets keep their
+  proofreading; changed ones return to `translated`.
+- Eleven stable problem codes (`latin_leak`, `lost_newline`, `too_long`,
+  `glossary_term_missing`, `persian_letters`, ...) computed per unit, shown by
+  `validate` and the dashboard, and listed with `loc.py search --problem
+  <code> --ids-only` for selective re-translation.
+- The translator role never edits unit files directly; it writes one JSON
+  answer and applies it. `search` gained `--path` for problem-only searches.
+
 ## 2026-10-21 — Roadmap phase 0: skill descriptions, budgets, manifest
 
 - All eight skill descriptions are now trigger-only (`Use when ...` plus

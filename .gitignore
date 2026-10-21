@@ -20,3 +20,4 @@ fonts/licenses/*
 reports/*.json
 reports/dashboard.html
 work/updates/
+work/batches/

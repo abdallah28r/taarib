@@ -61,12 +61,13 @@ its options. This table is the one map of when to use each.
 | extraction | `extract --adapter --game --out` | Once the adapter contract passes. |
 | extraction | `pseudo --adapter --game --out` | Before translating: install on a copy to test Arabic rendering and length. |
 | extraction | `estimate` | Before the first bulk batch, to size batches; record it in `PLAN.md`. |
-| localization | `mark --status translated --by` | Translator, after writing a batch's targets. |
+| localization | `apply <answer.json> --batch --by` | Translator: write a batch answer keyed by unit id; refused unless every id matches. |
+| localization | `mark --status translated --by` | Only for units whose target was written another way (images). |
 | localization | `validate` | After every batch and every edit; zero errors before integration. |
 | localization | `terms` (`--allow <id> <term>`) | Proofreader first step; the gate needs zero misses. |
 | localization | `findings <file>` | Proofreader, after recording findings. |
 | localization | `mark --status proofread --by` | Proofreader, for units with no open finding. |
-| any | `search "<text>"` | Find a string or image text before asking or editing. |
+| any | `search "<text>"` / `search --problem <code> --ids-only --path <units>` | Find a string or image text; list units with one problem to redo or review them. |
 | integration | `rebuild --adapter --game --out` | Build files from proofread units, outside the game. |
 | integration | `mark --status integrated --evidence` | After installing a build, naming it. |
 | playtest | `mark --status tested --evidence` | Only for what was observed in the running game. |
@@ -74,6 +75,26 @@ its options. This table is the one map of when to use each.
 | maintenance | `update --adapter --game --path` (`--dry-run`) | A new game version arrived; then `reopen`. |
 | maintenance | `normalize` | After resetting a changed unit to `extracted`. |
 | release | `tmx --out <file>` | Keep a translation memory for later games. |
+
+## Problem codes
+
+Computed from each unit every time (never stored, so never stale). `validate`
+prints the counts, the dashboard shows them, and `search --problem <code>`
+lists the units. Errors block integration; warnings go to the proofreader.
+
+| Code | Level | Meaning |
+| --- | --- | --- |
+| `missing_target` | error | translated or later, but the target is empty |
+| `token_mismatch` | error | placeholders, tags, or escapes differ from the source |
+| `source_changed` | error | the source changed after the unit was recorded |
+| `proofread_stale` | error | the target changed after proofreading |
+| `untranslated` | warning | the target is identical to the source |
+| `lost_newline` | warning | line-break count differs from the source |
+| `latin_leak` | warning | Latin words left in the Arabic (not code, not `keep_latin`) |
+| `too_long` | warning | over `max_length`, or more than 3x the source |
+| `glossary_term_missing` | warning | an approved glossary term is not used |
+| `unicode_form` | warning | presentation forms, tatweel, BiDi overrides, non-NFC |
+| `persian_letters` | warning | Persian ی or ک instead of Arabic ي or ك |
 
 `extract` and `rebuild` go through an adapter (`adapters/README.md`).
 `rebuild` writes only units at `proofread` or later unless `--min-status` says
