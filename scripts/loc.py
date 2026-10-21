@@ -19,7 +19,7 @@
     python scripts/loc.py reopen extraction --reason "game update 1.1"
     python scripts/loc.py accept --note "user accepted build r3 on 2026-11-02"
     python scripts/loc.py progress --format chat|md|html [--out PATH]
-    python scripts/loc.py dashboard             # لوحة-التقدم.html (also refreshed automatically)
+    python scripts/loc.py dashboard             # dashboard.html (also refreshed automatically)
 
 Progress is computed only from unit statuses and qa/LQA_MATRIX.csv, never from
 an agent's estimate.
@@ -223,7 +223,7 @@ PHASE_LABELS = {
     "integration": "الدمج", "playtest": "التجربة", "release": "النشر",
 }
 # Ships with the template (an empty project's page) and lives in every game copy beside the map.
-DASHBOARD = ROOT / "لوحة-التقدم.html"
+DASHBOARD = ROOT / "dashboard.html"
 MAP_PAGE = "خريطة-القالب.html"
 PLAN_FILE = ROOT / "PLAN.md"
 PLAN_MAX_LINES = 150
@@ -1156,7 +1156,7 @@ def main(argv=None) -> int:
         return p
 
     with_project(sub.add_parser("next", help="show the phase, its blockers, and what to load; at session start or when unsure")).set_defaults(run=cmd_next)
-    p = with_project(sub.add_parser("dashboard", help="regenerate لوحة-التقدم.html; in Codex after editing PLAN.md or the LQA matrix"))
+    p = with_project(sub.add_parser("dashboard", help="regenerate dashboard.html; in Codex after editing PLAN.md or the LQA matrix"))
     p.add_argument("--out", type=Path, default=DASHBOARD)
     p.set_defaults(run=cmd_dashboard)
     p = with_project(sub.add_parser("gate", help="advance the phase when every exit criterion passes; when next says ready"))

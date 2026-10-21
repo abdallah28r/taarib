@@ -11,7 +11,7 @@ SECURITY.md
 PLAN.md
 THIRD_PARTY_NOTICES.md
 خريطة-القالب.html
-لوحة-التقدم.html
+dashboard.html
 .gitignore
 .gitattributes
 .releaseinclude

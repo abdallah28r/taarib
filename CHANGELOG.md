@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-21 — The progress page is `dashboard.html`
+
+- `لوحة-التقدم.html` is renamed `dashboard.html`; it stays in the template
+  root of every game's folder, beside `خريطة-القالب.html`.
+
 ## 2026-10-21 — The progress page lives in each game's folder
 
 - The dashboard moved from `reports/dashboard.html` to `لوحة-التقدم.html` in

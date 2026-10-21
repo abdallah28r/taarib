@@ -155,7 +155,7 @@ with a test, through `localization-project-maintenance`.
 - `PLAN.md` never holds counts, the phase, intake answers, backup paths, or command logs:
   those live in units, `state/pipeline.json`, `PROJECT.yaml`, backup
   manifests, and Git. Write at batch or phase boundaries, one line per item.
-- `لوحة-التقدم.html` (in this folder, beside `خريطة-القالب.html`): the
+- `dashboard.html` (in this folder, beside `خريطة-القالب.html`): the
   user's progress page for this game, generated from the files above after
   every change (hooks in Claude Code; every `loc.py` command that changes
   state, in both runtimes). Never write it by hand.
