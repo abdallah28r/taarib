@@ -4,6 +4,7 @@
     python scripts/loc.py normalize [units/]
     python scripts/loc.py search "Save" [--kind image]
     python scripts/loc.py mark --batch batch-003 --status integrated --evidence "build 1.2 patch r4"
+    python scripts/loc.py brief --batch batch-003 --role translator --runtime claude-code
     python scripts/loc.py apply work/batches/batch-003.json --batch batch-003 --by translator-1
     python scripts/loc.py search --problem latin_leak --ids-only
     python scripts/loc.py findings work/proofreading/batch-003.jsonl
@@ -52,6 +53,7 @@ units = _load("loc_units")
 adapter_base = _load("loc_adapter_base", ROOT / "adapters" / "base.py")
 pipeline = _load("loc_pipeline")
 tools = _load("loc_tools")
+brief_tools = _load("loc_brief")
 
 LABELS = {
     "extracted": "مستخرج",
@@ -305,8 +307,18 @@ def phase_html(state: dict, checks) -> str:
     return "".join(parts)
 
 
+def quality_html(quality: dict | None) -> str:
+    if not quality:
+        return ""
+    dims = "، ".join(f"<bdi>{d}</bdi> {n}" for d, n in sorted(quality["dimensions"].items())) or "لا شيء"
+    return ('<h2>جودة التدقيق (MQM)</h2><div class="card"><ul>'
+            f'<li>وحدات عليها ملاحظات: {quality["flagged"]} من {quality["units"]} ({quality["flag_rate"]}%)</li>'
+            f'<li>نقاط الخطأ لكل 1000 كلمة: {quality["per_1000_words"]} (ثانوي 1، كبير 5، حرج 10، مانع 25)</li>'
+            f'<li>حسب البُعد: {dims}</li></ul></div>')
+
+
 def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, state: dict, checks, title: str,
-                     problems: dict | None = None) -> str:
+                     problems: dict | None = None, quality: dict | None = None) -> str:
     esc = html.escape
     return "".join([
         '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">',
@@ -317,6 +329,7 @@ def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, sta
         f'<p class="muted">تُولَّد آليًا من الملفات وتتحدث كل 15 ثانية. آخر توليد: {esc(generated)}. {esc(MEANING_NOTE)}</p>',
         "<h2>المرحلة</h2>", phase_html(state, checks),
         "<h2>التقدم</h2>", progress_html(groups, qa, problems),
+        quality_html(quality),
         '<h2>الخطة والملاحظات</h2><div class="card plan">', markdown_html(plan_text), "</div>",
         "</main></body></html>\n",
     ])
@@ -344,8 +357,14 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
     except Exception:
         title = "مشروع التعريب"
     plan_text = plan_file.read_text(encoding="utf-8") if plan_file.is_file() else ""
+    finding_files = sorted((ROOT / "work" / "proofreading").glob("*.jsonl")) if units_dir == units.UNITS_DIR else []
+    quality = None
+    if finding_files:
+        findings, _ = read_findings(finding_files)
+        covered = [u for u in all_units if u.get("batch") in {f.stem for f in finding_files}]
+        quality = mqm_score([f for _, f in findings], covered) if covered else None
     page = render_dashboard(groups, qa_cases(qa_file), datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            plan_text, state, checks, str(title), problems)
+                            plan_text, state, checks, str(title), problems, quality)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8", newline="\n")
     return out
@@ -536,7 +555,15 @@ def cmd_mark(args) -> int:
 
 SEVERITIES = ("blocker", "critical", "major", "minor")
 CATEGORIES = ("meaning", "omission", "context", "terminology", "grammar", "spelling",
-              "punctuation", "style", "voice", "length", "numbers")
+              "punctuation", "style", "voice", "length", "numbers", "dialect", "culture", "wordplay")
+# MQM top-level dimension of each category, and the common MQM severity weights.
+MQM_DIMENSION = {
+    "meaning": "accuracy", "omission": "accuracy", "context": "accuracy", "numbers": "accuracy",
+    "terminology": "terminology", "grammar": "linguistic", "spelling": "linguistic", "punctuation": "linguistic",
+    "style": "style", "voice": "style", "dialect": "style", "culture": "audience", "wordplay": "audience",
+    "length": "design",
+}
+SEVERITY_WEIGHT = {"minor": 1, "major": 5, "critical": 10, "blocker": 25}
 RESOLUTIONS = ("applied", "needs_decision", "rejected", "resolved")
 
 
@@ -582,6 +609,39 @@ def check_findings(findings: list[tuple[str, dict]], by_id: dict) -> tuple[list[
     }
     summary["open"] = sorted(open_items)
     return errors, summary
+
+
+def mqm_score(findings: list[dict], batch_units: list[dict]) -> dict:
+    """Flag rate and MQM penalty points per 1,000 source words for one or more proofread batches."""
+    counted = [f for f in findings if f.get("resolution") != "rejected" and f.get("severity") in SEVERITY_WEIGHT]
+    batch_ids = {u["id"] for u in batch_units}
+    flagged = {f["id"] for f in counted if f.get("id") in batch_ids}
+    words = sum(len((u.get("source") or "").split()) for u in batch_units)
+    penalty = sum(SEVERITY_WEIGHT[f["severity"]] for f in counted if f.get("id") in batch_ids)
+    dimensions: dict[str, int] = {}
+    for f in counted:
+        dimension = MQM_DIMENSION.get(f.get("category"), "other")
+        dimensions[dimension] = dimensions.get(dimension, 0) + 1
+    return {
+        "units": len(batch_units), "flagged": len(flagged),
+        "flag_rate": round(100 * len(flagged) / len(batch_units)) if batch_units else None,
+        "words": words, "penalty": penalty,
+        "per_1000_words": round(1000 * penalty / words, 1) if words else None,
+        "dimensions": dimensions,
+    }
+
+
+def read_findings(files) -> tuple[list[tuple[str, dict]], list[str]]:
+    findings, errors = [], []
+    for file in files:
+        for number, line in enumerate(Path(file).read_text(encoding="utf-8-sig").splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                findings.append((f"{file}:{number}", json.loads(line)))
+            except json.JSONDecodeError as exc:
+                errors.append(f"{file}:{number}: invalid JSON: {exc.msg}")
+    return findings, errors
 
 
 def parse_options(values: list[str]) -> dict:
@@ -718,16 +778,10 @@ def cmd_accept(args) -> int:
 
 def cmd_findings(args) -> int:
     report = units.Report()
-    by_id = {u.get("id"): u for u in units.all_units(units.load(args.path, report))}
-    findings = []
-    for file in args.files:
-        for number, line in enumerate(file.read_text(encoding="utf-8-sig").splitlines(), 1):
-            if not line.strip():
-                continue
-            try:
-                findings.append((f"{file}:{number}", json.loads(line)))
-            except json.JSONDecodeError as exc:
-                report.errors.append(f"{file}:{number}: invalid JSON: {exc.msg}")
+    every = units.all_units(units.load(args.path, report))
+    by_id = {u.get("id"): u for u in every}
+    findings, read_errors = read_findings(args.files)
+    report.errors += read_errors
     errors, summary = check_findings(findings, by_id)
     report.errors += errors
     print_report(report)
@@ -735,6 +789,13 @@ def cmd_findings(args) -> int:
         counts = ", ".join(f"{k}={v}" for k, v in summary[key].items() if v)
         print(f"{key.upper()}: {counts or 'none'}")
     print(f"OPEN_DECISIONS={len(summary['open'])} {' '.join(summary['open'])}".rstrip())
+    batches = {args.batch} if args.batch else {Path(f).stem for f in args.files}
+    batch_units = [u for u in every if u.get("batch") in batches]
+    if batch_units:
+        score = mqm_score([f for _, f in findings], batch_units)
+        print(f"MQM: flagged {score['flagged']}/{score['units']} units ({score['flag_rate']}%), "
+              f"penalty {score['penalty']} = {score['per_1000_words']} per 1000 words; "
+              + " ".join(f"{d}={n}" for d, n in sorted(score["dimensions"].items())))
     print(f"FINDINGS={len(findings)} ERRORS={len(report.errors)}")
     return 1 if report.errors else 0
 
@@ -888,6 +949,41 @@ def cmd_apply(args) -> int:
     return 0
 
 
+def cmd_brief(args) -> int:
+    """Write a self-contained brief for one batch: stable rules first, then characters and terms, then units."""
+    import hashlib
+    import yaml
+    files = units.load(args.path, units.Report())
+    every = units.all_units(files)
+    ids = set(args.ids or [])
+    batch_units = [u for u in every if u.get("id") in ids or (args.batch and u.get("batch") == args.batch)]
+    if not batch_units:
+        print("ERROR no units selected; give --batch or --ids")
+        return 2
+    label = args.batch or "selection"
+    brief_module = _load("make_subagent_brief")
+    policy, roles = brief_module.load_policy(), brief_module.load_roles()
+    role = roles[args.role]
+    constraints = brief_module.build_brief(
+        policy, role[0]["route"], f"{'Translate' if args.role == 'translator' else 'Proofread'} the batch in layer 3",
+        "the unit ids in layer 3",
+        "write", "Follow the Output section.", args.runtime, role)
+    settings = yaml.safe_load((ROOT / "PROJECT.yaml").read_text(encoding="utf-8")) or {}
+    glossary = project_glossary()
+    found, _ = find_problems(batch_units) if args.role == "proofreader" else ({}, {})
+    file_units = [u for u in every if u.get("file") == batch_units[0].get("file")]
+    text = brief_tools.build(args.role, label, batch_units, file_units, constraints, settings.get("game") or {},
+                             brief_tools.characters(ROOT / "loc-kit" / "CHARACTERS.yaml"), glossary,
+                             tools.glossary_entries(glossary), found, args.continuity)
+    out = args.out or ROOT / "work" / "batches" / f"{label}.{args.role}.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8", newline="\n")
+    layer_one = text.split(brief_tools.LAYER_MARKS[1])[0]
+    print(f"BRIEF={out} UNITS={len(batch_units)} ESTIMATED_TOKENS={round(len(text) / 3.5)} "
+          f"CACHEABLE_PREFIX_SHA={hashlib.sha256(layer_one.encode('utf-8')).hexdigest()[:12]}")
+    return 0
+
+
 def cmd_terms(args) -> int:
     """Check approved glossary terms in translated units, or record a deliberate exception."""
     report = units.Report()
@@ -1012,6 +1108,17 @@ def main(argv=None) -> int:
     p.add_argument("--by", required=True, help="translator role label, e.g. translator-1")
     p.set_defaults(run=cmd_apply)
 
+    p = sub.add_parser("brief", help="write a self-contained, cache-friendly brief for one batch, before sending it to an agent")
+    p.add_argument("--batch")
+    p.add_argument("--ids", nargs="+")
+    p.add_argument("--role", choices=("translator", "proofreader"), default="translator")
+    p.add_argument("--runtime", choices=("codex", "claude-code"), default="codex",
+                   help="claude-code omits role text already in the subagent definition")
+    p.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    p.add_argument("--out", type=Path)
+    p.add_argument("--continuity", type=int, default=5, help="approved lines before the batch to include")
+    p.set_defaults(run=cmd_brief)
+
     p = sub.add_parser("terms", help="check glossary terms in translated units; proofreader first step, gate needs zero")
     p.add_argument("--path", type=Path, default=units.UNITS_DIR)
     p.add_argument("--glossary", type=Path, default=ROOT / "glossary.yaml")
@@ -1053,6 +1160,7 @@ def main(argv=None) -> int:
     p = sub.add_parser("findings", help="validate and summarize a proofreading findings file; proofreader, before marking proofread")
     p.add_argument("files", nargs="+", type=Path)
     p.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    p.add_argument("--batch", help="batch for the MQM score (default: each file's name, e.g. batch-003)")
     p.set_defaults(run=cmd_findings)
 
     p = sub.add_parser("progress", help="report progress as chat text, Markdown, or HTML; when the user asks")

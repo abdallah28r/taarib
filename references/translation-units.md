@@ -36,7 +36,9 @@ blocking question; keep the unit at `extracted` or `translated` until resolved).
   Record every region, including `keep` ones. Image-specific approval data
   still lives in the region manifest checked by `check_image_regions.py`.
 - Optional: `key` (native key), `target`, `decision`, `batch`, `context`
-  (`speaker`, `scene`, `location`, `function`, …), `max_length`,
+  (`speaker`, `scene`, `location`, `function`, `addressee`,
+  `addressee_gender` m|f|mixed|unknown, `addressee_number`
+  singular|dual|plural), `max_length`,
   `translated_by`, `proofread_by`, `proofread_hash`, `evidence`, `notes`,
   `term_exceptions` (glossary terms this unit deliberately inflects or varies;
   set with `loc.py terms --allow <id> <term>`), `previous_target` (set by
@@ -61,11 +63,12 @@ its options. This table is the one map of when to use each.
 | extraction | `extract --adapter --game --out` | Once the adapter contract passes. |
 | extraction | `pseudo --adapter --game --out` | Before translating: install on a copy to test Arabic rendering and length. |
 | extraction | `estimate` | Before the first bulk batch, to size batches; record it in `PLAN.md`. |
+| localization | `brief --batch --role --runtime` | Before sending a batch to a translator or proofreader. |
 | localization | `apply <answer.json> --batch --by` | Translator: write a batch answer keyed by unit id; refused unless every id matches. |
 | localization | `mark --status translated --by` | Only for units whose target was written another way (images). |
 | localization | `validate` | After every batch and every edit; zero errors before integration. |
 | localization | `terms` (`--allow <id> <term>`) | Proofreader first step; the gate needs zero misses. |
-| localization | `findings <file>` | Proofreader, after recording findings. |
+| localization | `findings <file>` | Proofreader, after recording findings; prints flag rate and MQM score. |
 | localization | `mark --status proofread --by` | Proofreader, for units with no open finding. |
 | any | `search "<text>"` / `search --problem <code> --ids-only --path <units>` | Find a string or image text; list units with one problem to redo or review them. |
 | integration | `rebuild --adapter --game --out` | Build files from proofread units, outside the game. |

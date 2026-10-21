@@ -14,7 +14,10 @@ You are the translator for one bounded batch of translation units.
 1. Load the `arabic-game-translation` skill and run the context route for the
    batch's text type: `python scripts/context_plan.py translation-ui`,
    `translation-dialogue`, or `subtitles`. Read only the returned files.
-2. Never edit unit files directly. Write your whole answer as one JSON object
+2. Your brief (`python scripts/loc.py brief --batch <batch>`) lists the units,
+   each speaker's card, the addressee's gender and number, the batch's glossary
+   terms, and approved lines just before the batch. Make verbs, adjectives, and
+   pronouns agree with them. Never edit unit files directly. Write your whole answer as one JSON object
    keyed by unit id, `{"<id>": "<Arabic target>", ...}`, to
    `work/batches/<batch>.json`, with exactly one entry for every id in your
    brief: no missing ids, no extra ids, no empty or placeholder text. Preserve

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-10-21 — Roadmap phase 3: batch briefs and an MQM-style proofreader
+
+- `loc.py brief --batch --role --runtime` writes a self-contained brief in
+  three layers: rules, role, project conventions, and output contract
+  (byte-identical across batches, reported as `CACHEABLE_PREFIX_SHA`), then
+  the characters and glossary terms the batch uses, then continuity lines and
+  the units (with targets and problem codes for the proofreader).
+- Units may carry `context.addressee`, `addressee_gender`, and
+  `addressee_number` (validated); speakers come from `loc-kit/CHARACTERS.yaml`.
+- Proofreading is an MQM-style estimate: new categories `dialect`,
+  `culture`, `wordplay`; each category maps to an MQM dimension; `findings`
+  prints the flag rate and penalty per 1,000 words (minor 1, major 5,
+  critical 10, blocker 25), and the dashboard shows them across batches. The
+  checklist gained six Arabic calibration examples.
+
 ## 2026-10-21 — Roadmap phase 2: Arabic typography checks and levels
 
 - New problem codes: `digit_style` (follows `game.digits`), `number_mismatch`

@@ -1,7 +1,10 @@
 # Proofreading checklist
 
-Check each unit in this order; meaning outranks polish. Severity follows
-`game-localization-qa/references/lqa-severity.md` (player impact, not effort).
+You are an error estimator first (MQM style): find and classify problems,
+then change only what is clearly wrong. Check each unit in this order; meaning
+outranks polish. Severity follows `game-localization-qa/references/lqa-severity.md`
+(player impact, not effort) and weighs minor 1, major 5, critical 10, blocker 25
+in the MQM score `loc.py findings` prints. Zero findings is a valid result.
 
 | Category | What to check | Typical severity |
 | --- | --- | --- |
@@ -16,6 +19,25 @@ Check each unit in this order; meaning outranks polish. Severity follows
 | `voice` | Register or character voice inconsistent with `glossary.yaml` → characters | minor / major |
 | `length` | Target over `max_length` or clearly longer than the UI allows | minor / major |
 | `numbers` | Digits, units, dates, or quantities changed | major |
+| `dialect` | Colloquial or regional forms in MSA text, unless the project approved them | minor / major |
+| `culture` | References, humor, or taboos that need adaptation for Arabic players | minor / major |
+| `wordplay` | A pun, rhyme, or riddle lost or broken where the game depends on it | major |
+
+MQM dimensions: accuracy (meaning, omission, context, numbers), terminology,
+linguistic (grammar, spelling, punctuation), style (style, voice, dialect),
+audience (culture, wordplay), design (length).
+
+## Calibration examples
+
+| Source | Target | Finding |
+| --- | --- | --- |
+| `Are you ready, Sara?` | `هل أنت مستعد يا سارة؟` | `context`, major: Sara is female → `مستعدة` |
+| `You two, follow me.` | `اتبعني.` | `grammar`, major: dual addressee → `اتبعاني` |
+| `The door was opened.` | `تم فتح الباب.` | `style`, minor: calque → `فُتح الباب` |
+| `Press Start` (glossary: Start → ابدأ) | `اضغط زر البدء` | `terminology`, major (also `glossary_term_missing`) |
+| `Don't touch it!` | `ما تلمسه!` | `dialect`, major: colloquial → `لا تلمسه!` |
+| `It's raining cats and dogs.` | `السماء تمطر قططًا وكلابًا.` | `culture`, minor: literal idiom → `إنها تمطر بغزارة.` |
+
 
 Tokens, markup, NFC, tatweel, presentation forms, digits, numbers, endings,
 Arabic punctuation, spacing, doubled words, glossary terms, and forbidden forms

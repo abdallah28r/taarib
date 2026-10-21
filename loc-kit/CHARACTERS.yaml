@@ -1,2 +1,3 @@
 characters: []
-# Add id, name, gender if known, role, voice, formality, pronouns, evidence.
+# Add id (the unit's context.speaker), name, gender (m|f|mixed|unknown), role, voice, formality,
+# pronouns, evidence. loc.py brief puts each batch's speakers and addressees in the brief.

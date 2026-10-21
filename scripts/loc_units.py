@@ -18,6 +18,9 @@ UNITS_DIR = ROOT / "units"
 STATUSES = ("extracted", "translated", "proofread", "integrated", "tested")
 KINDS = ("text", "image")
 DECISIONS = ("translate", "keep", "review")
+# Arabic verbs, adjectives, and pronouns agree with the addressee, so the brief carries them.
+ADDRESSEE_GENDERS = ("m", "f", "mixed", "unknown")
+ADDRESSEE_NUMBERS = ("singular", "dual", "plural")
 REQUIRED = ("id", "kind", "file", "source", "source_hash", "status")
 # Stable key order keeps one-line-per-unit diffs readable in Git.
 KEY_ORDER = (
@@ -120,6 +123,10 @@ def check_unit(unit: dict, where: str, profile: str, report: Report) -> None:
     label = f"{where} [{unit['id']}]"
     if unit["kind"] not in KINDS:
         report.errors.append(f"{label}: kind must be one of {KINDS}")
+    context = unit.get("context") or {}
+    for key, allowed in (("addressee_gender", ADDRESSEE_GENDERS), ("addressee_number", ADDRESSEE_NUMBERS)):
+        if key in context and context[key] not in allowed:
+            report.errors.append(f"{label}: context.{key} must be one of {allowed}")
     if unit["status"] not in STATUSES:
         report.errors.append(f"{label}: status must be one of {STATUSES}")
         return

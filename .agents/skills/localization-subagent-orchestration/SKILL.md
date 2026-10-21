@@ -21,8 +21,13 @@ Generate each bounded contract with:
 
 ```text
 python scripts/make_subagent_brief.py --route <route> --task <task> --scope <paths> --write-mode read-only|write
-python scripts/make_subagent_brief.py --role translator|proofreader --task <task> --scope <paths> --write-mode write
+python scripts/loc.py brief --batch <batch> --role translator|proofreader --runtime codex|claude-code
 ```
+
+For text batches use `loc.py brief`: its first layer (rules, role, project
+conventions, output contract) is byte-identical for every batch, so a runtime
+can cache it, and it reports `CACHEABLE_PREFIX_SHA` so you can confirm that.
+Give the agent the brief file; it needs nothing else.
 
 Roles in `.agents/roles/` (native subagents with the same names in Claude
 Code): `translator` and `proofreader` for text batches, `researcher` for

@@ -28,8 +28,9 @@ Add `references/ui-style.md`, `references/dialogue-style.md`, or
 
 ## One pass per batch
 
-1. Select the batch's units at `translated` (`loc.py search` or the batch
-   file). Run `python scripts/loc.py validate` (it lists problem codes) and
+1. Get the batch with `python scripts/loc.py brief --batch <batch> --role
+   proofreader` (units with targets, their problem codes, character cards, and
+   the glossary slice); a delegating agent passes you that file. Run `python scripts/loc.py validate` (it lists problem codes) and
    `python scripts/loc.py terms --path <batch file>` first; start reading at
    the units `loc.py search --problem <code> --ids-only` flags; structural errors go back to the
    translator. Each glossary miss is either fixed (a `terminology` finding)
