@@ -1,6 +1,6 @@
 ---
 name: arabic-proofreading
-description: Proofread translated Arabic game text in translation units as an independent reviewer, record findings with severity, apply only clear-cut fixes, and advance clean units to proofread.
+description: "Use when a batch of translation units is at status translated and needs its independent proofreading pass, or when proofreading findings must be recorded or checked. Triggers: تدقيق لغوي، مراجعة الترجمة، ملاحظات المدقق."
 ---
 
 # Arabic proofreading

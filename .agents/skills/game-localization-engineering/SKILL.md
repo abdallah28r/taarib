@@ -1,6 +1,6 @@
 ---
 name: game-localization-engineering
-description: Discover, extract, edit, rebuild, or update localization data in a game while preserving its file formats and runtime behavior.
+description: "Use when identifying a game's engine or text files, writing or proving an adapter, extracting or rebuilding text, researching localization mods, or integrating a build. Triggers: اكتشاف المحرك، استخراج النصوص، محوّل، إعادة البناء، دمج، مود تعريب."
 ---
 
 # Game localization engineering

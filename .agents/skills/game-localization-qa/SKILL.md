@@ -1,6 +1,6 @@
 ---
 name: game-localization-qa
-description: Validate localized game files and diagnose Arabic rendering, RTL, fonts, layout, terminology, update, or in-game screenshot defects.
+description: "Use when checking localized files or a build for structural, rendering, RTL, font, layout, or terminology defects, or when the user reports an in-game problem or screenshot. Triggers: فحص، خطأ في اللعبة، حروف مقطعة، اتجاه النص، الخط، لقطة شاشة."
 ---
 
 # Game localization QA

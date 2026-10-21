@@ -19,6 +19,7 @@ glossary.yaml
 .claude/skills/**
 .claude/agents/**
 .claude/settings.json
+.claude/generated-manifest.json
 config/**
 engines/**
 references/**

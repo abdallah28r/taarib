@@ -1,6 +1,6 @@
 ---
 name: localization-knowledge-capture
-description: Capture and promote reusable localization discoveries without duplicating transient notes across project records.
+description: "Use at the end of a phase, or when a verified finding should outlive this session: an engine quirk, a working tool version, or a failed route. Triggers: توثيق اكتشاف، ملف المحرك، خبرة مكتسبة."
 ---
 
 # Localization knowledge capture

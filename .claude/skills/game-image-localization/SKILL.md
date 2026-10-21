@@ -1,6 +1,6 @@
 ---
 name: game-image-localization
-description: Classify, translate, rebuild, compare, and visually review text baked into game images or textures while preserving artwork, style, alpha, dimensions, and native format.
+description: "Use when a game image or texture contains player-visible text that may need translating, or when an image candidate needs review. Triggers: نص داخل صورة، تعريب الصور، خامة، شعار."
 ---
 
 # Game image localization

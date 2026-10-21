@@ -1,6 +1,6 @@
 ---
 name: localization-project-maintenance
-description: Migrate, update, archive, release, or harvest reusable improvements from an existing game-localization project.
+description: "Use when an existing project needs a game update merged, a phase reopened, a translation memory exported, an improvement promoted to the template, or a release prepared. Triggers: تحديث اللعبة، صيانة المشروع، إصدار، ذاكرة ترجمة."
 ---
 
 # Localization project maintenance

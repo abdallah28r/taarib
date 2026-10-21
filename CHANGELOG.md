@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-21 — Roadmap phase 0: skill descriptions, budgets, manifest
+
+- All eight skill descriptions are now trigger-only (`Use when ...` plus
+  Arabic trigger words) instead of summaries of their steps.
+- `tests/test_budgets.py`: `AGENTS.md` and `CLAUDE.md` under 200 lines,
+  `AGENTS.md` well under Codex's 32 KiB cut-off, skill names matching their
+  folders, descriptions within 1,024 characters, skill bodies under 500 lines.
+- `sync_runtime.py` records every generated file with its SHA-256 in
+  `.claude/generated-manifest.json`; `--check` tells a hand edit from an
+  out-of-date copy. Fixed: a sync used to delete the whole `.claude/skills`
+  and `.claude/agents` folders, including skills a user added there.
+- `AGENTS.md` tells Codex which hook checks to run by hand.
+
 ## 2026-10-21 — loc.py commands made discoverable
 
 - One table in `references/translation-units.md` lists all 18 `loc.py`

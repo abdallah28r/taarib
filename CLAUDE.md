@@ -10,7 +10,8 @@
 
 - **المهارات:** يقرأ Claude Code المجلد `.claude/skills/`، وهو نسخة مولّدة من `.agents/skills/`.
   عدّل المهارات في `.agents/skills/` فقط، ثم شغّل `python scripts/sync_runtime.py`.
-  يفشل `python scripts/verify_template.py` إذا اختلفت النسختان.
+  الملفات المولَّدة مسجلة ببصماتها في `.claude/generated-manifest.json`، والفحص يكشف أي تعديل يدوي
+  عليها. مهارات أو وكلاء تضيفهم بنفسك في `.claude/` لا يحذفها التوليد.
 - **الأدوار:** أربعة وكلاء فرعيين في `.claude/agents/` مولَّدين من `.agents/roles/`:
   `translator` و`proofreader` و`researcher` (قراءة فقط) و`image-localizer`. استدعِ كل وكيل باسمه،
   ومرّر له موجزًا من `python scripts/make_subagent_brief.py --role <role> --runtime claude-code`.

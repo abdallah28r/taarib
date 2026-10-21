@@ -1,6 +1,6 @@
 ---
 name: arabic-game-translation
-description: Translate or linguistically review player-facing game text into Arabic with consistent terminology, context, character voice, and protected syntax.
+description: "Use when translating player-facing game text into Arabic, editing existing Arabic targets, or settling terminology and character voice for a batch. Triggers: ترجمة، تعريب النصوص، دفعة ترجمة، صوت الشخصية، مصطلح."
 ---
 
 # Arabic game translation

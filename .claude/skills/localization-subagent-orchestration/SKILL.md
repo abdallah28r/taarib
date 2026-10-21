@@ -1,6 +1,6 @@
 ---
 name: localization-subagent-orchestration
-description: Plan, brief, coordinate, and verify localization subagents with controlled model routing, disjoint scopes, and bounded integration cost.
+description: "Use when deciding whether to split localization work across subagents, writing their briefs, or merging and verifying their results. Triggers: وكلاء فرعيون، توزيع الدفعات، تفويض."
 ---
 
 # Localization subagent orchestration

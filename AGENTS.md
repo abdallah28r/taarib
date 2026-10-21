@@ -24,6 +24,12 @@ skills only in `.agents/skills/` and roles only in `.agents/roles/`;
 `python scripts/sync_runtime.py`. Model routes use tiers mapped per
 runtime in `config/agent-policy.json`.
 
+**In Codex**, the project hooks (configured for Claude Code only) do not run, so
+do their work yourself: `scripts/safe_backup.py` before changing a game file;
+`loc.py validate` after editing units, `loc.py findings <file>` after a findings
+file, `scripts/check_yaml.py` after YAML, `scripts/sync_runtime.py` after skills
+or roles, and `loc.py dashboard` after `PLAN.md` or the LQA matrix.
+
 For a new game's end-to-end request, follow `references/project-run.md`:
 one grouped startup intake, then continuous work through a verified build and,
 when the intake approved it, installation on the user's copy, one user playtest gate, fixes, and only then a portable game
@@ -145,8 +151,7 @@ with a test, through `localization-project-maintenance`.
   manifests, and Git. Write at batch or phase boundaries, one line per item.
 - `reports/dashboard.html`: generated from the files above after every change
   (hooks in Claude Code; every `loc.py` command that changes state, in both
-  runtimes). Never write it by hand. Codex has no hooks: after editing
-  `PLAN.md` or `qa/LQA_MATRIX.csv` there, run `python scripts/loc.py dashboard`.
+  runtimes). Never write it by hand.
   Every `loc.py` command and when to use it: `references/translation-units.md`.
 - `glossary.yaml`: approved terminology, names, context variants, and voices.
 - `work/NOTES.md`: temporary findings during a phase.

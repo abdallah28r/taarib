@@ -34,12 +34,30 @@ Do the thing.
 
 class RuntimeSupportTests(unittest.TestCase):
     def test_generated_claude_files_are_current(self):
-        self.assertEqual(sync_runtime.differences(sync_runtime.expected(), sync_runtime.present()), [])
+        self.assertEqual(sync_runtime.differences(sync_runtime.expected(), sync_runtime.present(),
+                                                  sync_runtime.load_manifest()), [])
 
-    def test_drift_is_reported(self):
-        wanted = {"a": b"new", "b": b"same"}
-        found = {"a": b"old", "b": b"same", "c": b"x"}
-        self.assertEqual(sync_runtime.differences(wanted, found), ["changed a", "stale c"])
+    def test_drift_is_classified_with_the_manifest(self):
+        d = sync_runtime.digest
+        wanted = {"a": b"new", "b": b"same", "e": b"mine-now"}
+        found = {"a": b"old", "b": b"same", "c": b"x", "e": b"hand edit", "user": b"own skill"}
+        manifest = {"a": d(b"old"), "b": d(b"same"), "c": d(b"x"), "e": d(b"mine-now")}
+        self.assertEqual(sync_runtime.differences(wanted, found, manifest),
+                         ["edited by hand e", "out of date a", "stale c"])
+
+    def test_sync_keeps_files_it_did_not_generate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sync_runtime.write_all({".claude/skills/x/SKILL.md": b"v1", ".claude/agents/old.md": b"o"}, root)
+            own = root / ".claude" / "skills" / "my-own" / "SKILL.md"
+            own.parent.mkdir(parents=True)
+            own.write_bytes(b"user skill")
+            sync_runtime.write_all({".claude/skills/x/SKILL.md": b"v2"}, root)
+            self.assertEqual(own.read_bytes(), b"user skill")
+            self.assertFalse((root / ".claude" / "agents" / "old.md").exists())
+            manifest = json.loads((root / ".claude" / "generated-manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(list(manifest["files"]), [".claude/skills/x/SKILL.md"])
+            self.assertIn("Do not edit", manifest["note"])
 
     def test_role_renders_as_claude_agent_with_tier_model(self):
         with tempfile.TemporaryDirectory() as directory:
