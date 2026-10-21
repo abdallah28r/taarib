@@ -210,16 +210,82 @@ PROBLEM_CODES = {
     "lost_newline": ("warning", "the number of line breaks differs from the source"),
     "latin_leak": ("warning", "Latin words left in the Arabic target (not a placeholder or a keep_latin term)"),
     "too_long": ("warning", "longer than max_length, or more than 3x the source"),
-    "glossary_term_missing": ("warning", "an approved glossary term is not used"),
+    "glossary_term_missing": ("error", "an approved glossary term is not used (or allow it: loc.py terms --allow)"),
+    "forbidden_term": ("error", "a form the glossary forbids (glossary.yaml forbidden:)"),
     "unicode_form": ("warning", "presentation forms, tatweel, BiDi overrides, or non-NFC text"),
     "persian_letters": ("warning", "Persian ی or ک instead of Arabic ي or ك"),
+    "digit_style": ("warning", "digits do not follow PROJECT.yaml game.digits"),
+    "number_mismatch": ("warning", "a number (11 or more, or with decimals) differs from the source"),
+    "end_punctuation": ("warning", "the ending (question, exclamation, period, ellipsis, colon, none) differs"),
+    "latin_punctuation": ("warning", "Latin ? , ; next to Arabic letters instead of ؟ ، ؛"),
+    "whitespace": ("warning", "leading/trailing spaces differ, double spaces, or a space before punctuation"),
+    "doubled_word": ("warning", "the same word twice in a row where the source repeats nothing"),
+    "invisible_chars": ("warning", "zero-width, soft-hyphen, or control characters"),
 }
 LATIN_WORD_RE = re.compile(r"[A-Za-z][A-Za-z'-]{2,}")
 CODE_SPAN_RE = re.compile(r"\[[^\]]*\]|\{[^}]*\}|<[^>]*>|%\w+")
 PRESENTATION_RE = re.compile(r"[\uFB50-\uFDFF\uFE70-\uFEFF\u0640\u202A\u202B\u202D\u202E]")
 
 
-def unit_problems(all_units: list[dict], glossary: dict | None = None, profile: str = "generic") -> dict[str, list[str]]:
+ARABIC_INDIC = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
+EASTERN_DIGIT_RE = re.compile(r"[\u0660-\u0669\u06F0-\u06F9]")
+NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)*")
+ARABIC_LETTER_RE = re.compile(r"[\u0621-\u064A]")
+INVISIBLE_RE = re.compile(r"[\u200B-\u200D\u2060\uFEFF\u00AD\u0000-\u0008\u000B\u000C\u000E-\u001F]")
+DOUBLED_RE = re.compile(r"(?<!\w)(\w{2,})\s+\1(?!\w)", re.IGNORECASE)
+CLOSERS = "\"'»”’)]"
+
+
+def end_class(text: str) -> str:
+    """What a string ends with: question, exclamation, ellipsis, period, colon, or none."""
+    text = text.rstrip().rstrip(CLOSERS).rstrip()
+    if text.endswith(("...", "…")):
+        return "ellipsis"
+    return {"?": "question", "؟": "question", "!": "exclamation", ".": "period", ":": "colon"}.get(text[-1:], "none")
+
+
+def numbers(text: str) -> list[str]:
+    found = []
+    for value in NUMBER_RE.findall(text.translate(ARABIC_INDIC)):
+        plain = value.replace(",", "")
+        if "." in value or (plain.isdigit() and int(plain) > 10):
+            found.append(plain)
+    return sorted(found)
+
+
+def arabic_checks(source: str, target: str, digits: str = "western") -> list[str]:
+    """Typography checks on prose (code spans already removed) for an Arabic target."""
+    codes = []
+    if digits == "western" and EASTERN_DIGIT_RE.search(target):
+        codes.append("digit_style")
+    elif digits == "arabic-indic" and re.search(r"[0-9]", target):
+        codes.append("digit_style")
+    if numbers(source) != numbers(target):
+        codes.append("number_mismatch")
+    if end_class(source) != end_class(target):
+        codes.append("end_punctuation")
+    if re.search(r"[\u0621-\u064A][\s]*[?,;]|[?,;][\s]*[\u0621-\u064A]", target):
+        codes.append("latin_punctuation")
+    edge = lambda s: (s[:1].isspace(), s[-1:].isspace())
+    if (edge(source) != edge(target) or ("  " in target and "  " not in source)
+            or re.search(r"\s[،؛؟.!:,;?]", target)):
+        codes.append("whitespace")
+    if DOUBLED_RE.search(target) and not DOUBLED_RE.search(source):  # repetition in the source is deliberate
+        codes.append("doubled_word")
+    if INVISIBLE_RE.search(target):
+        codes.append("invisible_chars")
+    return codes
+
+
+def forbidden_forms(unit: dict, glossary: dict) -> list[str]:
+    folded = normalize_arabic(unit.get("target") or "")
+    exceptions = set(unit.get("term_exceptions") or [])
+    return [form for form in (glossary.get("forbidden") or {})
+            if isinstance(form, str) and form not in exceptions and normalize_arabic(form) in folded]
+
+
+def unit_problems(all_units: list[dict], glossary: dict | None = None, profile: str = "generic",
+                  digits: str = "western") -> dict[str, list[str]]:
     """Problem codes per unit id, for every unit that has at least one."""
     import unicodedata
     keep_latin = {t.lower() for t in (glossary or {}).get("keep_latin") or [] if isinstance(t, str)}
@@ -261,18 +327,30 @@ def unit_problems(all_units: list[dict], glossary: dict | None = None, profile: 
                 codes.append("unicode_form")
             if "\u06CC" in target or "\u06A9" in target:
                 codes.append("persian_letters")
+            # Code becomes a neutral mark, not a space, so it cannot fake a spacing or punctuation problem.
+            prose = lambda text, found_tokens: CODE_SPAN_RE.sub(
+                "§", text if not found_tokens else re.sub("|".join(map(re.escape, found_tokens)), "§", text))
+            codes += arabic_checks(prose(source, source_tokens), prose(target, target_tokens), digits)
+            if glossary and forbidden_forms(unit, glossary):
+                codes.append("forbidden_term")
         codes += missing_terms.get(ident, [])
         if codes:
             found[ident] = codes
     return found
 
 
-def problem_counts(found: dict[str, list[str]]) -> dict[str, int]:
+def level(code: str, overrides: dict | None = None) -> str:
+    """error or warning; PROJECT.yaml qa.levels may promote or demote any code."""
+    value = (overrides or {}).get(code)
+    return value if value in ("error", "warning") else PROBLEM_CODES[code][0]
+
+
+def problem_counts(found: dict[str, list[str]], overrides: dict | None = None) -> dict[str, int]:
     counts: dict[str, int] = {}
     for codes in found.values():
         for code in codes:
             counts[code] = counts.get(code, 0) + 1
-    return dict(sorted(counts.items(), key=lambda item: (PROBLEM_CODES[item[0]][0] != "error", -item[1])))
+    return dict(sorted(counts.items(), key=lambda item: (level(item[0], overrides) != "error", -item[1])))
 
 
 # ----- applying a translated batch ------------------------------------------------

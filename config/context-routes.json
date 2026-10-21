@@ -34,12 +34,12 @@
     },
     "proofreading": {
       "skill": ".agents/skills/arabic-proofreading/SKILL.md",
-      "required": ["references/translation-units.md", "glossary.yaml", "references/translation-core.md", ".agents/skills/arabic-proofreading/references/proofreading-checklist.md"],
+      "required": ["references/problem-codes.md", "references/translation-units.md", "glossary.yaml", "references/translation-core.md", ".agents/skills/arabic-proofreading/references/proofreading-checklist.md"],
       "optional": ["references/ui-style.md", "references/dialogue-style.md", "references/subtitles-style.md", ".agents/skills/game-localization-qa/references/lqa-severity.md"]
     },
     "qa-structural": {
       "skill": ".agents/skills/game-localization-qa/SKILL.md",
-      "required": ["references/translation-units.md", "references/qa-strategy.md"],
+      "required": ["references/problem-codes.md", "references/translation-units.md", "references/qa-strategy.md"],
       "optional": ["glossary.yaml", "engines/<engine>.md"]
     },
     "qa-rendering": {

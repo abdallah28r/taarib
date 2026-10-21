@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-21 — Roadmap phase 2: Arabic typography checks and levels
+
+- New problem codes: `digit_style` (follows `game.digits`), `number_mismatch`
+  (numbers 11+ or decimals; 0–10 may be written as words), `end_punctuation`,
+  `latin_punctuation` (`? , ;` beside Arabic letters), `whitespace`,
+  `doubled_word`, `invisible_chars`, and `forbidden_term` from a new
+  `forbidden:` section in `glossary.yaml`. Code spans are ignored.
+- Every code is `error` or `warning`; `PROJECT.yaml` → `qa.levels` can
+  promote or demote any code. The localization gate now blocks on every
+  error-level code (including glossary misses and forbidden forms) instead of
+  a separate glossary line; `loc.py terms` also lists forbidden forms.
+- A test fails if a problem code is missing from the reference table.
+
 ## 2026-10-21 — Roadmap phase 1: batch alignment and problem codes
 
 - `loc.py apply <answer.json> --batch|--ids --by`: writes a translator's

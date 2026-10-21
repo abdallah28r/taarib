@@ -76,25 +76,8 @@ its options. This table is the one map of when to use each.
 | maintenance | `normalize` | After resetting a changed unit to `extracted`. |
 | release | `tmx --out <file>` | Keep a translation memory for later games. |
 
-## Problem codes
-
-Computed from each unit every time (never stored, so never stale). `validate`
-prints the counts, the dashboard shows them, and `search --problem <code>`
-lists the units. Errors block integration; warnings go to the proofreader.
-
-| Code | Level | Meaning |
-| --- | --- | --- |
-| `missing_target` | error | translated or later, but the target is empty |
-| `token_mismatch` | error | placeholders, tags, or escapes differ from the source |
-| `source_changed` | error | the source changed after the unit was recorded |
-| `proofread_stale` | error | the target changed after proofreading |
-| `untranslated` | warning | the target is identical to the source |
-| `lost_newline` | warning | line-break count differs from the source |
-| `latin_leak` | warning | Latin words left in the Arabic (not code, not `keep_latin`) |
-| `too_long` | warning | over `max_length`, or more than 3x the source |
-| `glossary_term_missing` | warning | an approved glossary term is not used |
-| `unicode_form` | warning | presentation forms, tatweel, BiDi overrides, non-NFC |
-| `persian_letters` | warning | Persian ی or ک instead of Arabic ي or ك |
+Problem codes (`validate`, `search --problem`) and their levels are listed in
+`references/problem-codes.md`.
 
 `extract` and `rebuild` go through an adapter (`adapters/README.md`).
 `rebuild` writes only units at `proofread` or later unless `--min-status` says

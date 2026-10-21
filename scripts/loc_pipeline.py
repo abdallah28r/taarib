@@ -195,14 +195,19 @@ def check_localization(project: Project, settings: dict, state: dict) -> list[tu
     review = [u for u in all_units if units.decision(u) == "review"]
     import yaml
     glossary = yaml.safe_load(project.glossary_file.read_text(encoding="utf-8")) if project.glossary_file.is_file() else {}
-    terms = tools.check_terms(all_units, glossary or {})
+    digits = settings.get("game", {}).get("digits") or "western"
+    overrides = (settings.get("qa") or {}).get("levels") or {}
+    profile = settings.get("game", {}).get("token_profile", "generic") or "generic"
+    counts = tools.problem_counts(tools.unit_problems(all_units, glossary or {}, profile, digits), overrides)
+    errors = {code: n for code, n in counts.items() if tools.level(code, overrides) == "error"}
     batches = plan_batches(project)
     return [
         (bool(all_units), "توجد وحدات في units/"),
         (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
         (not pending, f"كل وحدة قابلة للترجمة مدققة لغويًا (المتبقي: {len(pending)})"),
         (not review, f"لا وحدة تنتظر قرارًا (بانتظار قرار: {len(review)})"),
-        (not terms, f"المصطلحات تطابق القاموس أو لها استثناء مسجل (المخالفات: {len(terms)})"),
+        (not errors, "لا مشكلات من مستوى الخطأ، ومنها المسرد والصيغ الممنوعة ("
+                     + ("، ".join(f"{c}={n}" for c, n in errors.items()) or "لا شيء") + ")"),
         (bool(batches) and all(batches), f"كل دفعات PLAN.md مؤشّرة ☑ (المتبقي: {batches.count(False)})"),
     ]
 

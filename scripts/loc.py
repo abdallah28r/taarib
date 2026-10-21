@@ -273,7 +273,8 @@ def progress_html(groups: dict, qa: dict, problems: dict | None = None) -> str:
     items = "".join(f"<li>{esc(line)}</li>" for line in [qa_line(qa), *extra_lines(g)])
     parts.append(f'</table></div><div class="card"><ul>{items}</ul></div>')
     if problems:
-        rows = "".join(f'<li class="{"err" if tools.PROBLEM_CODES[c][0] == "error" else ""}"><bdi>{c}</bdi>: {n}</li>'
+        overrides = project_qa()[1]
+        rows = "".join(f'<li class="{"err" if tools.level(c, overrides) == "error" else ""}"><bdi>{c}</bdi>: {n}</li>'
                        for c, n in problems.items())
         parts.append(f'<div class="card"><p class="muted">المشكلات حسب الكود (loc.py search --problem)</p>'
                      f'<ul class="checks">{rows}</ul></div>')
@@ -328,7 +329,8 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
     all_units = units.all_units(units.load(units_dir, units.Report()))
     groups = compute(all_units)
     try:
-        problems = tools.problem_counts(tools.unit_problems(all_units, project_glossary(), token_profile()))
+        found, overrides = find_problems(all_units)
+        problems = tools.problem_counts(found, overrides)
     except Exception:  # the page must render even with a broken glossary
         problems = {}
     state = project.state()
@@ -393,7 +395,8 @@ def print_report(report, limit: int = LINE_LIMIT) -> None:
 def cmd_validate(args) -> int:
     files, report = load_checked(args.path)
     print_report(report, args.limit)
-    counts = tools.problem_counts(tools.unit_problems(units.all_units(files), project_glossary(), token_profile()))
+    found, overrides = find_problems(units.all_units(files))
+    counts = tools.problem_counts(found, overrides)
     if counts:
         print("PROBLEMS: " + " ".join(f"{code}={n}" for code, n in counts.items())
               + "  (list them: loc.py search --problem <code>)")
@@ -428,6 +431,22 @@ def project_glossary() -> dict:
     return load_glossary(path) if path.is_file() else {}
 
 
+def project_qa() -> tuple[str, dict]:
+    """The digit policy and problem-level overrides from PROJECT.yaml."""
+    try:
+        import yaml
+        settings = yaml.safe_load((ROOT / "PROJECT.yaml").read_text(encoding="utf-8")) or {}
+    except Exception:
+        return "western", {}
+    return settings.get("game", {}).get("digits") or "western", (settings.get("qa") or {}).get("levels") or {}
+
+
+def find_problems(all_units: list[dict]) -> tuple[dict, dict]:
+    """(problem codes per unit id, level overrides) with every project setting applied."""
+    digits, overrides = project_qa()
+    return tools.unit_problems(all_units, project_glossary(), token_profile(), digits), overrides
+
+
 def cmd_search(args) -> int:
     report = units.Report()
     if args.path_option:
@@ -439,7 +458,7 @@ def cmd_search(args) -> int:
         print("ERROR unknown problem code. Codes: " + ", ".join(tools.PROBLEM_CODES))
         return 2
     all_units = units.all_units(units.load(args.path, report))
-    flagged = tools.unit_problems(all_units, project_glossary(), token_profile()) if args.problem else {}
+    flagged = find_problems(all_units)[0] if args.problem else {}
     needle = (args.query or "").casefold()
     hits = 0
     for unit in all_units:
@@ -862,8 +881,8 @@ def cmd_apply(args) -> int:
     for unit_file in files:
         units.write(unit_file)
     auto_dashboard(args.path)
-    found = tools.unit_problems(selected, project_glossary(), token_profile())
-    counts = tools.problem_counts(found)
+    found, overrides = find_problems(selected)
+    counts = tools.problem_counts(found, overrides)
     print(f"APPLIED={len(selected)} STATUS=translated BY={args.by}"
           + (" WARNINGS: " + " ".join(f"{c}={n}" for c, n in counts.items()) if counts else ""))
     return 0
@@ -885,7 +904,12 @@ def cmd_terms(args) -> int:
                     return 0
         print(f"ERROR unknown unit id {ident!r}")
         return 2
-    problems = tools.check_terms(units.all_units(files), load_glossary(args.glossary))
+    glossary = load_glossary(args.glossary)
+    all_units = units.all_units(files)
+    problems = tools.check_terms(all_units, glossary)
+    problems += [(u["id"], form, f"forbidden; use {(glossary.get('forbidden') or {})[form]}")
+                 for u in all_units if u.get("target") and units.decision(u) == "translate"
+                 for form in tools.forbidden_forms(u, glossary)]
     for ident, term, expected in problems[:args.limit]:
         print(f"WARN  [{ident}] {term!r} should read: {expected}")
     if len(problems) > args.limit:

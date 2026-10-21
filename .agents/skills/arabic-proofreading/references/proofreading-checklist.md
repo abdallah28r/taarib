@@ -17,8 +17,10 @@ Check each unit in this order; meaning outranks polish. Severity follows
 | `length` | Target over `max_length` or clearly longer than the UI allows | minor / major |
 | `numbers` | Digits, units, dates, or quantities changed | major |
 
-Tokens, markup, NFC, tatweel, and presentation forms are already checked by
-`loc.py validate`; do not spend review time re-checking them by eye.
+Tokens, markup, NFC, tatweel, presentation forms, digits, numbers, endings,
+Arabic punctuation, spacing, doubled words, glossary terms, and forbidden forms
+are checked by `loc.py validate` (`references/problem-codes.md`); do not spend review time
+re-checking them by eye. Read the flagged units first.
 
 ## Findings file
 
