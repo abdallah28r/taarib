@@ -149,7 +149,8 @@ with a test, through `localization-project-maintenance`.
   localization notes, the current blocker, and one resumable next action.
   **Batch plan:** before leaving extraction, write every batch as one
   checklist line under `## الدفعات` (`- [ ] batch-001 — scope — translator /
-  proofreader`); tick it `- [x]` when that batch is proofread. The extraction
+  proofreader`); tick it `- [x]` when that batch is proofread, and append
+  `— unfinished: ...` only while a batch is stopped midway. The extraction
   gate needs the list and the localization gate needs every box ticked, and
   the dashboard shows it live. Add a batch line if new text appears; never
   delete one to pass a gate.

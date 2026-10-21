@@ -70,7 +70,7 @@ Before a bulk translation, run
 `PLAN.md`. The estimate is for shard planning, not billing. If the available
 quota is insufficient for two estimated batches or repeated rate-limit/quota
 errors persist after bounded retries, finish or checkpoint the current batch,
-record resumable state, and stop. Never switch model, tier, or runtime silently.
+record resumable state, and stop.
 
 ## Delegation contract
 
@@ -91,11 +91,7 @@ Only one agent may write a given file at a time. Prefer read-only subagents for 
 
 - Treat a subagent result as an untrusted contribution until the root agent checks its scope, diffs, protected tokens, glossary, format, encoding, and relevant tests.
 - For translation, require zero structural/token errors. Review a representative semantic sample and escalate only the ambiguous or failing subset.
-- Keep one compact delegation line per batch in `PLAN.md` → batches: assigned scope,
-  outputs, checks, and unfinished work. Record per-agent model/effort or retry
-  details only when they affect quality, cost, a policy exception, or resumption;
-  use the actual run output as the detailed source when available. Do not request
-  or store hidden chain-of-thought.
+- The batch checklist line in `PLAN.md` (`- [ ] batch-001 — scope — translator / proofreader`) is the only delegation record. If a batch stops midway, append `— unfinished: <what is left>` to its line and remove it when the batch is done. Do not record models, reasoning effort, outputs, or checks: models change, and code recomputes outputs and checks from the units. Unit fields `translated_by` and `proofread_by` are written by `loc.py`. Do not request or store hidden chain-of-thought.
 - If a prohibited local model is attempted, stop that operation, preserve evidence, report the command/service and affected files, and do not silently retry through another model.
 
 ## Reusable improvements

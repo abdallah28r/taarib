@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-21 — Record only what someone uses
+
+- No more recording of each subagent's model, reasoning effort, outputs, or
+  checks in `PLAN.md`: nobody reads them, models change, and code recomputes
+  outputs and checks. The batch checklist line is the only delegation record,
+  with `— unfinished: ...` while a batch is stopped midway.
+- Dropped "never switch model, tier, or runtime silently"; model choice is
+  free. The quota checkpoint-and-stop rule stays. `translated_by` and
+  `proofread_by` are unchanged.
+
 ## 2026-10-21 — No model names in the template
 
 - Model names are gone from the policy, its JSON, `CLAUDE.md`, the skills, and
