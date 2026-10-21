@@ -43,6 +43,17 @@ class AgentPolicyTests(unittest.TestCase):
         self.assertIn("independent bounded work", brief)
         self.assertIn("sole writer", brief)
 
+    def test_model_choice_is_free(self):
+        policy = make_subagent_brief.load_policy(ROOT / "config" / "agent-policy.json")
+        self.assertEqual(policy["authorization"]["model_selection"], "free_choice_by_root_agent_routes_are_suggestions")
+        brief = make_subagent_brief.build_brief(policy, "mechanical", "Count rows", "source/", runtime="claude-code",
+                                                tier="deep", effort="high")
+        self.assertIn("Model tier: deep (claude-code: opus)", brief)
+        self.assertIn("Reasoning effort: high", brief)
+        text = (ROOT / "MODEL_AND_SUBAGENT_POLICY.md").read_text(encoding="utf-8")
+        self.assertIn("There is no lightest-first rule", text)
+        self.assertNotIn("Choose the lightest", text)
+
     def test_brief_can_target_one_runtime(self):
         policy = make_subagent_brief.load_policy(ROOT / "config" / "agent-policy.json")
         brief = make_subagent_brief.build_brief(

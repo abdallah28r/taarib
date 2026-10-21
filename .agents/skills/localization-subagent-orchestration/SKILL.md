@@ -41,8 +41,11 @@ disjoint.
 - Give writers disjoint files; one writer owns each file at a time.
 - Nested delegation is allowed only when children inherit the complete policy
   and keep disjoint scopes.
-- Choose the lightest allowed hosted model/effort that meets semantic and
-  structural risk. Escalate after recorded failure evidence, not by habit.
+- Choose any hosted model tier and effort of the active runtime by your own
+  judgment; there is no lightest-first rule. Route tiers are suggestions. In
+  Claude Code a role's `model:` is a suggestion too: pass `model` (haiku,
+  sonnet, opus) when starting it to choose another; for Codex briefs use
+  `make_subagent_brief.py --tier --effort`.
 - Never ask for hidden chain-of-thought.
 
 The root agent validates scope and diffs, runs deterministic format/token tests,

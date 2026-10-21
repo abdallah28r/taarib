@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-21 — The root agent chooses subagent models freely
+
+- No lightest-first rule: the root agent picks any tier (light, standard,
+  deep) and effort for each subagent by its own judgment, with no expected
+  default and no recorded reason. Route tiers in `config/agent-policy.json`
+  and a Claude Code role's `model:` are suggestions
+  (`authorization.model_selection`). `make_subagent_brief.py` takes `--tier`
+  and `--effort`.
+
 ## 2026-10-21 — Fewer intake questions: install, subagents and image editing are fixed
 
 - Installing the checked build on the user's identified copy, using subagents,

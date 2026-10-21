@@ -33,7 +33,9 @@ def model_line(policy: dict, tier: str, runtime: str | None) -> str:
 
 def build_brief(policy: dict, route_name: str, task: str, scope: str,
                 write_mode: str = "read-only", deliverable: str = "Return findings and evidence.",
-                runtime: str | None = None, role: tuple[dict, str] | None = None) -> str:
+                runtime: str | None = None, role: tuple[dict, str] | None = None,
+                tier: str | None = None, effort: str | None = None) -> str:
+    """The route's tier and effort are suggestions; ``tier``/``effort`` record the root agent's own choice."""
     route = policy["routing"][route_name]
     auth = policy["authorization"]
     providers = policy["providers"]
@@ -46,8 +48,8 @@ def build_brief(policy: dict, route_name: str, task: str, scope: str,
         f"- Write mode: {write_mode}",
         *([f"- Role: {role[0]['name']} (skill: {role[0]['skill']})"] if role else []),
         f"- Requested route: {route_name}",
-        model_line(policy, route["tier"], runtime),
-        f"- Reasoning effort: {route['effort']}",
+        model_line(policy, tier or route["tier"], runtime),
+        f"- Reasoning effort: {effort or route['effort']}",
         "",
         "## Binding constraints",
         "",
@@ -83,13 +85,17 @@ def main(argv=None) -> int:
     parser.add_argument("--deliverable", default="Return findings and evidence.")
     parser.add_argument("--runtime", choices=sorted(policy["runtimes"]),
                         help="show only this runtime's model for the tier")
+    parser.add_argument("--tier", choices=("light", "standard", "deep"),
+                        help="any tier you choose; the route's tier is only a suggestion")
+    parser.add_argument("--effort", choices=("low", "medium", "high", "xhigh", "max"),
+                        help="any reasoning effort you choose; the route's effort is only a suggestion")
     args = parser.parse_args(argv)
     role = roles[args.role] if args.role else None
     route = args.route or (role[0]["route"] if role else None)
     if not route:
         parser.error("give --role or --route")
     print(build_brief(policy, route, args.task, args.scope, args.write_mode, args.deliverable,
-                      args.runtime, role), end="")
+                      args.runtime, role, args.tier, args.effort), end="")
     return 0
 
 

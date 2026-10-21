@@ -6,7 +6,8 @@
     "permission_persists": true,
     "concurrency_policy": "adaptive_no_fixed_limit",
     "nested_delegation": "allowed_when_bounded_and_policy_compliant",
-    "single_writer_per_file": true
+    "single_writer_per_file": true,
+    "model_selection": "free_choice_by_root_agent_routes_are_suggestions"
   },
   "providers": {
     "allowed": ["hosted_frontier_models_exposed_by_the_active_runtime"],
@@ -62,7 +63,7 @@
     "scoped_edit": {
       "tier": "light",
       "effort": "medium",
-      "use_for": "small mechanical edits or coordinated updates from a clear brief; standard/low if light fails"
+      "use_for": "small mechanical edits or coordinated updates from a clear brief"
     },
     "ui_translation": {
       "tier": "standard",

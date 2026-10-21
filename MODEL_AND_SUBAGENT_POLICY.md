@@ -46,9 +46,9 @@ Routes name a capability tier, not a vendor model. `config/agent-policy.json` â†
 | standard | gpt-6-sol | sonnet |
 | deep | gpt-6-astra | opus |
 
-Choose the lightest available tier and reasoning effort that meets the quality and risk threshold. Correctness, structural safety, and preservation of meaning outrank token savings. Do not select `high`, `xhigh`, or `max` by habit.
+The root agent chooses each subagent's tier and reasoning effort freely: light, standard, or deep, at any effort, by its own judgment of the task. There is no lightest-first rule, no expected default, and no reason to record for choosing a heavier or lighter model. The table lists suggestions only.
 
-| Work | Starting route |
+| Work | Suggested route |
 | --- | --- |
 | Inventory, counting, hashes, token comparison, simple extraction, deterministic checks | light / low |
 | Small mechanical edits and coordinated updates from a clear brief | light / medium or standard / low |
@@ -62,13 +62,6 @@ Choose the lightest available tier and reasoning effort that meets the quality a
 | Exceptional long-running analysis with a measurable quality gain | deep / xhigh; `max` only when a representative evaluation justifies it |
 
 Model names in the tier map are examples, not permanent availability guarantees; update the map when a runtime's models change. Check the models exposed by the current runtime. If per-subagent model selection is unsupported and all agents inherit the root model, say so and apply the task/effort policy without pretending a different model was used.
-
-Escalate only for a recorded reason: unresolved semantic ambiguity, conflicting project evidence, repeated verification failure, a hard-to-reverse decision, broad cross-file reasoning, or a representative evaluation showing a material quality gain. Do not downgrade final narrative translation to a mechanical route merely because the batch is large.
-
-Lines with several protected tokens, nested plural/select syntax, or dense engine
-control codes may start one route higher because structural preservation is part
-of correctness. Record that reason; markup density does not automatically
-justify the highest model.
 
 ## Usage planning
 
