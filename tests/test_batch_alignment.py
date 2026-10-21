@@ -40,6 +40,7 @@ class BatchAlignmentTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.dir = Path(self.temporary.name)
         self.units = self.dir / "u.jsonl"
+        self.state = self.dir / "state" / "pipeline.json"
         shutil.copyfile(FIXTURE, self.units)
 
     def tearDown(self):
@@ -51,7 +52,14 @@ class BatchAlignmentTests(unittest.TestCase):
         return path
 
     def apply(self, data, *extra):
-        return run("apply", str(self.answer(data)), "--path", str(self.units), "--by", "translator-9", *extra)
+        return run("apply", str(self.answer(data)), "--path", str(self.units), "--by", "translator-9",
+                   "--state", str(self.state), *extra)
+
+    def open_fix(self, *ids):
+        code, out = run("fix", "--state", str(self.state), "open", "--title", "t", "--current", "c",
+                        "--expected", "e", "--unchanged", "u", "--ids", *ids, "--path", str(self.units))
+        self.assertEqual(code, 0, out)
+        return out.split("FIX_OPENED=")[1].split()[0]
 
     def unit(self, ident):
         for line in self.units.read_text(encoding="utf-8").splitlines():
@@ -71,10 +79,17 @@ class BatchAlignmentTests(unittest.TestCase):
         self.assertIn("NOT_WRITTEN", out)
         self.assertEqual(self.units.read_bytes(), before)
 
+    def test_proofread_text_is_locked_without_a_fix(self):
+        code, out = self.apply({"dlg/ch1#001": "أهلًا يا {player}!"}, "--ids", "dlg/ch1#001")
+        self.assertEqual(code, 1)
+        self.assertIn("LOCKED (1): proofread text changes only through an open fix", out)
+
     def test_full_answer_is_applied_and_resets_changed_proofreading(self):
+        fix = self.open_fix("dlg/ch1#001")
         code, out = self.apply([{"id": "dlg/ch1#001", "target": "أهلًا يا {player}!"},
                                 {"id": "dlg/ch1#002", "target": "انتبه."},
-                                {"id": "dlg/ch1#003", "target": "لم أقل ذلك قط."}], "--batch", "batch-002")
+                                {"id": "dlg/ch1#003", "target": "لم أقل ذلك قط."}], "--batch", "batch-002",
+                               "--fix", fix)
         self.assertEqual(code, 0, out)
         changed = self.unit("dlg/ch1#001")
         self.assertEqual((changed["status"], changed["translated_by"]), ("translated", "translator-9"))
@@ -87,7 +102,8 @@ class BatchAlignmentTests(unittest.TestCase):
         self.assertEqual(self.unit("dlg/ch1#001")["status"], "proofread")
 
     def test_token_errors_are_refused(self):
-        code, out = self.apply({"dlg/ch1#001": "مرحبًا!"}, "--ids", "dlg/ch1#001")
+        fix = self.open_fix("dlg/ch1#001")
+        code, out = self.apply({"dlg/ch1#001": "مرحبًا!"}, "--ids", "dlg/ch1#001", "--fix", fix)
         self.assertEqual(code, 1)
         self.assertIn("token mismatch", out)
 
@@ -97,6 +113,58 @@ class BatchAlignmentTests(unittest.TestCase):
                 tools.parse_batch_output(bad)
         with self.assertRaises(ValueError):
             tools.parse_batch_output('[{"id": "a", "target": "x"}, {"id": "a", "target": "y"}]')
+
+
+class FixLaneTests(BatchAlignmentTests.__base__):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.dir = Path(self.temporary.name)
+        self.units = self.dir / "u.jsonl"
+        self.state = self.dir / "state" / "pipeline.json"
+        shutil.copyfile(FIXTURE, self.units)
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def fix(self, *argv):
+        return run("fix", "--state", str(self.state), *argv)
+
+    def test_verified_needs_proofreading_evidence_and_an_untouched_rest(self):
+        code, out = self.fix("open", "--title", "greeting", "--current", "مرحبًا", "--expected", "أهلًا",
+                             "--unchanged", "other lines", "--ids", "dlg/ch1#001", "--path", str(self.units))
+        self.assertEqual(code, 0, out)
+        answer = self.dir / "a.json"
+        answer.write_text(json.dumps({"dlg/ch1#001": "أهلًا يا {player}!"}, ensure_ascii=False), encoding="utf-8")
+        self.assertEqual(run("apply", str(answer), "--path", str(self.units), "--ids", "dlg/ch1#001",
+                             "--by", "translator-9", "--state", str(self.state), "--fix", "F-001")[0], 0)
+        close = lambda *extra: self.fix("close", "F-001", "--verdict", "verified", "--path", str(self.units), *extra)
+        code, out = close("--evidence", "seen in game")
+        self.assertIn("not proofread again", out)
+        run("mark", "--path", str(self.units), "--ids", "dlg/ch1#001", "--status", "proofread", "--by", "p-2")
+        code, out = close()
+        self.assertIn("needs --evidence", out)
+        rows = [json.loads(line) for line in self.units.read_text(encoding="utf-8").splitlines()]
+        for row in rows:
+            if row["id"] == "dlg/ch1#002":
+                row["target"] = "احذر."
+        self.units.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+        code, out = close("--evidence", "seen in game")
+        self.assertEqual(code, 1)
+        self.assertIn("text outside the fix changed: dlg/ch1#002", out)
+        code, out = self.fix("close", "F-001", "--verdict", "partial", "--path", str(self.units))
+        self.assertEqual(code, 0, out)
+        code, out = self.fix("list")
+        self.assertIn("F-001 [closed/partial] greeting", out)
+
+    def test_open_fix_blocks_playtest_and_unknown_ids_are_refused(self):
+        code, _ = self.fix("open", "--title", "t", "--current", "c", "--expected", "e", "--unchanged", "u",
+                           "--ids", "nope", "--path", str(self.units))
+        self.assertEqual(code, 2)
+        self.fix("open", "--title", "t", "--current", "c", "--expected", "e", "--unchanged", "u",
+                 "--ids", "dlg/ch1#002", "--path", str(self.units))
+        project = loc.pipeline.Project(state_file=self.state, units_dir=self.units, qa_file=self.dir / "q.csv")
+        checks = loc.pipeline.check_playtest(project, {}, project.state())
+        self.assertIn((False, "لا إصلاحات مفتوحة (loc.py fix list؛ المفتوحة: 1)"), checks)
 
 
 class ProblemCodeTests(unittest.TestCase):

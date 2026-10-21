@@ -221,6 +221,7 @@ PROBLEM_CODES = {
     "whitespace": ("warning", "leading/trailing spaces differ, double spaces, or a space before punctuation"),
     "doubled_word": ("warning", "the same word twice in a row where the source repeats nothing"),
     "invisible_chars": ("warning", "zero-width, soft-hyphen, or control characters"),
+    "needs_rewrite": ("warning", "a game update changed the source; rewrite it starting from previous_target"),
 }
 LATIN_WORD_RE = re.compile(r"[A-Za-z][A-Za-z'-]{2,}")
 CODE_SPAN_RE = re.compile(r"\[[^\]]*\]|\{[^}]*\}|<[^>]*>|%\w+")
@@ -304,6 +305,8 @@ def unit_problems(all_units: list[dict], glossary: dict | None = None, profile: 
             codes.append("source_changed")
         if units.stage(unit) >= 2 and "proofread_hash" in unit and unit["proofread_hash"] != units.source_hash(target):
             codes.append("proofread_stale")
+        if units.stage(unit) == 0 and unit.get("previous_target"):
+            codes.append("needs_rewrite")
         if target and translatable:
             source_tokens, target_tokens = units.tokens(source, profile), units.tokens(target, profile)
             if unit.get("kind") == "text" and source_tokens != target_tokens:

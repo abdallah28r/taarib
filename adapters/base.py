@@ -32,6 +32,17 @@ def _load_units():
 
 
 loc_units = _load_units()
+RTL_CAPABILITIES = ("native", "needs_preshape", "unsupported")
+
+
+def _load_shaping():
+    import importlib.util as util
+    if "arabic_shaping" not in sys.modules:
+        spec = util.spec_from_file_location("arabic_shaping", ROOT / "scripts" / "arabic_shaping.py")
+        module = util.module_from_spec(spec)
+        sys.modules["arabic_shaping"] = module
+        spec.loader.exec_module(module)
+    return sys.modules["arabic_shaping"]
 
 
 class Adapter:
@@ -40,6 +51,12 @@ class Adapter:
     engine = "generic"
     # Token profile passed to loc_qa.tokens (generic, renpy, rpgmaker, paradox).
     token_profile = "generic"
+    # How the engine shows Arabic, decided from evidence during discovery:
+    #   native          the renderer shapes and orders Arabic itself (write logical text)
+    #   needs_preshape  the renderer is left-to-right only; write shaped, visually ordered text
+    #   unsupported     no workable route with this adapter
+    # "unknown" fails the contract and the discovery gate until it is decided.
+    rtl = "unknown"
 
     def __init__(self, game_root: Path, options: dict | None = None):
         self.game_root = Path(game_root)
@@ -61,6 +78,10 @@ class Adapter:
         written relative paths. Status filtering is the caller's job.
         """
         raise NotImplementedError
+
+    def render(self, target: str) -> str:
+        """The text written into game files for a logical Arabic target (call this in rebuild)."""
+        return _load_shaping().render(target) if self.rtl == "needs_preshape" else target
 
     def read_back(self, root: Path) -> dict[str, str]:
         """The text the game would show for each unit id in the tree at ``root``."""

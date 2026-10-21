@@ -19,6 +19,15 @@ Subclass `Adapter` from `base.py` and implement:
   `out_dir`, leaving every untranslated part byte-identical.
 - `read_back(root)`: the text the game would show for each unit id.
 
+Set `rtl` from discovery evidence: `native` when the engine shapes and orders
+Arabic itself (write logical text), or `needs_preshape` when it renders left to
+right only; then `render()` shapes each line with forms derived from Unicode
+and reverses it for display, keeping Latin runs, numbers, and code spans
+intact. Wrap lines before rendering, because reversing a wrapped paragraph puts
+its lines in the wrong order. Always pass targets through `self.render()` in
+`rebuild`. `unsupported` (or the default `unknown`) fails the contract and the
+discovery gate. Units keep logical Arabic whatever the engine needs.
+
 Set `token_profile` (`generic`, `renpy`, `rpgmaker`, `paradox`) and end the
 module with `ADAPTER = <YourClass>`. Fail with a clear `ValueError` naming the
 file and line for any construct you do not support; never guess.
@@ -29,7 +38,7 @@ file and line for any construct you do not support; never guess.
 python scripts/adapter_contract.py --adapter adapters/<name>.py --game <copy of the game>
 ```
 
-All seven checks must pass on the actual game build: inventory, extract,
+All eight checks must pass on the actual game build: rtl, inventory, extract,
 deterministic, read-back, identity, round-trip, and isolation. The contract
 runs in temporary copies and never writes to the game. A pass proves the text
 round trip only, not in-game rendering, fonts, or RTL; those stay with QA and

@@ -37,6 +37,10 @@ live in those references and are not repeated here.
 - Mark units `integrated` only with the build they entered and `tested` only
   with what was observed in the running game (`loc.py mark --evidence`). A
   passing validator is never evidence for `tested`.
+- A small playtest report (a wrong line, a clipped label) goes through the fix
+  lane instead of reopening a phase: `loc.py fix open` with what happens now,
+  what should happen, and what must not change, then `apply --fix`, proofread,
+  `fix close` with a verdict. Reopen a phase only for systemic problems.
 - Record each distinct defect once in `qa/LQA_MATRIX.csv` with screen/key,
   environment, observed/expected result, severity, evidence, and retest.
 

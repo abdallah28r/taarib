@@ -138,9 +138,19 @@ def adapter_fingerprint(project: Project, settings: dict) -> dict | None:
 def check_discovery(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
     flow = settings.get("workflow", {})
     adapter = flow.get("adapter", "")
+    exists = filled(adapter) and project.resolve(adapter).is_file()
+    rtl = "unknown"
+    if exists:
+        try:
+            base = _load("loc_adapter_base", ROOT / "adapters" / "base.py")
+            rtl = base.load_adapter(project.resolve(adapter), Path("."), flow.get("adapter_options") or {}).rtl
+        except Exception as exc:  # a broken adapter cannot pass discovery
+            rtl = f"error: {exc}"
     return [
         (filled(flow.get("engine_profile")), "المحرك محدد (engine_profile)"),
-        (filled(adapter) and project.resolve(adapter).is_file(), "المحوّل محدد وملفه موجود (workflow.adapter)"),
+        (exists, "المحوّل محدد وملفه موجود (workflow.adapter)"),
+        (rtl in ("native", "needs_preshape"),
+         f"المحوّل يعلن طريقة عرض العربية من دليل الاكتشاف: native أو needs_preshape (الآن: {rtl})"),
     ]
 
 
@@ -236,8 +246,13 @@ def check_playtest(project: Project, settings: dict, state: dict) -> list[tuple[
     return [
         (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
         (not severe, f"لا أخطاء حرجة مفتوحة في qa/LQA_MATRIX.csv ({', '.join(severe[:3]) or 'لا شيء'})"),
+        (not open_fixes(state), f"لا إصلاحات مفتوحة (loc.py fix list؛ المفتوحة: {len(open_fixes(state))})"),
         (bool(state.get("acceptance")), "قبولك للنسخة مسجل (loc.py accept)"),
     ]
+
+
+def open_fixes(state: dict) -> list[dict]:
+    return [f for f in state.get("fixes", []) if f.get("status") == "open"]
 
 
 def check_release(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
@@ -286,6 +301,51 @@ def reopen(project: Project, phase: str, reason: str) -> None:
     state["phase"] = phase
     state.pop("acceptance", None)
     project.save(state)
+
+
+FIX_VERDICTS = ("verified", "partial", "failed")
+
+
+def open_fix(project: Project, title: str, current: str, expected: str, unchanged: str, ids: list[str],
+             snapshot: dict[str, str]) -> str:
+    """Record a small fix (current / expected / must-not-change) and freeze the other units' text."""
+    state = project.state()
+    fixes = state.setdefault("fixes", [])
+    ident = f"F-{len(fixes) + 1:03d}"
+    folder = project.state_file.parent / "fixes"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{ident}.snapshot.json").write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8")
+    fixes.append({"id": ident, "title": title, "current": current, "expected": expected, "unchanged": unchanged,
+                  "ids": ids, "status": "open", "opened_at": now()})
+    project.save(state)
+    return ident
+
+
+def close_fix(project: Project, ident: str, verdict: str, evidence: str, snapshot_now: dict[str, str],
+              stages: dict[str, int]) -> list[str]:
+    """Close a fix. 'verified' is refused if text outside the fix changed or a fixed unit is not proofread."""
+    state = project.state()
+    fix = next((f for f in state.get("fixes", []) if f["id"] == ident), None)
+    if fix is None or fix.get("status") != "open":
+        return [f"{ident} is not an open fix"]
+    if verdict not in FIX_VERDICTS:
+        return [f"verdict must be one of {FIX_VERDICTS}"]
+    problems = []
+    if verdict == "verified":
+        frozen = json.loads((project.state_file.parent / "fixes" / f"{ident}.snapshot.json").read_text(encoding="utf-8"))
+        changed = sorted(i for i, digest in frozen.items() if snapshot_now.get(i) != digest)
+        if changed:
+            problems.append(f"text outside the fix changed: {' '.join(changed[:20])}")
+        stale = [i for i in fix["ids"] if stages.get(i, 0) < 2]
+        if stale:
+            problems.append(f"fixed units are not proofread again: {' '.join(stale[:20])}")
+        if not evidence.strip():
+            problems.append("a verified fix needs --evidence (what was checked, where)")
+    if problems:
+        return problems
+    fix.update(status="closed", verdict=verdict, evidence=evidence, closed_at=now())
+    project.save(state)
+    return []
 
 
 def accept(project: Project, note: str) -> None:

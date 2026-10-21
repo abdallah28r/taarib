@@ -3,6 +3,7 @@
     python scripts/adapter_contract.py --adapter adapters/renpy.py --game examples/renpy-reference
 
 Checks, in order:
+  rtl            the adapter declares how the engine shows Arabic; pre-shaping keeps code intact
   inventory      files exist under the game root
   extract        units validate, ids are unique, every unit's file is in the inventory
   deterministic  a second extract returns identical units
@@ -86,7 +87,7 @@ def run_contract(adapter_path: Path, game_root: Path, options: dict | None = Non
     try:
         _run_checks(result, adapter_path, game_root, options, hashed)
     except Exception as exc:  # the adapter is untrusted code under test
-        names = ("inventory", "extract", "deterministic", "read-back", "identity", "round-trip")
+        names = ("rtl", "inventory", "extract", "deterministic", "read-back", "identity", "round-trip")
         step = names[len(result.checks)] if len(result.checks) < len(names) else "contract"
         result.add(step, False, f"{type(exc).__name__}: {exc}")
     after = listing(game_root)
@@ -98,6 +99,19 @@ def run_contract(adapter_path: Path, game_root: Path, options: dict | None = Non
 
 def _run_checks(result: Result, adapter_path: Path, game_root: Path, options: dict | None, hashed: dict) -> None:
     adapter = base.load_adapter(adapter_path, game_root, options)
+
+    rtl_problem = ""
+    if adapter.rtl not in ("native", "needs_preshape"):
+        rtl_problem = f"rtl is {adapter.rtl!r}; declare native or needs_preshape from discovery evidence"
+    elif adapter.rtl == "needs_preshape":
+        sample = pseudo("Hello {name}, press [key] now")
+        rendered = adapter.render(sample)
+        if loc_units.tokens(rendered, adapter.token_profile) != loc_units.tokens(sample, adapter.token_profile):
+            rtl_problem = "render() changed placeholders or tags"
+        elif any("\u0621" <= ch <= "\u064A" for ch in rendered):
+            rtl_problem = "render() left unshaped Arabic letters"
+    if not result.add("rtl", not rtl_problem, rtl_problem or adapter.rtl):
+        return
 
     inventory = adapter.inventory()
     missing = [p for p in inventory if not (game_root / p).is_file()]
@@ -140,7 +154,7 @@ def _run_checks(result: Result, adapter_path: Path, game_root: Path, options: di
         for rel in written:
             (copy / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(out / rel, copy / rel)
-        expected = {**sources, **targets}
+        expected = {**sources, **{ident: adapter.render(text) for ident, text in targets.items()}}
         shown = adapter.read_back(copy)
         after_ids = [u["id"] for u in base.load_adapter(adapter_path, copy, options).extract()]
         copied = file_hashes(copy, inventory)

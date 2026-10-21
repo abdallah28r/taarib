@@ -13,6 +13,7 @@
     python scripts/loc.py rebuild --adapter adapters/renpy.py --game <game_root> --out builds/r1
     python scripts/loc.py update --adapter adapters/renpy.py --game <game_root> --path units/game.jsonl
     python scripts/loc.py estimate | tmx --out memory.tmx | pseudo --adapter ... --game ... --out builds/pseudo
+    python scripts/loc.py fix open --title ... --current ... --expected ... --unchanged ... --ids <ids>
     python scripts/loc.py next                  # current phase, what blocks it, what to load
     python scripts/loc.py gate [--check]        # advance when every exit criterion passes
     python scripts/loc.py reopen extraction --reason "game update 1.1"
@@ -96,6 +97,7 @@ def compute(all_units: list[dict]) -> dict:
             "applicable": len(applicable),
             "keep": len(members) - len(applicable),
             "review": sum(1 for u in members if units.decision(u) == "review"),
+            "rewrite": sum(1 for u in members if units.stage(u) == 0 and u.get("previous_target")),
             "reached": reached,
         }
     return groups
@@ -146,6 +148,8 @@ def extra_lines(group: dict) -> list[str]:
         lines.append(f"تحتاج قرارًا (review): {group['review']}")
     if group["keep"]:
         lines.append(f"تُترك دون ترجمة عمدًا (keep): {group['keep']} — خارج النسب")
+    if group.get("rewrite"):
+        lines.append(f"تحتاج إعادة كتابة بعد تحديث اللعبة: {group['rewrite']} (loc.py search --problem needs_rewrite)")
     return lines
 
 
@@ -296,6 +300,11 @@ def phase_html(state: dict, checks) -> str:
                        for ok, message in checks)
         parts.append(f'<div class="card"><p class="muted">شروط إغلاق مرحلة {PHASE_LABELS[current]}</p>'
                      f'<ul class="checks">{rows}</ul></div>')
+    fixes = state.get("fixes", [])
+    if fixes:
+        rows = "".join(f'<li>{esc(f["id"])} — {esc(f["title"])} — '
+                       f'{"مفتوح" if f["status"] == "open" else esc(f.get("verdict", ""))}</li>' for f in fixes[-8:])
+        parts.append(f'<div class="card"><p class="muted">الإصلاحات السريعة (loc.py fix)</p><ul>{rows}</ul></div>')
     recent = state.get("history", [])[-5:]
     if recent:
         rows = "".join(
@@ -923,6 +932,17 @@ def cmd_apply(args) -> int:
         print(f"NOT_WRITTEN: the answer must contain exactly these {len(expected)} ids, each with a non-empty "
               "target, and nothing else. Re-run the whole batch; never pad or guess missing lines.")
         return 1
+    locked = [u["id"] for u in selected
+              if units.stage(u) >= units.STATUSES.index("proofread") and u.get("target") != given[u["id"]]]
+    if locked:
+        state = pipeline.Project(state_file=args.state).state()
+        fix = next((f for f in pipeline.open_fixes(state) if f["id"] == args.fix), None)
+        outside = [i for i in locked if not fix or i not in fix["ids"]]
+        if outside:
+            print(f"ERROR LOCKED ({len(outside)}): proofread text changes only through an open fix listing it: "
+                  + " ".join(outside[:LINE_LIMIT]))
+            print('NOT_WRITTEN: run loc.py fix open --title ... --ids <ids>, then apply with --fix F-xxx')
+            return 1
     before = set(units.validate(files, token_profile()).errors)
     for unit in selected:
         if unit.get("target") == given[unit["id"]] and units.stage(unit) >= units.STATUSES.index("translated"):
@@ -981,6 +1001,47 @@ def cmd_brief(args) -> int:
     layer_one = text.split(brief_tools.LAYER_MARKS[1])[0]
     print(f"BRIEF={out} UNITS={len(batch_units)} ESTIMATED_TOKENS={round(len(text) / 3.5)} "
           f"CACHEABLE_PREFIX_SHA={hashlib.sha256(layer_one.encode('utf-8')).hexdigest()[:12]}")
+    return 0
+
+
+def target_snapshot(all_units: list[dict], exclude: set[str]) -> dict[str, str]:
+    return {u["id"]: units.source_hash(u.get("target") or "") for u in all_units if u.get("id") not in exclude}
+
+
+def cmd_fix(args) -> int:
+    """A light lane for small reported problems: open (assess), fix through apply, close (verify)."""
+    project = pipeline.Project(state_file=args.state)
+    if args.fix_command == "list":
+        fixes = project.state().get("fixes", [])
+        for fix in fixes:
+            print(f"{fix['id']} [{fix['status']}{'/' + fix['verdict'] if fix.get('verdict') else ''}] "
+                  f"{fix['title']} — ids: {' '.join(fix['ids'][:LINE_LIMIT])}")
+        print(f"FIXES={len(fixes)} OPEN={len(pipeline.open_fixes(project.state()))}")
+        return 0
+    all_units = units.all_units(units.load(args.path, units.Report()))
+    if args.fix_command == "open":
+        known = {u["id"] for u in all_units}
+        unknown = [i for i in args.ids if i not in known]
+        if unknown:
+            print(f"ERROR unknown unit ids: {' '.join(unknown[:LINE_LIMIT])}")
+            return 2
+        ident = pipeline.open_fix(project, args.title, args.current, args.expected, args.unchanged, args.ids,
+                                  target_snapshot(all_units, set(args.ids)))
+        auto_dashboard(args.state, args.path)
+        print(f"FIX_OPENED={ident} — change the listed units with loc.py apply --fix {ident}, "
+              f"have them proofread again, then loc.py fix close {ident} --verdict verified --evidence ...")
+        return 0
+    fixed = next((f for f in project.state().get("fixes", []) if f["id"] == args.id), None)
+    exclude = set(fixed["ids"]) if fixed else set()
+    problems = pipeline.close_fix(project, args.id, args.verdict, args.evidence or "",
+                                  target_snapshot(all_units, exclude), {u["id"]: units.stage(u) for u in all_units})
+    for problem in problems:
+        print(f"ERROR {problem}")
+    if problems:
+        print("NOT_CLOSED: fix the above, or close honestly as partial or failed and open a follow-up")
+        return 1
+    auto_dashboard(args.state, args.path)
+    print(f"FIX_CLOSED={args.id} VERDICT={args.verdict}")
     return 0
 
 
@@ -1106,6 +1167,8 @@ def main(argv=None) -> int:
     p.add_argument("--batch")
     p.add_argument("--ids", nargs="+")
     p.add_argument("--by", required=True, help="translator role label, e.g. translator-1")
+    p.add_argument("--fix", help="open fix id (F-001) that allows changing already proofread units")
+    p.add_argument("--state", type=Path, default=ROOT / "state" / "pipeline.json", help=argparse.SUPPRESS)
     p.set_defaults(run=cmd_apply)
 
     p = sub.add_parser("brief", help="write a self-contained, cache-friendly brief for one batch, before sending it to an agent")
@@ -1118,6 +1181,24 @@ def main(argv=None) -> int:
     p.add_argument("--out", type=Path)
     p.add_argument("--continuity", type=int, default=5, help="approved lines before the batch to include")
     p.set_defaults(run=cmd_brief)
+
+    p = sub.add_parser("fix", help="small reported problem: open with current/expected/unchanged, apply --fix, close with a verdict")
+    p.add_argument("--state", type=Path, default=ROOT / "state" / "pipeline.json", help=argparse.SUPPRESS)
+    fix_sub = p.add_subparsers(dest="fix_command", required=True)
+    q = fix_sub.add_parser("open", help="assess: record what is wrong, what is expected, and what must not change")
+    q.add_argument("--title", required=True)
+    q.add_argument("--current", required=True, help="what happens now")
+    q.add_argument("--expected", required=True, help="what should happen")
+    q.add_argument("--unchanged", required=True, help="what must stay as it is")
+    q.add_argument("--ids", nargs="+", required=True, help="the units this fix may change")
+    q.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    q = fix_sub.add_parser("close", help="verify: verified (checked, nothing else changed), partial, or failed")
+    q.add_argument("id")
+    q.add_argument("--verdict", required=True, choices=pipeline.FIX_VERDICTS)
+    q.add_argument("--evidence", help="what was checked and where (required for verified)")
+    q.add_argument("--path", type=Path, default=units.UNITS_DIR)
+    fix_sub.add_parser("list", help="every fix with its status and verdict")
+    p.set_defaults(run=cmd_fix)
 
     p = sub.add_parser("terms", help="check glossary terms in translated units; proofreader first step, gate needs zero")
     p.add_argument("--path", type=Path, default=units.UNITS_DIR)

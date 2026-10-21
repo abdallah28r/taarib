@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-21 — Roadmap phase 5: fix lane, needs-rewrite, RTL rendering
+
+- Fix lane: `loc.py fix open|close|list`. A fix records what happens now,
+  what should happen, what must not change, and the unit ids it may touch.
+  `apply` now refuses to change proofread text unless `--fix` names an open fix
+  listing the unit. `fix close --verdict verified` requires evidence,
+  re-proofread units, and no change to any other unit's text since the fix
+  opened (checked against a snapshot); `partial` and `failed` are honest
+  alternatives. The playtest gate blocks on open fixes; the dashboard lists
+  them.
+- `needs_rewrite`: units a game update sent back to `extracted` with a
+  `previous_target` are a problem code and a line in progress reports.
+- Adapters declare `rtl` (`native` | `needs_preshape` | `unsupported`);
+  `render()` pre-shapes and visually orders text for left-to-right engines with
+  `scripts/arabic_shaping.py` (forms derived from the Unicode database, no
+  dependency; matches `arabic_reshaper` on 21 test words, keeps diacritics).
+  The contract has an eighth check (`rtl`), and the discovery gate requires a
+  declared capability. Ren'Py is `native` (needs `config.rtl = True`).
+
 ## 2026-10-21 — Roadmap phase 3: batch briefs and an MQM-style proofreader
 
 - `loc.py brief --batch --role --runtime` writes a self-contained brief in

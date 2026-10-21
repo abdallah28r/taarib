@@ -28,4 +28,5 @@ tags, placeholders) are ignored by the typography checks.
 | `whitespace` | warning | leading/trailing spaces differ, double spaces, or a space before punctuation |
 | `doubled_word` | warning | the same word twice in a row where the source repeats nothing |
 | `invisible_chars` | warning | zero-width, soft-hyphen, or control characters |
+| `needs_rewrite` | warning | a game update changed the source; rewrite from `previous_target` |
 

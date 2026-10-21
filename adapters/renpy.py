@@ -70,6 +70,9 @@ class Entry:
 class RenpyAdapter(Adapter):
     engine = "renpy"
     token_profile = "renpy"
+    # Ren'Py shapes Arabic itself when the game sets `config.rtl = True` (HarfBuzz in Ren'Py 8);
+    # confirm it on each game in the playtest and switch to needs_preshape if letters come out broken.
+    rtl = "native"
 
     @property
     def language(self) -> str:
@@ -181,7 +184,7 @@ class RenpyAdapter(Adapter):
             for ident, target in by_id.items():
                 entry = known[ident]
                 line = lines[entry.line_index]
-                lines[entry.line_index] = line[:entry.start] + escape(target) + line[entry.end:]
+                lines[entry.line_index] = line[:entry.start] + escape(self.render(target)) + line[entry.end:]
             path = Path(out_dir) / rel
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes((b"\xef\xbb\xbf" if bom else b"") + "".join(lines).encode("utf-8"))

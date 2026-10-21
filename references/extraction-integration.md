@@ -26,7 +26,9 @@ and commands unless runtime evidence proves visibility.
 
 Merge by stable identity and source text/context, never row number. Separate
 unchanged, changed-source, added, removed, and conflicting entries. Carry a
-translation only when identity and source are unchanged.
+translation only when identity and source are unchanged. `loc.py update` does
+this; changed units show as `needs_rewrite` with their old Arabic in
+`previous_target`.
 
 ## Integration
 

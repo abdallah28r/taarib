@@ -69,7 +69,8 @@ class RenpyAdapterTests(TempGame):
         result = contract.run_contract(RENPY, REFERENCE)
         self.assertTrue(result.ok, result.checks)
         self.assertEqual([name for name, _, _ in result.checks],
-                         ["inventory", "extract", "deterministic", "read-back", "identity", "round-trip", "isolation"])
+                         ["rtl", "inventory", "extract", "deterministic", "read-back", "identity", "round-trip",
+                          "isolation"])
 
     def test_extracted_units(self):
         units = base.load_adapter(RENPY, self.game).extract()

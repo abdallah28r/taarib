@@ -75,6 +75,7 @@ its options. This table is the one map of when to use each.
 | integration | `mark --status integrated --evidence` | After installing a build, naming it. |
 | playtest | `mark --status tested --evidence` | Only for what was observed in the running game. |
 | playtest | `accept --note` | Only on the user's explicit acceptance in chat. |
+| playtest | `fix open\|close\|list` | A small reported problem: record current / expected / unchanged, change the units with `apply --fix`, re-proofread, close with a verdict. |
 | maintenance | `update --adapter --game --path` (`--dry-run`) | A new game version arrived; then `reopen`. |
 | maintenance | `normalize` | After resetting a changed unit to `extracted`. |
 | release | `tmx --out <file>` | Keep a translation memory for later games. |
@@ -87,7 +88,11 @@ Problem codes (`validate`, `search --problem`) and their levels are listed in
 otherwise, and only to a folder outside the game.
 
 `mark` refuses backward moves (unless `--force`) and refuses any change that
-would add a validation error.
+would add a validation error. `apply` refuses to change proofread text unless
+`--fix F-xxx` names an open fix that lists the unit; closing that fix as
+`verified` needs evidence, re-proofread units, and no change to any other
+unit's text since the fix was opened. After closing, rebuild and mark the
+units `integrated` again.
 
 ## Showing progress
 
