@@ -32,16 +32,19 @@
       "instructions": "AGENTS.md",
       "skills_dir": ".agents/skills",
       "per_agent_model_selection": "runtime_dependent",
-      "nested_delegation": "runtime_dependent",
-      "tiers": {"light": "gpt-6-luna", "standard": "gpt-6-sol", "deep": "gpt-6-astra"}
+      "nested_delegation": "runtime_dependent"
     },
     "claude-code": {
       "instructions": "CLAUDE.md (imports AGENTS.md)",
       "skills_dir": ".claude/skills (generated from .agents/skills by scripts/sync_runtime.py)",
       "per_agent_model_selection": "supported",
-      "nested_delegation": "unsupported_root_agent_fans_out",
-      "tiers": {"light": "haiku", "standard": "sonnet", "deep": "opus"}
+      "nested_delegation": "unsupported_root_agent_fans_out"
     }
+  },
+  "tiers": {
+    "light": "the lightest model the active runtime offers at work time",
+    "standard": "a middle model the active runtime offers at work time",
+    "deep": "the strongest model the active runtime offers at work time"
   },
   "roles": {
     "source_dir": ".agents/roles",

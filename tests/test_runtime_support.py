@@ -59,14 +59,15 @@ class RuntimeSupportTests(unittest.TestCase):
             self.assertEqual(list(manifest["files"]), [".claude/skills/x/SKILL.md"])
             self.assertIn("Do not edit", manifest["note"])
 
-    def test_role_renders_as_claude_agent_with_tier_model(self):
+    def test_role_renders_as_claude_agent_without_a_model_name(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "helper.md"
             path.write_text(ROLE, encoding="utf-8")
             meta, body = sync_runtime.load_role(path)
         text = sync_runtime.render_claude_agent(meta, body, POLICY)
         self.assertTrue(text.startswith("---\nname: helper\n"))
-        self.assertIn("model: sonnet\n", text)
+        self.assertIn("model: inherit\n", text)
+        self.assertIn("Suggested tier: standard", text)
         self.assertIn("tools: Read, Bash\n", text)
         self.assertIn(".claude/skills/arabic-proofreading/SKILL.md", text)
         self.assertTrue(text.endswith("Do the thing.\n"))
@@ -91,7 +92,7 @@ class RuntimeSupportTests(unittest.TestCase):
         brief = make_subagent_brief.build_brief(POLICY, role[0]["route"], "Proofread batch-1", "units/a.jsonl",
                                                 "write", runtime="codex", role=role)
         self.assertIn("- Role: proofreader (skill: arabic-proofreading)", brief)
-        self.assertIn("Model tier: standard (codex: gpt-6-sol)", brief)
+        self.assertIn("Model tier: standard (", brief)
         self.assertIn("## Role instructions", brief)
         self.assertIn("another agent translated", brief)
 

@@ -2,12 +2,12 @@
 name: image-localizer
 description: "Localizes text baked into an assigned set of game images, keeping the image work and its heavy visual context out of the root agent. Classifies regions, builds candidates, reviews them visually, and records units and the region manifest."
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: sonnet
+model: inherit
 ---
 
 <!-- Generated from .agents/roles/image-localizer.md by scripts/sync_runtime.py; edit the source. -->
 
-Skill: `.claude/skills/game-image-localization/SKILL.md`. Reasoning effort: medium.
+Skill: `.claude/skills/game-image-localization/SKILL.md`. Suggested tier: standard. Suggested reasoning effort: medium.
 
 You localize the text in the images named in your brief, and only those.
 

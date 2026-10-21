@@ -38,13 +38,13 @@ differ from its translator; `loc.py` enforces this from the role labels.
 
 ## Model and reasoning routing
 
-Routes name a capability tier, not a vendor model. `config/agent-policy.json` → `runtimes` maps each tier to the active runtime's model:
+The template names no models: names and models change. It uses three tiers (`config/agent-policy.json` → `tiers`), and the agent maps each to a model the active runtime offers at work time:
 
-| Tier | Codex | Claude Code |
-| --- | --- | --- |
-| light | gpt-6-luna | haiku |
-| standard | gpt-6-sol | sonnet |
-| deep | gpt-6-astra | opus |
+| Tier | Meaning |
+| --- | --- |
+| light | the lightest model available now |
+| standard | a middle model available now |
+| deep | the strongest model available now |
 
 The root agent chooses each subagent's tier and reasoning effort freely: light, standard, or deep, at any effort, by its own judgment of the task. There is no lightest-first rule, no expected default, and no reason to record for choosing a heavier or lighter model. The table lists suggestions only.
 
@@ -61,7 +61,7 @@ The root agent chooses each subagent's tier and reasoning effort freely: light, 
 | Conflicting evidence, localization architecture, risky integration decisions, final adjudication after a weaker route fails | deep / medium or high |
 | Exceptional long-running analysis with a measurable quality gain | deep / xhigh; `max` only when a representative evaluation justifies it |
 
-Model names in the tier map are examples, not permanent availability guarantees; update the map when a runtime's models change. Check the models exposed by the current runtime. If per-subagent model selection is unsupported and all agents inherit the root model, say so and apply the task/effort policy without pretending a different model was used.
+Check the models the current runtime exposes when you start a subagent, and pick one for the tier you want. If per-subagent model selection is unsupported and all agents inherit the root model, say so and apply the task/effort policy without pretending a different model was used.
 
 ## Usage planning
 

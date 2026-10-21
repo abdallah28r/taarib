@@ -42,10 +42,10 @@ disjoint.
 - Nested delegation is allowed only when children inherit the complete policy
   and keep disjoint scopes.
 - Choose any hosted model tier and effort of the active runtime by your own
-  judgment; there is no lightest-first rule. Route tiers are suggestions. In
-  Claude Code a role's `model:` is a suggestion too: pass `model` (haiku,
-  sonnet, opus) when starting it to choose another; for Codex briefs use
-  `make_subagent_brief.py --tier --effort`.
+  judgment; there is no lightest-first rule. Route tiers are suggestions, and
+  the template names no models: pick one from those the runtime offers when
+  you start the subagent. Claude Code roles use `model: inherit` unless you
+  pass a model; for Codex briefs use `make_subagent_brief.py --tier --effort`.
 - Never ask for hidden chain-of-thought.
 
 The root agent validates scope and diffs, runs deterministic format/token tests,

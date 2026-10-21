@@ -50,12 +50,14 @@ def validate(root: Path = ROOT, policy_path: Path | None = None) -> list[str]:
 
     runtimes = policy.get("runtimes", {})
     for name in REQUIRED_RUNTIMES:
-        tiers = runtimes.get(name, {}).get("tiers", {})
         if name not in runtimes:
             errors.append(f"missing runtime: {name}")
-        for tier in TIERS:
-            if name in runtimes and not tiers.get(tier):
-                errors.append(f"runtime {name} has no model for tier {tier}")
+        elif "tiers" in runtimes[name]:
+            errors.append(f"runtime {name} names models; tiers stay descriptions and the agent picks a live model")
+    tiers = policy.get("tiers", {})
+    for tier in TIERS:
+        if not tiers.get(tier):
+            errors.append(f"tier {tier} needs a description")
     if policy.get("mixed_runtime", {}).get("single_writer_per_file_across_runtimes") is not True:
         errors.append("single writer per file must hold across runtimes")
 

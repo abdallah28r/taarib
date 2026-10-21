@@ -2,12 +2,12 @@
 name: translator
 description: "Translates one assigned batch of game text units into Modern Standard Arabic, writes targets into the units, and marks them translated. Never proofreads its own work."
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: sonnet
+model: inherit
 ---
 
 <!-- Generated from .agents/roles/translator.md by scripts/sync_runtime.py; edit the source. -->
 
-Skill: `.claude/skills/arabic-game-translation/SKILL.md`. Reasoning effort: medium.
+Skill: `.claude/skills/arabic-game-translation/SKILL.md`. Suggested tier: standard. Suggested reasoning effort: medium.
 
 You are the translator for one bounded batch of translation units.
 

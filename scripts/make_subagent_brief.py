@@ -25,10 +25,8 @@ def load_policy(path: Path = DEFAULT_POLICY) -> dict:
 
 
 def model_line(policy: dict, tier: str, runtime: str | None) -> str:
-    runtimes = policy["runtimes"]
-    names = [runtime] if runtime else sorted(runtimes)
-    examples = ", ".join(f"{name}: {runtimes[name]['tiers'][tier]}" for name in names)
-    return f"- Model tier: {tier} ({examples})"
+    """A tier, never a model name: names change, so the agent picks a live model when it starts the subagent."""
+    return f"- Model tier: {tier} ({policy['tiers'][tier]})"
 
 
 def build_brief(policy: dict, route_name: str, task: str, scope: str,
@@ -84,7 +82,7 @@ def main(argv=None) -> int:
     parser.add_argument("--write-mode", choices=("read-only", "write"), default="read-only")
     parser.add_argument("--deliverable", default="Return findings and evidence.")
     parser.add_argument("--runtime", choices=sorted(policy["runtimes"]),
-                        help="show only this runtime's model for the tier")
+                        help="the runtime the brief is for")
     parser.add_argument("--tier", choices=("light", "standard", "deep"),
                         help="any tier you choose; the route's tier is only a suggestion")
     parser.add_argument("--effort", choices=("low", "medium", "high", "xhigh", "max"),

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-21 — No model names in the template
+
+- Model names are gone from the policy, its JSON, `CLAUDE.md`, the skills, and
+  the generated Claude Code agents. Three tiers remain (light, standard, deep)
+  as descriptions; the agent picks a model from those its runtime offers at
+  work time. Claude Code roles use `model: inherit`. The policy check rejects
+  a runtime that names models.
+
 ## 2026-10-21 — The root agent chooses subagent models freely
 
 - No lightest-first rule: the root agent picks any tier (light, standard,

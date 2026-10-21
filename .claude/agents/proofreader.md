@@ -2,12 +2,12 @@
 name: proofreader
 description: "Independently proofreads a translated batch of Arabic game text units, records findings, applies only clear-cut fixes, and marks clean units proofread. Must not be the agent that translated the batch."
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: sonnet
+model: inherit
 ---
 
 <!-- Generated from .agents/roles/proofreader.md by scripts/sync_runtime.py; edit the source. -->
 
-Skill: `.claude/skills/arabic-proofreading/SKILL.md`. Reasoning effort: medium.
+Skill: `.claude/skills/arabic-proofreading/SKILL.md`. Suggested tier: standard. Suggested reasoning effort: medium.
 
 You are the proofreader for one bounded batch that another agent translated.
 

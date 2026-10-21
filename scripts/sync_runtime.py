@@ -4,8 +4,9 @@ Codex reads .agents/skills/ directly. Claude Code reads .claude/skills/ and
 .claude/agents/. This script regenerates both from the canonical sources:
 
 - .agents/skills/** is copied to .claude/skills/** unchanged.
-- .agents/roles/<role>.md is rendered to .claude/agents/<role>.md, with the
-  model taken from the role's route tier in config/agent-policy.json.
+- .agents/roles/<role>.md is rendered to .claude/agents/<role>.md with
+  `model: inherit`: no model name is written, and the root agent passes the
+  model it picks from those available when it starts the subagent.
 
 Codex uses the same roles through `make_subagent_brief.py --role <role>`.
 Edit only the canonical sources. Plain copies are used instead of symlinks
@@ -76,16 +77,16 @@ def render_claude_agent(meta: dict, body: str, policy: dict, skills: Path = SKIL
         raise ValueError(f"role {meta['name']}: unknown route {meta['route']}")
     if not (skills / meta["skill"] / "SKILL.md").is_file():
         raise ValueError(f"role {meta['name']}: unknown skill {meta['skill']}")
-    model = policy["runtimes"]["claude-code"]["tiers"][route["tier"]]
     header = {
         "name": meta["name"],
         "description": json.dumps(meta["description"], ensure_ascii=False),
         "tools": ", ".join(meta["tools"]),
-        "model": model,
+        "model": "inherit",
     }
     front = "".join(f"{key}: {value}\n" for key, value in header.items())
     note = GENERATED_NOTE.format(name=meta["name"])
-    skill_line = f"Skill: `.claude/skills/{meta['skill']}/SKILL.md`. Reasoning effort: {route['effort']}."
+    skill_line = (f"Skill: `.claude/skills/{meta['skill']}/SKILL.md`. "
+                  f"Suggested tier: {route['tier']}. Suggested reasoning effort: {route['effort']}.")
     return f"---\n{front}---\n\n{note}\n\n{skill_line}\n\n{body}"
 
 
