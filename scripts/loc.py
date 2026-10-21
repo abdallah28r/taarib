@@ -19,7 +19,7 @@
     python scripts/loc.py reopen extraction --reason "game update 1.1"
     python scripts/loc.py accept --note "user accepted build r3 on 2026-11-02"
     python scripts/loc.py progress --format chat|md|html [--out PATH]
-    python scripts/loc.py dashboard             # reports/dashboard.html (also refreshed automatically)
+    python scripts/loc.py dashboard             # لوحة-التقدم.html (also refreshed automatically)
 
 Progress is computed only from unit statuses and qa/LQA_MATRIX.csv, never from
 an agent's estimate.
@@ -222,7 +222,9 @@ PHASE_LABELS = {
     "intake": "الاستقبال", "discovery": "الاكتشاف", "extraction": "الاستخراج", "localization": "التعريب",
     "integration": "الدمج", "playtest": "التجربة", "release": "النشر",
 }
-DASHBOARD = ROOT / "reports" / "dashboard.html"
+# Ships with the template (an empty project's page) and lives in every game copy beside the map.
+DASHBOARD = ROOT / "لوحة-التقدم.html"
+MAP_PAGE = "خريطة-القالب.html"
 PLAN_FILE = ROOT / "PLAN.md"
 PLAN_MAX_LINES = 150
 
@@ -335,7 +337,10 @@ def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, sta
         '<meta http-equiv="refresh" content="15">',
         f"<title>{esc(title)} — لوحة التعريب</title><style>{HTML_STYLE}</style></head><body><main>",
         f"<h1>{esc(title)}</h1>",
-        f'<p class="muted">تُولَّد آليًا من الملفات وتتحدث كل 15 ثانية. آخر توليد: {esc(generated)}. {esc(MEANING_NOTE)}</p>',
+        f'<p class="muted">تُولَّد آليًا من ملفات هذا المجلد وتتحدث كل 15 ثانية. '
+        + (f"آخر تغيير في بيانات المشروع: {esc(generated)}. " if generated
+           else "لم يبدأ العمل بعد: افتح هذا المجلد مشروعًا في Claude Code أو Codex وقل «عرّب اللعبة». ")
+        + f'{esc(MEANING_NOTE)} <a href="{MAP_PAGE}">خريطة القالب</a> تشرح ما تفعله أنت وكيف يعمل النظام.</p>',
         "<h2>المرحلة</h2>", phase_html(state, checks),
         "<h2>التقدم</h2>", progress_html(groups, qa, problems),
         quality_html(quality),
@@ -366,14 +371,18 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
     except Exception:
         title = "مشروع التعريب"
     plan_text = plan_file.read_text(encoding="utf-8") if plan_file.is_file() else ""
+    unit_files = units.unit_paths(units_dir) if Path(units_dir).exists() else []
+    data_files = [*unit_files, *(p for p in (project.state_file, plan_file, qa_file) if p.is_file())]
+    # The time of the newest project data, not of this render, so an unchanged project gives the same page.
+    changed = (datetime.fromtimestamp(max(p.stat().st_mtime for p in data_files)).strftime("%Y-%m-%d %H:%M:%S")
+               if unit_files or project.state_file.is_file() else "")
     finding_files = sorted((ROOT / "work" / "proofreading").glob("*.jsonl")) if units_dir == units.UNITS_DIR else []
     quality = None
     if finding_files:
         findings, _ = read_findings(finding_files)
         covered = [u for u in all_units if u.get("batch") in {f.stem for f in finding_files}]
         quality = mqm_score([f for _, f in findings], covered) if covered else None
-    page = render_dashboard(groups, qa_cases(qa_file), datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            plan_text, state, checks, str(title), problems, quality)
+    page = render_dashboard(groups, qa_cases(qa_file), changed, plan_text, state, checks, str(title), problems, quality)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8", newline="\n")
     return out
@@ -1147,7 +1156,7 @@ def main(argv=None) -> int:
         return p
 
     with_project(sub.add_parser("next", help="show the phase, its blockers, and what to load; at session start or when unsure")).set_defaults(run=cmd_next)
-    p = with_project(sub.add_parser("dashboard", help="regenerate reports/dashboard.html; in Codex after editing PLAN.md or the LQA matrix"))
+    p = with_project(sub.add_parser("dashboard", help="regenerate لوحة-التقدم.html; in Codex after editing PLAN.md or the LQA matrix"))
     p.add_argument("--out", type=Path, default=DASHBOARD)
     p.set_defaults(run=cmd_dashboard)
     p = with_project(sub.add_parser("gate", help="advance the phase when every exit criterion passes; when next says ready"))

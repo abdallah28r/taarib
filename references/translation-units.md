@@ -96,7 +96,7 @@ units `integrated` again.
 
 ## Showing progress
 
-`reports/dashboard.html` is always current: code regenerates it from units,
+`لوحة-التقدم.html`, in the root of each game's copy, is always current: code regenerates it from units,
 `state/pipeline.json`, `qa/LQA_MATRIX.csv`, and `PLAN.md` after every change
 (Claude Code hooks, and every `loc.py` command that changes state). It refreshes
 itself in the browser every 15 seconds. Never write it by hand.

@@ -1,0 +1,19 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="15"><title>مشروع التعريب — لوحة التعريب</title><style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--track:#e6e6e1;--fill:#2f6f5e;--line:#ddddd6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--card:#20201f;--ink:#ececea;--muted:#a3a39d;--track:#33332f;--fill:#5fb39a;--line:#3a3a36}}
+:root[data-theme="dark"]{--bg:#161615;--card:#20201f;--ink:#ececea;--muted:#a3a39d;--track:#33332f;--fill:#5fb39a;--line:#3a3a36}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,"Segoe UI",Tahoma,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px}h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.1rem;margin:28px 0 12px}
+.muted{color:var(--muted);font-size:.9rem}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.row{display:grid;grid-template-columns:9rem 1fr 4.5rem;gap:12px;align-items:center;padding:6px 0}
+.track{height:12px;background:var(--track);border-radius:6px;overflow:hidden}.fill{height:100%;background:var(--fill)}
+.num{text-align:left;font-variant-numeric:tabular-nums}table{width:100%;border-collapse:collapse}
+.card+.card{margin-top:12px}.phases{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:0 0 12px}
+.phases li{padding:4px 10px;border-radius:999px;border:1px solid var(--line);font-size:.9rem;color:var(--muted)}
+.phases li.done{color:var(--fill);border-color:var(--fill)}.phases li.now{background:var(--fill);color:var(--card);border-color:var(--fill)}
+.plan h2,.plan h3,.plan h4{font-size:1rem;margin:16px 0 6px}.plan p{margin:4px 0}
+.checks{list-style:none;padding:0;margin:0}.checks li{padding:4px 0}.checks li.ok{color:var(--fill)}
+bdi{unicode-bidi:isolate}.checks li.err{color:#c0392b}
+td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right}ul{padding-inline-start:20px}
+@media (max-width:480px){.row{grid-template-columns:6.5rem 1fr 3.5rem}}
+</style></head><body><main><h1>مشروع التعريب</h1><p class="muted">تُولَّد آليًا من ملفات هذا المجلد وتتحدث كل 15 ثانية. لم يبدأ العمل بعد: افتح هذا المجلد مشروعًا في Claude Code أو Codex وقل «عرّب اللعبة». مترجم = النص العربي موجود في الملفات. مدمج = أصبح جزءًا من نسخة اللعبة. مختبر = تأكدنا من ظهوره وعمله داخل اللعبة. ترجمة 100% لا تعني أن اللعبة جاهزة. <a href="خريطة-القالب.html">خريطة القالب</a> تشرح ما تفعله أنت وكيف يعمل النظام.</p><h2>المرحلة</h2><ol class="phases"><li class="now">الاستقبال</li><li class="">الاكتشاف</li><li class="">الاستخراج</li><li class="">التعريب</li><li class="">الدمج</li><li class="">التجربة</li><li class="">النشر</li></ol><div class="card"><p class="muted">شروط إغلاق مرحلة الاستقبال</p><ul class="checks"><li class="todo">○ <bdi>اسم اللعبة محدد (game.name)</bdi></li><li class="todo">○ <bdi>مسار اللعبة محدد وموجود (game.install_path)</bdi></li><li class="todo">○ <bdi>أُجيب سؤال التثبيت على نسختك بنعم/لا (install_to_user_copy)</bdi></li><li class="todo">○ <bdi>أُجيب سؤال الوكلاء الفرعيين بنعم/لا (subagent_preference)</bdi></li><li class="todo">○ <bdi>أُجيب سؤال تعريب الصور بنعم/لا (image_scope)</bdi></li><li class="ok">✓ <bdi>حُدد السماح بتشغيل اللعبة (allow_launch_game)</bdi></li></ul></div><h2>التقدم</h2><div class="card"><p>لا توجد وحدات ترجمة بعد.</p><p>حالات الاختبار: نُفذ 0 من 7 (0%)، نجح 0، فشل 0</p></div><h2>الخطة والملاحظات</h2><div class="card plan"><h2>خطة المشروع</h2><h3>الهدف</h3><h3>الدفعات</h3><h3>القرارات</h3><h3>أسئلة مفتوحة</h3><h3>ملاحظات التعريب</h3><h3>العائق الحالي والخطوة التالية</h3><h3>العمل النشط حسب بيئة التشغيل</h3></div></main></body></html>

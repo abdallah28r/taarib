@@ -18,6 +18,5 @@ fonts/licenses/*
 !fonts/licenses/README.md
 # Generated on demand; never commit (stale snapshots mislead agents)
 reports/*.json
-reports/dashboard.html
 work/updates/
 work/batches/

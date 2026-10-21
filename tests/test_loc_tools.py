@@ -129,6 +129,22 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("&lt;b&gt;x&lt;/b&gt;", page)
         self.assertNotIn("PRIVATE-NOTE-XYZ", page)
 
+    def test_shipped_page_is_an_empty_projects_page(self):
+        if (ROOT / "state" / "pipeline.json").exists() or loc.units.unit_paths(loc.units.UNITS_DIR):
+            self.skipTest("a game is in progress in this copy")
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            (directory / "units").mkdir()
+            project = loc.pipeline.Project(units_dir=directory / "units", state_file=directory / "state.json",
+                                           qa_file=ROOT / "qa" / "LQA_MATRIX.csv")
+            first = loc.write_dashboard(project.units_dir, project.qa_file, directory / "a.html", project, ROOT / "PLAN.md")
+            second = loc.write_dashboard(project.units_dir, project.qa_file, directory / "b.html", project, ROOT / "PLAN.md")
+            page = first.read_text(encoding="utf-8")
+            self.assertEqual(page, second.read_text(encoding="utf-8"), "an unchanged project must render the same page")
+        self.assertIn("لم يبدأ العمل بعد", page)
+        self.assertEqual(page, loc.DASHBOARD.read_text(encoding="utf-8"),
+                         "regenerate the shipped page: python scripts/loc.py dashboard")
+
     def test_auto_dashboard_ignores_test_paths(self):
         before = loc.DASHBOARD.stat().st_mtime_ns if loc.DASHBOARD.exists() else None
         loc.auto_dashboard(Path(tempfile.gettempdir()) / "elsewhere.jsonl")

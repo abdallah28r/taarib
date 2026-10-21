@@ -155,9 +155,10 @@ with a test, through `localization-project-maintenance`.
 - `PLAN.md` never holds counts, the phase, intake answers, backup paths, or command logs:
   those live in units, `state/pipeline.json`, `PROJECT.yaml`, backup
   manifests, and Git. Write at batch or phase boundaries, one line per item.
-- `reports/dashboard.html`: generated from the files above after every change
-  (hooks in Claude Code; every `loc.py` command that changes state, in both
-  runtimes). Never write it by hand.
+- `لوحة-التقدم.html` (in this folder, beside `خريطة-القالب.html`): the
+  user's progress page for this game, generated from the files above after
+  every change (hooks in Claude Code; every `loc.py` command that changes
+  state, in both runtimes). Never write it by hand.
   Every `loc.py` command and when to use it: `references/translation-units.md`.
 - `glossary.yaml`: approved terminology, names, context variants, and voices.
 - `work/NOTES.md`: temporary findings during a phase.

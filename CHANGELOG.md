@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-21 — The progress page lives in each game's folder
+
+- The dashboard moved from `reports/dashboard.html` to `لوحة-التقدم.html` in
+  the template root, beside `خريطة-القالب.html`, and ships with the template
+  as an empty project's page; every game copy has its own.
+- Its time is the newest project data's, not the render's, so an unchanged
+  project regenerates the same bytes. A test keeps the shipped page equal to
+  an empty project's render. The page links to the map.
+
 ## 2026-10-21 — «عرّب اللعبة» is enough to start
 
 - `AGENTS.md`: while the phase is intake, a bare start request starts the
