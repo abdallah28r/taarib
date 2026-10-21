@@ -63,6 +63,11 @@ section.part { padding-top: 44px; display: grid; gap: 22px }
 .say b { color: var(--you) }
 .tagrow { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px }
 .tag { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--surface); color: var(--muted) }
+.sub { margin: 0; padding-inline-start: 22px; display: grid; gap: 6px; max-width: 70ch }
+.howto { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 900px }
+.howto > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 14px; min-width: 0 }
+.howto b { color: var(--you) }
+@media (max-width: 760px) { .howto { grid-template-columns: 1fr } }
 .tree { display: grid; gap: 8px; max-width: 760px }
 .tree .row { display: grid; grid-template-columns: 64px minmax(0, 15em) minmax(0, 1fr); gap: 4px 12px; align-items: center;
   background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px }
@@ -310,14 +315,24 @@ const rich = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
 
 /* ---------- Part 1 data ---------- */
 const JOURNEY = [
-  { you: true, title: "جهّز نسخة من القالب لهذه اللعبة",
-    text: "انسخ مجلد القالب <code>arabic-loc-template</code> كاملًا، لا ملفًا منه. احتفظ بالأصل نظيفًا واعمل في النسخة. سمِّ النسخة كما تحب؛ الاسم للتمييز فقط، ولا يعرّف اللعبة. ثم افتح <b>مجلد النسخة نفسه</b> في Claude Code أو Codex: المجلد الذي تجد فيه مباشرة <code>AGENTS.md</code> و<code>CLAUDE.md</code> و<code>PROJECT.yaml</code>.",
+  { you: true, title: "جهّز مجلد عمل للعبة ومشروعًا يشير إليه",
+    text: "ثلاث خطوات، مرة واحدة لكل لعبة:",
+    sub: [
+      "<b>انسخ</b> مجلد القالب <code>arabic-loc-template</code> كاملًا، لا ملفًا منه. احتفظ بالأصل نظيفًا.",
+      "<b>سمِّ النسخة باسم اللعبة</b>، مثل <code>Station</code>، لتميّزها عن ألعابك الأخرى. هذا هو مجلد العمل.",
+      "<b>أنشئ مشروعًا في Claude Code أو Codex يشير إلى مجلد العمل هذا</b>، أي المجلد الذي تجد فيه مباشرة <code>AGENTS.md</code> و<code>CLAUDE.md</code> و<code>PROJECT.yaml</code>. افتح كل جلسات هذه اللعبة من هذا المشروع.",
+    ],
+    howto: [
+      ["Claude Code", "ابدأ جلسة أو مشروعًا جديدًا واختر مجلد العمل <code>Station</code> مجلدًا له. من الطرفية: ادخل المجلد ثم شغّل <code>claude</code>."],
+      ["Codex", "أنشئ مشروعًا جديدًا واختر مجلد العمل <code>Station</code> مجلدًا له. من الطرفية: ادخل المجلد ثم شغّل <code>codex</code>."],
+      ["الاثنان معًا", "يشير المشروعان إلى مجلد العمل نفسه. يسجل كل واحد في <code>PLAN.md</code> الملفات التي يعمل عليها حتى لا يتعارضا."],
+    ],
     tree: [
       ["origin", "الأصل", "arabic-loc-template", "لا تعمل فيه. انسخ منه لكل لعبة جديدة."],
-      ["copy", "نسختك", "Station-عربي", "افتح هذا المجلد في Claude Code أو Codex. هنا كل العمل والسجلات."],
+      ["copy", "مجلد العمل", "Station", "النسخة المسماة باسم اللعبة. مشروع Claude Code أو Codex يشير إلى هنا."],
       ["game", "اللعبة", "…\\steamapps\\common\\Station", "تبقى في مكانها. لا تنقلها إلى القالب، ولا تضع القالب داخلها."],
     ],
-    note: "لماذا هذا المجلد بالذات؟ الوكيل يقرأ قواعده من <code>AGENTS.md</code> و<code>CLAUDE.md</code> في المجلد المفتوح، والحراس التي تمنع الكتابة في اللعبة قبل النسخ الاحتياطي لا تعمل إلا من هنا.",
+    note: "لماذا يشير المشروع إلى هذا المجلد بالذات؟ الوكيل يقرأ قواعده من <code>AGENTS.md</code> و<code>CLAUDE.md</code> في مجلد المشروع، والحراس التي تمنع الكتابة في اللعبة قبل النسخ الاحتياطي لا تعمل إلا من هنا. اسم المجلد لا يكفي ليعرف الوكيل اللعبة؛ يعرفها من إجاباتك في الخطوة التالية.",
     tags: ["دقيقتان", "مرة لكل لعبة"] },
   { you: true, title: "اطلب التعريب بكلامك",
     text: "اكتب طلبك في المحادثة، ومعه مسار اللعبة إن عرفته. الوكيل يتولى الباقي.",
@@ -348,10 +363,12 @@ document.getElementById("journey").innerHTML = JOURNEY.map(s => {
   if (s.auto) return `<div class="auto"><div class="rail"><span class="ring" aria-hidden="true"></span><span class="stem"></span></div>
     <div class="auto-body"><p>${rich(s.text)}</p><div class="agent-chips">${s.chips.map(c => `<span>${c}</span>`).join("")}</div></div></div>`;
   n += 1;
-  const tree = s.tree ? `<div class="tree">${s.tree.map(r => `<div class="row ${r[0]}"><span class="kind">${r[1]}</span>
+  const sub = s.sub ? `<ol class="sub">${s.sub.map(x => `<li>${x}</li>`).join("")}</ol>` : "";
+  const howto = s.howto ? `<div class="howto">${s.howto.map(h => `<div><b>${h[0]}</b><p>${h[1]}</p></div>`).join("")}</div>` : "";
+  const tree = s.tree ?`<div class="tree">${s.tree.map(r => `<div class="row ${r[0]}"><span class="kind">${r[1]}</span>
     <code class="path">${esc(r[2])}</code><span class="what">${r[3]}</span></div>`).join("")}</div><p class="muted">${s.note}</p>` : "";
   return `<div class="step"><div class="rail"><span class="big">${"٠١٢٣٤٥"[n - 1]}</span><span class="stem"></span></div>
-    <div class="step-body"><h3>${s.title}</h3><p>${s.text}</p>${tree}${s.say ? `<p class="say">${s.say}</p>` : ""}
+    <div class="step-body"><h3>${s.title}</h3><p>${s.text}</p>${sub}${howto}${tree}${s.say ? `<p class="say">${s.say}</p>` : ""}
     <div class="tagrow">${s.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div></div></div>`;
 }).join("");
 
@@ -505,7 +522,7 @@ document.getElementById("agent-table").innerHTML =
   AGENTS.map(a => `<tr><td><span class="dot ${a[0]}">${KIND[a[0]]}</span><b>${a[1]}</b></td><td>${a[2]}</td><td>${a[3]}</td><td>${a[4]}</td><td>${a[5]}</td></tr>`).join("") + "</tbody>";
 
 const TROUBLE = [
-  ["الوكيل لا يعرف القواعد، أو لا يسأل أسئلة البداية", "٠ التحضير", "فُتح مجلد خاطئ. افتح مجلد النسخة الذي فيه `AGENTS.md` مباشرة، ثم ابدأ جلسة جديدة."],
+  ["الوكيل لا يعرف القواعد، أو لا يسأل أسئلة البداية", "٠ التحضير", "المشروع في Claude Code أو Codex يشير إلى مجلد خاطئ. اجعله يشير إلى مجلد العمل المسمى باسم اللعبة، الذي فيه `AGENTS.md` مباشرة، ثم ابدأ جلسة جديدة."],
   ["الحروف العربية في اللعبة مفككة أو مقلوبة", "٢ الاستكشاف", "قرار عرض العربية كان خاطئًا لهذا المحرك. يُغيَّر في المحوّل إلى «يحتاج تشكيلًا مسبقًا» ثم يُعاد البناء."],
   ["نص مقصوص أو خارج الإطار", "٦ تجربتك", "يُفتح إصلاح لتلك الجمل وحدها: صياغة أقصر أو تعديل حجم الخط."],
   ["جملة خاطئة المعنى أو الجنس", "٦ تجربتك", "إصلاح صغير لتلك الجملة، ثم تدقيق جديد، ثم إعادة بناء."],
