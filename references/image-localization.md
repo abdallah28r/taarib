@@ -78,11 +78,11 @@ One candidate for simple assets, at least two different ones for complex or
 uncertain assets. Expand only after a visual or technical failure. Stop at the
 first candidate that passes; if every useful route fails, keep the source.
 
-## 4. OpenAI image editing (only if the intake approved it)
+## 4. OpenAI image editing (on whenever images are in scope)
 
-Allowed only when `PROJECT.yaml` →
-`image_localization.external_image_editing.enabled` is `"yes"`, only for
-`TRANSLATE` regions, and only for this project's images.
+Allowed when images are in scope and `PROJECT.yaml` →
+`image_localization.external_image_editing.enabled` is `"yes"` (the default),
+only for `TRANSLATE` regions, and only for this project's images.
 
 - `background-only`: send the untouched source and a tight text mask; remove
   the lettering, rebuild the hidden background, add **no text**, change nothing

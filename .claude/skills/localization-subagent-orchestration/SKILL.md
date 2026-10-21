@@ -5,11 +5,10 @@ description: "Use when deciding whether to split localization work across subage
 
 # Localization subagent orchestration
 
-Subagents are allowed as a capability. For a new game, first honor the one-time
-project choice recorded under `references/project-run.md`; do not delegate if
-the user selected no or the choice is still unresolved. When enabled, use them
-only when parallel or specialist value exceeds briefing and merge cost; there
-is no fixed concurrency cap. Do not ask again for every batch.
+Subagents are always allowed and always used; never ask the user. Send every
+translation batch, proofreading pass, research question, and image set to its
+role; there is no fixed concurrency cap. Only a project whose `PROJECT.yaml`
+was later set to `subagent_preference: "no"` keeps the work with the root agent.
 
 ## Required policy
 

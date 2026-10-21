@@ -103,19 +103,13 @@ def digest_files(root: Path, paths) -> str:
 
 def check_intake(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
     game, flow = settings.get("game", {}), settings.get("workflow", {})
-    images = settings.get("image_localization", {}).get("external_image_editing", {})
     path = game.get("install_path", "")
     checks = [
         (filled(game.get("name")), "اسم اللعبة محدد (game.name)"),
         (filled(path) and Path(path).is_dir(), "مسار اللعبة محدد وموجود (game.install_path)"),
-        (yes_no(flow.get("install_to_user_copy")) is not None, "أُجيب سؤال التثبيت على نسختك بنعم/لا (install_to_user_copy)"),
-        (yes_no(flow.get("subagent_preference")) is not None, "أُجيب سؤال الوكلاء الفرعيين بنعم/لا (subagent_preference)"),
         (yes_no(flow.get("image_scope")) is not None, "أُجيب سؤال تعريب الصور بنعم/لا (image_scope)"),
         (isinstance(flow.get("allow_launch_game"), bool), "حُدد السماح بتشغيل اللعبة (allow_launch_game)"),
     ]
-    if yes_no(flow.get("image_scope")) == "yes":
-        checks.append((yes_no(images.get("enabled")) is not None,
-                       "أُجيب سؤال تحرير الصور عبر OpenAI بنعم/لا (external_image_editing)"))
     return checks
 
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-21 — Fewer intake questions: install, subagents and image editing are fixed
+
+- Installing the checked build on the user's identified copy, using subagents,
+  and sending in-scope images to official OpenAI image editing are now
+  standing defaults (`"yes"` in `PROJECT.yaml`) and are never asked. The
+  intake keeps four questions: game name, its location, images (with a note
+  that image work is slower and works best under Codex), and launching the
+  game. The intake gate no longer waits for the removed answers.
+- Subagents are always used: every translation batch, proofreading pass,
+  research question and image set goes to its role.
+
 ## 2026-10-21 — The progress page is `dashboard.html`
 
 - `لوحة-التقدم.html` is renamed `dashboard.html`; it stays in the template

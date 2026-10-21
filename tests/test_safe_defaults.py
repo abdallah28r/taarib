@@ -12,12 +12,15 @@ def load_yaml(name):
 
 
 class SafeDefaultTests(unittest.TestCase):
-    """A blank public template must never read as standing permission."""
+    """Only the deliberate standing defaults grant permission; everything else stays off."""
 
-    def test_install_and_image_editing_default_to_ask(self):
+    def test_standing_defaults(self):
         project = load_yaml("PROJECT.yaml")
-        self.assertEqual(project["workflow"]["install_to_user_copy"], "ask")
-        self.assertEqual(project["image_localization"]["external_image_editing"]["enabled"], "ask")
+        self.assertEqual(project["workflow"]["install_to_user_copy"], "yes")
+        self.assertEqual(project["workflow"]["subagent_preference"], "yes")
+        self.assertIs(project["workflow"]["allow_subagents"], True)
+        self.assertEqual(project["image_localization"]["external_image_editing"]["enabled"], "yes")
+        self.assertEqual(project["workflow"]["image_scope"], "ask")
         self.assertIs(project["workflow"]["allow_launch_game"], False)
 
     def test_image_policy_does_not_enable_editing_itself(self):

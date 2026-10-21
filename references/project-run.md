@@ -20,18 +20,18 @@ for missing project choices. Do not ask for facts already established. Include:
    one likely match, show it as the suggested answer. Show what was found for
    confirmation; list several installations or editions and ask which copy;
    ask for the path if nothing matches. Never change anything while searching.
-3. Whether the agent may install the verified, reversible build on that copy
-   (`yes`/`no`). Record it as `workflow.install_to_user_copy`; the template's
-   `"ask"` value is not permission.
-4. Whether to use subagents for this game (`yes`/`no`). They are available by
-   policy, but this one-time project preference controls whether to delegate.
-5. Whether baked text in UI/art images is in scope (`yes`/`no`). If yes, follow
-   the image policy; this does not mean translating every visible marking.
-   If yes, also ask whether in-scope images may be sent to official OpenAI
-   image editing (`yes`/`no`), recorded as
-   `image_localization.external_image_editing.enabled`.
-6. Whether the agent may launch the game for a smoke test (`yes`/`no`). Default
+3. Whether baked text in UI/art images is in scope (`yes`/`no`), recorded as
+   `workflow.image_scope`. Tell the user that image work takes noticeably
+   longer, works best under Codex, and sends in-scope images to official
+   OpenAI image editing. If yes, follow the image policy; this does not mean
+   translating every visible marking.
+4. Whether the agent may launch the game for a smoke test (`yes`/`no`). Default
    is no; user playtesting is still required for final quality.
+
+Never ask, because the template fixes them: installation on the identified
+copy (`install_to_user_copy: "yes"`), subagents (`subagent_preference: "yes"`),
+and OpenAI image editing for in-scope images (`external_image_editing.enabled:
+"yes"`). A user may still change any of them later.
 
 Ask about tone, dialect, mature language, a preferred font, or accessibility
 only if the game evidence or user's wording leaves a material choice. Do not
@@ -89,9 +89,10 @@ Researching a mod is not permission to modify or bundle it. Use
 
 ## Install, user trial, then shareable package
 
-Installation to the user's named copy is the completion step when the intake
-recorded `install_to_user_copy: "yes"` and the target is unambiguous; with
-`"no"`, stop at a verified build and its install instructions. Before it, verify target build and
+Installation to the user's identified copy is the completion step
+(`install_to_user_copy: "yes"`, the default) once the target is unambiguous; only
+if a user changed it to `"no"`, stop at a verified build and its install
+instructions. Before it, verify target build and
 original hashes, create restorable backups outside the replacement set, run
 native/structural/image gates, and use the least invasive reversible method.
 Verify installed files and give a rollback procedure. If the build is unknown,

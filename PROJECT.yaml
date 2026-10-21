@@ -26,13 +26,13 @@ workflow:
   approval_checkpoints: false
   startup_intake: "ask-once-per-new-game"
   mod_research: "once-after-engine-identification"  # localization-useful mods only; never automatic adoption
-  subagent_preference: "ask"  # yes/no after the initial grouped questions
+  subagent_preference: "yes"  # always yes, never asked: translation, proofreading, research and images go to subagents
   image_scope: "ask"  # yes/no; image policy still controls what is translated
-  install_to_user_copy: "ask"  # ask|yes|no — set once at the new-game intake; a blank template value is never standing permission
+  install_to_user_copy: "yes"  # always yes, never asked: the checked, reversible build goes on the user's identified copy
   user_playtest_gate: true
   portable_package_after_user_acceptance: true
   allow_launch_game: false
-  allow_subagents: true  # capability; subagent_preference controls this game
+  allow_subagents: true  # always allowed
   subagent_concurrency: "adaptive_no_fixed_limit"
   max_batch_strings: 500
   max_batch_source_tokens: 4000
@@ -50,7 +50,7 @@ image_localization:
   adaptive_candidate_search: true
   preserve_source_if_no_candidate_passes: true
   external_image_editing:
-    enabled: "ask"  # ask|yes|no — set at intake only when images are in scope; never inferred from template defaults
+    enabled: "yes"  # always yes, never asked: used for in-scope images whenever workflow.image_scope is yes
     provider: "openai-official"
     authorization_scope: "current-project"
     final_asset_requires_review: true
