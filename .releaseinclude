@@ -13,6 +13,7 @@ THIRD_PARTY_NOTICES.md
 خريطة-القالب.html
 لوحة-التقدم.html
 .gitignore
+.gitattributes
 .releaseinclude
 requirements.txt
 glossary.yaml
