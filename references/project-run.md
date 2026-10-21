@@ -10,20 +10,27 @@ Read the current request and `PROJECT.yaml`, make a quick read-only check if it
 helps identify the actual game/build, and ask **one compact set** of questions
 for missing project choices. Do not ask for facts already established. Include:
 
-1. Game name and the user's installation path/build/platform if not clear. The
-   agent may discover the exact build read-only; ask which copy to modify only
-   if multiple installations or editions make the target ambiguous.
-2. Whether the agent may install the verified, reversible build on that copy
+1. The game name. Users name their copy of the template after the game, so
+   offer the working folder's name as the suggested answer to confirm or
+   correct.
+2. Where the game is installed, as two choices: the user gives the path, or
+   the agent finds it. Finding it is a read-only search for a folder matching
+   the name in Steam libraries (`steamapps/libraryfolders.vdf`), Epic, GOG,
+   Xbox/Microsoft Store, and Program Files. If a quick search already found
+   one likely match, show it as the suggested answer. Show what was found for
+   confirmation; list several installations or editions and ask which copy;
+   ask for the path if nothing matches. Never change anything while searching.
+3. Whether the agent may install the verified, reversible build on that copy
    (`yes`/`no`). Record it as `workflow.install_to_user_copy`; the template's
    `"ask"` value is not permission.
-3. Whether to use subagents for this game (`yes`/`no`). They are available by
+4. Whether to use subagents for this game (`yes`/`no`). They are available by
    policy, but this one-time project preference controls whether to delegate.
-4. Whether baked text in UI/art images is in scope (`yes`/`no`). If yes, follow
+5. Whether baked text in UI/art images is in scope (`yes`/`no`). If yes, follow
    the image policy; this does not mean translating every visible marking.
    If yes, also ask whether in-scope images may be sent to official OpenAI
    image editing (`yes`/`no`), recorded as
    `image_localization.external_image_editing.enabled`.
-5. Whether the agent may launch the game for a smoke test (`yes`/`no`). Default
+6. Whether the agent may launch the game for a smoke test (`yes`/`no`). Default
    is no; user playtesting is still required for final quality.
 
 Ask about tone, dialect, mature language, a preferred font, or accessibility

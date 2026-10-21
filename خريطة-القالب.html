@@ -68,6 +68,7 @@ section.part { padding-top: 44px; display: grid; gap: 22px }
 .howto > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 14px; min-width: 0 }
 .howto b { color: var(--you) }
 @media (max-width: 760px) { .howto { grid-template-columns: 1fr } }
+.say .qs { margin: 6px 0 0; padding-inline-start: 20px; display: grid; gap: 3px }
 .tree { display: grid; gap: 8px; max-width: 760px }
 .tree .row { display: grid; grid-template-columns: 64px minmax(0, 15em) minmax(0, 1fr); gap: 4px 12px; align-items: center;
   background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px }
@@ -334,13 +335,13 @@ const JOURNEY = [
     ],
     note: "لماذا يشير المشروع إلى هذا المجلد بالذات؟ الوكيل يقرأ قواعده من <code>AGENTS.md</code> و<code>CLAUDE.md</code> في مجلد المشروع، والحراس التي تمنع الكتابة في اللعبة قبل النسخ الاحتياطي لا تعمل إلا من هنا. اسم المجلد لا يكفي ليعرف الوكيل اللعبة؛ يعرفها من إجاباتك في الخطوة التالية.",
     tags: ["دقيقتان", "مرة لكل لعبة"] },
-  { you: true, title: "اطلب التعريب بكلامك",
-    text: "اكتب طلبك في المحادثة، ومعه مسار اللعبة إن عرفته. الوكيل يتولى الباقي.",
-    say: "<b>أنت:</b> عرّب لعبة Station، وهي مثبتة في <code>C:\\…\\Station</code>. نفّذ المراحل دون انتظار موافقتي بعد كل مرحلة، وأعطني اللعبة لأجربها قبل أي حزمة.",
-    tags: ["دقيقة واحدة"] },
+  { you: true, title: "قل «عرّب اللعبة»",
+    text: "هذا كل ما تكتبه. لا تحتاج إلى اسم اللعبة ولا مسارها ولا أي تفاصيل: الوكيل يفهم أنها بداية مشروع جديد، فيبدأ أسئلة البداية مباشرة.",
+    say: "<b>أنت:</b> عرّب اللعبة",
+    tags: ["ثوانٍ"] },
   { you: true, title: "أجب أسئلة البداية مرة واحدة",
     text: "يسألك الوكيل مجموعة واحدة من الأسئلة، ويحفظ إجاباتك فلا يكررها في الجلسات القادمة.",
-    say: "أي نسخة من اللعبة؟ هل أثبّت التعريب على نسختك؟ هل أستعين بوكلاء فرعيين؟ هل نعرّب النص المرسوم داخل الصور؟ هل أشغّل اللعبة لفحص سريع؟",
+    say: "<b>الوكيل:</b><ol class=\"qs\"><li>ما اسم اللعبة؟ أقترح «Station» من اسم المجلد.</li><li>أين هي مثبتة؟ تكتب المسار أنت، أو أبحث عنها بنفسي في مكتبات Steam وEpic وGOG وغيرها وأعرض عليك ما وجدت لتؤكده.</li><li>هل أثبّت التعريب على نسختك من اللعبة؟</li><li>هل أستعين بوكلاء فرعيين؟</li><li>هل نعرّب النص المرسوم داخل الصور؟</li><li>هل أشغّل اللعبة لفحص سريع؟</li></ol>",
     tags: ["نحو ٥ دقائق", "تُحفظ في PROJECT.yaml"] },
   { auto: true, text: "الوكيل يعمل وحده: يستكشف اللعبة، يستخرج نصوصها، يترجمها دفعةً دفعة، يدققها بوكيل آخر، يبني النسخة العربية ويثبّتها إن سمحت. قد يستغرق هذا ساعات أو أيامًا بحسب حجم اللعبة.",
     chips: ["الاستكشاف", "الاستخراج", "الترجمة والتدقيق", "البناء والتثبيت"] },
@@ -368,15 +369,15 @@ document.getElementById("journey").innerHTML = JOURNEY.map(s => {
   const tree = s.tree ?`<div class="tree">${s.tree.map(r => `<div class="row ${r[0]}"><span class="kind">${r[1]}</span>
     <code class="path">${esc(r[2])}</code><span class="what">${r[3]}</span></div>`).join("")}</div><p class="muted">${s.note}</p>` : "";
   return `<div class="step"><div class="rail"><span class="big">${"٠١٢٣٤٥"[n - 1]}</span><span class="stem"></span></div>
-    <div class="step-body"><h3>${s.title}</h3><p>${s.text}</p>${sub}${howto}${tree}${s.say ? `<p class="say">${s.say}</p>` : ""}
+    <div class="step-body"><h3>${s.title}</h3><p>${s.text}</p>${sub}${howto}${tree}${s.say ? `<div class="say">${s.say}</div>` : ""}
     <div class="tagrow">${s.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div></div></div>`;
 }).join("");
 
 /* ---------- Part 2 data ---------- */
 const STATIONS = [
   { name: "البداية: أسئلة المشروع", who: "الوكيل الرئيسي + أنت",
-    input: "طلبك ومسار اللعبة", output: "إجاباتك وصلاحياتك محفوظة",
-    does: ["يسألك الأسئلة كلها دفعة واحدة", "يحفظ الإجابات ليقرأها في كل جلسة"],
+    input: "«عرّب اللعبة» وإجاباتك", output: "اسم اللعبة ومكانها وصلاحياتك محفوظة",
+    does: ["يبدأ الأسئلة بمجرد «عرّب اللعبة»، دون أن يسأل «ماذا تقصد؟»", "يقترح اسم المجلد اسمًا للعبة", "يأخذ مكان اللعبة منك، أو يبحث عنه بنفسه ويعرضه لتؤكده", "يحفظ الإجابات ليقرأها في كل جلسة"],
     doesnt: ["لا يلمس ملفات اللعبة", "لا يكرر الأسئلة في الجلسات التالية", "لا يعتبر «اسأل» موافقة"],
     when: "مرة واحدة لكل لعبة جديدة.", notwhen: "عند استئناف مشروع قائم، أو إذا كانت الإجابات محفوظة.",
     uses: [

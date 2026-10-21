@@ -34,7 +34,7 @@ tools = _load("loc_tools", ROOT / "scripts" / "loc_tools.py")
 
 PHASES = ("intake", "discovery", "extraction", "localization", "integration", "playtest", "release")
 ROUTES = {
-    "intake": "references/project-run.md (ask the grouped intake questions once)",
+    "intake": "references/project-run.md (a bare «عرّب اللعبة» starts it: ask the grouped intake questions once)",
     "discovery": "python scripts/context_plan.py discovery, then mod-research",
     "extraction": "python scripts/context_plan.py extraction (write/prove the adapter, then loc.py extract)",
     "localization": "python scripts/context_plan.py translation-ui|translation-dialogue, then proofreading",

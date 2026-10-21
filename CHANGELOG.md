@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-21 — «عرّب اللعبة» is enough to start
+
+- `AGENTS.md`: while the phase is intake, a bare start request starts the
+  new-game intake instead of a clarifying question.
+- `references/project-run.md`: the intake asks the game name (suggesting the
+  working folder's name) and offers to take the install path from the user or
+  find it with a read-only search of the usual game libraries.
+- The template map shows the same start: copy, name it after the game, point a
+  Claude Code or Codex project at it, say «عرّب اللعبة».
+
 ## 2026-10-21 — The template map is the starting point
 
 - `خريطة-القالب.html` replaces `اقرأني.md` as the human entry point. It adds
