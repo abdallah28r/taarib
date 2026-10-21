@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- صفحة شرح للبشر: لا يقرؤها الوكيل ولا تتولد آليًا. حدّثها يدويًا عند تغيير المراحل أو الأدوار. -->
+<title>خريطة قالب التعريب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;700&display=swap">
+<style>
+/* Layout: a station line (metro map). Each phase is a station: the card on one side, the circles of what it uses on the other, the gate as a door under it. */
+:root {
+  --bg: #F1F4F6; --surface: #FFFFFF; --ink: #15212B; --muted: #566572; --line: #D3DBE2;
+  --accent: #0D6A6F;
+  --skill: #2A5BC6; --agent: #8A3BBE; --file: #A0650F; --tool: #22804D; --gate: #B5372F; --you: #0D6A6F;
+  --display: "Reem Kufi", "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E151C; --surface: #16202A; --ink: #E4EBF0; --muted: #93A2AF; --line: #2A3743;
+  --accent: #43B6B8; --skill: #82A5F3; --agent: #C590EA; --file: #E1A94C; --tool: #5FC68C; --gate: #EF7C72; --you: #43B6B8;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0E151C; --surface: #16202A; --ink: #E4EBF0; --muted: #93A2AF; --line: #2A3743;
+  --accent: #43B6B8; --skill: #82A5F3; --agent: #C590EA; --file: #E1A94C; --tool: #5FC68C; --gate: #EF7C72; --you: #43B6B8;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.75; margin: 0 }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.35 }
+h1 { font-size: clamp(28px, 5vw, 42px); font-weight: 700 }
+h2 { font-size: clamp(22px, 3.4vw, 30px); font-weight: 700 }
+h3 { font-size: 19px; font-weight: 700 }
+p { margin: 0 }
+code, .mono { font-family: var(--mono); font-size: .86em; direction: ltr; unicode-bidi: isolate }
+.muted { color: var(--muted) }
+.lead { font-size: 17px; max-width: 68ch; color: var(--muted) }
+
+header.top { display: grid; gap: 14px; padding-bottom: 22px; border-bottom: 1px solid var(--line) }
+nav.jump { display: flex; flex-wrap: wrap; gap: 10px }
+nav.jump a { text-decoration: none; color: var(--ink); border: 1px solid var(--line); background: var(--surface);
+  padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: 14px }
+nav.jump a:hover, nav.jump a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none }
+
+section.part { padding-top: 44px; display: grid; gap: 22px }
+.part-head { display: grid; gap: 8px }
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .02em; color: var(--accent) }
+
+/* ---------- Part 1: the user's journey ---------- */
+.journey { display: grid; gap: 0 }
+.step { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 16px; position: relative }
+.step .rail { display: flex; flex-direction: column; align-items: center }
+.big { width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: var(--you); color: var(--bg); font-family: var(--display); font-size: 26px; font-weight: 700 }
+.rail .stem { width: 3px; flex: 1; background: var(--you); min-height: 24px }
+.step:last-child .rail .stem { display: none }
+.step-body { padding-bottom: 26px; display: grid; gap: 10px; min-width: 0 }
+.say { background: var(--surface); border: 1px solid var(--line); border-radius: 14px 14px 4px 14px; padding: 10px 14px;
+  max-width: 560px; font-size: 14.5px }
+.say b { color: var(--you) }
+.tagrow { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px }
+.tag { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--surface); color: var(--muted) }
+.auto { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 16px }
+.auto .rail .stem { background: repeating-linear-gradient(var(--muted) 0 6px, transparent 6px 12px); width: 3px }
+.auto .ring { width: 30px; height: 30px; border-radius: 50%; border: 3px dashed var(--muted); flex: none }
+.auto-body { padding: 4px 0 26px; color: var(--muted); display: grid; gap: 8px; min-width: 0 }
+.agent-chips { display: flex; flex-wrap: wrap; gap: 6px }
+.agent-chips span { font-size: 13px; border-radius: 999px; padding: 1px 10px; background: color-mix(in srgb, var(--muted) 14%, transparent) }
+
+.side-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; min-width: 0 }
+.panel ul { margin: 0; padding-inline-start: 20px; display: grid; gap: 4px }
+.panel.never { border-color: color-mix(in srgb, var(--gate) 40%, var(--line)) }
+.panel.never h3 { color: var(--gate) }
+.panel.stop h3 { color: var(--accent) }
+
+/* ---------- Legend ---------- */
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px }
+.legend div { display: flex; align-items: center; gap: 8px; font-size: 14px }
+
+/* the circles */
+.dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  font-size: 12px; font-weight: 700; border: 2.5px solid currentColor; background: color-mix(in srgb, currentColor 12%, var(--surface)) }
+.dot.skill { color: var(--skill) } .dot.agent { color: var(--agent) } .dot.file { color: var(--file) } .dot.tool { color: var(--tool) }
+.dot.none { color: var(--muted); border-style: dashed; background: transparent }
+.dot.gate { color: var(--gate); border-radius: 8px }
+
+/* ---------- Part 2: the station line ---------- */
+.line { display: grid; gap: 0 }
+.station { display: grid; grid-template-columns: minmax(0, 1.25fr) 64px minmax(0, 1fr); gap: 0 18px }
+.spine { display: flex; flex-direction: column; align-items: center }
+.spine .num { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: var(--surface); border: 3px solid var(--accent); color: var(--accent); font-family: var(--display); font-size: 22px; font-weight: 700 }
+.spine .stem { width: 4px; flex: 1; background: var(--accent); min-height: 30px }
+.station.optional .spine .num { border-style: dashed }
+.station.optional .spine .stem { display: none }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 14px; margin-bottom: 18px; min-width: 0; align-content: start }
+.card .title { display: grid; gap: 4px }
+.card .who { font-size: 13px; color: var(--muted) }
+.io { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: stretch }
+.io > div { border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; min-width: 0 }
+.io .lbl { display: block; font-size: 12px; font-weight: 600; color: var(--muted) }
+.io .arrow { align-self: center; color: var(--accent); font-size: 22px; border: 0; padding: 0 }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px }
+.two > div { min-width: 0 }
+.two h4 { margin: 0 0 4px; font-size: 13.5px; font-weight: 700 }
+.two ul { margin: 0; padding-inline-start: 18px; font-size: 14px; display: grid; gap: 2px }
+.yes h4 { color: var(--tool) } .no h4 { color: var(--gate) }
+.when h4 { color: var(--accent) } .notwhen h4 { color: var(--muted) }
+
+.uses { display: grid; gap: 10px; align-content: start; padding-top: 6px; margin-bottom: 18px; min-width: 0 }
+.uses .head { font-size: 13px; font-weight: 600; color: var(--muted) }
+.use { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start }
+.use .txt { font-size: 14px; line-height: 1.6; min-width: 0; overflow-wrap: anywhere }
+.use .name { font-weight: 600 }
+.use .name code { font-size: 13px }
+.use .cond { display: block; font-size: 12.5px; color: var(--muted) }
+
+.gate-row { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.25fr) 64px minmax(0, 1fr); gap: 0 18px }
+.door { grid-column: 1 / 2; border: 2px solid var(--gate); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px;
+  background: color-mix(in srgb, var(--gate) 6%, var(--surface)); display: grid; gap: 6px; min-width: 0 }
+.door h4 { margin: 0; color: var(--gate); font-size: 14.5px; display: flex; gap: 8px; align-items: center }
+.door ul { margin: 0; padding-inline-start: 18px; font-size: 14px; display: grid; gap: 2px }
+.door .stuck { font-size: 13.5px; color: var(--muted) }
+.gate-row .spine .stem { background: var(--accent) }
+.gate-row .spine .lock { width: 26px; height: 26px; border-radius: 6px; border: 2.5px solid var(--gate); background: var(--surface); flex: none }
+
+/* always-on */
+.always { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px }
+.always .panel { grid-template-columns: 34px minmax(0, 1fr); align-items: start; gap: 10px 12px }
+.always .panel h3 { font-size: 16px; font-family: var(--body) }
+.always .panel p { font-size: 14px; grid-column: 2 }
+
+/* sentence life */
+.life { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px }
+.life .st { display: grid; justify-items: center; gap: 6px; width: 132px; text-align: center }
+.life .st .dot { width: 46px; height: 46px; font-size: 15px; color: var(--accent) }
+.life .st b { font-size: 14.5px }
+.life .st span { font-size: 12.5px; color: var(--muted); line-height: 1.5 }
+.life .ar { align-self: center; color: var(--muted); font-size: 20px; margin-top: -40px; width: 20px; text-align: center }
+.life-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px }
+
+/* agents table + trouble table */
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface) }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 14px }
+th, td { text-align: start; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { font-size: 13px; color: var(--muted); font-weight: 600; background: color-mix(in srgb, var(--accent) 5%, var(--surface)) }
+tr:last-child td { border-bottom: 0 }
+td .dot { width: 28px; height: 28px; display: inline-grid; vertical-align: middle; margin-inline-end: 6px }
+
+@media (max-width: 860px) {
+  .side-grid { grid-template-columns: 1fr }
+  .station, .gate-row { grid-template-columns: 44px minmax(0, 1fr) }
+  .station .spine, .gate-row .spine { grid-column: 1; grid-row: 1 / span 2 }
+  .station .card, .station .uses { grid-column: 2 }
+  .door { grid-column: 2 }
+  .spine .num { width: 40px; height: 40px; font-size: 18px }
+  .two { grid-template-columns: 1fr }
+  .uses { margin-top: -6px; padding: 0 4px 18px }
+}
+@media (max-width: 520px) {
+  .io { grid-template-columns: 1fr }
+  .io .arrow { transform: rotate(-90deg); justify-self: center }
+  .step, .auto { grid-template-columns: 52px minmax(0, 1fr); gap: 12px }
+  .big { width: 46px; height: 46px; font-size: 20px }
+  .life .st { width: 50% }
+  .life .ar { display: none }
+}
+@media (prefers-reduced-motion: no-preference) { nav.jump a { transition: border-color .15s, color .15s } }
+</style>
+</head>
+<body>
+<div class="wrap" dir="rtl" lang="ar">
+  <header class="top">
+    <span class="eyebrow">قالب تعريب الألعاب بالوكلاء — Claude Code وCodex</span>
+    <h1>خريطة قالب التعريب</h1>
+    <p class="lead">صفحتان في صفحة واحدة. الأولى لمن يريد تعريب لعبة فقط: ماذا تفعل أنت، ومتى. الثانية لمن يريد أن يفهم ما يجري في الداخل، ويتتبّع مشكلة إلى مكانها، دون أن يقرأ ملفات القالب.</p>
+    <nav class="jump" aria-label="أقسام الصفحة">
+      <a href="#user">١. أنت كمستخدم</a>
+      <a href="#system">٢. كيف يعمل من الداخل</a>
+      <a href="#life">رحلة الجملة الواحدة</a>
+      <a href="#agents">الوكلاء الفرعيون</a>
+      <a href="#trouble">تتبّع مشكلة</a>
+    </nav>
+  </header>
+
+  <!-- ===================== PART 1 ===================== -->
+  <section class="part" id="user">
+    <div class="part-head">
+      <span class="eyebrow">المخطط الأول</span>
+      <h2>أنت كمستخدم: خمس لحظات فقط</h2>
+      <p class="lead">الدوائر الممتلئة هي ما تفعله أنت. الدوائر المتقطعة هي ما يفعله الوكيل وحده بينها، دون أن ينتظرك.</p>
+    </div>
+
+    <div class="journey" id="journey"></div>
+
+    <div class="side-grid">
+      <div class="panel never">
+        <h3>ما لا تحتاج إليه أبدًا</h3>
+        <ul>
+          <li>قراءة ملفات القالب أو قواعده.</li>
+          <li>كتابة أوامر في الطرفية.</li>
+          <li>اختيار الأدوات أو الخطوط أو حجم الدفعات.</li>
+          <li>الموافقة بعد كل مرحلة. الوكيل لا يتوقف ليستأذن في كل خطوة.</li>
+          <li>نسخ ملفات اللعبة احتياطيًا. الوكيل ينسخ كل ملف قبل أن يلمسه.</li>
+        </ul>
+      </div>
+      <div class="panel stop">
+        <h3>متى يتوقف الوكيل ويسألك؟</h3>
+        <ul>
+          <li>عند سؤال البداية، مرة واحدة لكل لعبة.</li>
+          <li>عند قرار يغيّر المعنى ولا يستطيع حسمه، مثل جنس شخصية أو لغز.</li>
+          <li>عند مانع يتعلق بالأمان، أو صلاحية لم تعطها.</li>
+          <li>عند التجربة: يسلمك اللعبة لتجربها، ثم ينتظر قبولك.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>عبارات تنفعك في المحادثة</h3>
+        <ul>
+          <li>«أين وصلنا؟»</li>
+          <li>«ما الذي يعطّل المرحلة الحالية؟»</li>
+          <li>«اللعبة تحدّثت، حدّث الترجمة.»</li>
+          <li>«أعد ملفات اللعبة الأصلية.»</li>
+          <li>«قبلت النسخة.» (فقط عندما تكون راضيًا)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PART 2 ===================== -->
+  <section class="part" id="system">
+    <div class="part-head">
+      <span class="eyebrow">المخطط الثاني</span>
+      <h2>كيف يعمل من الداخل: سبع محطات وبوابة بعد كل واحدة</h2>
+      <p class="lead">كل محطة فيها: ما تأخذه وما تخرجه، ما تفعله وما لا تفعله، متى تعمل ومتى لا تعمل. وبجانبها دوائر بما تستخدمه وفائدة كل شيء. تحت كل محطة بوابة: لا ينتقل المشروع إلى المحطة التالية حتى يفحص البرنامج الملفات بنفسه، فلا يكفي أن يقول الوكيل «انتهيت».</p>
+    </div>
+
+    <div class="legend" aria-label="مفتاح الدوائر">
+      <div><span class="dot skill">م</span> مهارة: دليل عمل يقرؤه الوكيل لهذه المهمة</div>
+      <div><span class="dot agent">و</span> وكيل فرعي: مساعد مستقل بدور واحد</div>
+      <div><span class="dot file">ملف</span> ملف يُقرأ أو يُكتب</div>
+      <div><span class="dot tool">أداة</span> أداة يشغّلها الوكيل</div>
+      <div><span class="dot none">—</span> لا شيء من هذا النوع هنا</div>
+      <div><span class="dot gate">ب</span> بوابة تفحص قبل الانتقال</div>
+    </div>
+
+    <div class="line" id="stations"></div>
+
+    <div class="part-head" style="padding-top:12px">
+      <span class="eyebrow">تعمل في كل المحطات</span>
+      <h3>الأجزاء الثابتة: ستراها في كل مكان</h3>
+    </div>
+    <div class="always" id="always"></div>
+  </section>
+
+  <section class="part" id="life">
+    <div class="part-head">
+      <span class="eyebrow">من منظور جملة واحدة</span>
+      <h2>رحلة الجملة الواحدة</h2>
+      <p class="lead">كل نص في اللعبة يُحفظ سطرًا مستقلًا في <code>units/</code> ومعه حالته. نسب التقدم في اللوحة تُحسب من هذه الحالات فقط، لا من كلام الوكيل.</p>
+    </div>
+    <div class="life" id="lifeline"></div>
+    <div class="life-notes">
+      <div class="panel"><h3>لا يدقق المترجم نفسه</h3><p>البرنامج يرفض وسم الجملة «مدققة» إذا كان المدقق هو نفسه من ترجمها.</p></div>
+      <div class="panel"><h3>لا يدخل اللعبة إلا المدقق</h3><p>البناء يأخذ الجمل المدققة فقط. أي جملة تغيّرت بعد التدقيق لا تدخل حتى تُدقق من جديد.</p></div>
+      <div class="panel"><h3>الجملة المدققة مقفلة</h3><p>تغييرها بعد التدقيق لا يتم إلا عبر «إصلاح» مفتوح يسمّيها، ثم تعود للتدقيق.</p></div>
+      <div class="panel"><h3>تحديث اللعبة</h3><p>إذا تغيّر النص الأصلي في تحديث، ترجع الجملة إلى «مستخرجة» مع ترجمتها القديمة، وتظهر في اللوحة تحت «تحتاج إعادة كتابة».</p></div>
+    </div>
+  </section>
+
+  <section class="part" id="agents">
+    <div class="part-head">
+      <span class="eyebrow">من يعمل؟</span>
+      <h2>الوكلاء الفرعيون: متى يُستخدمون ومتى لا</h2>
+      <p class="lead">الوكيل الرئيسي هو الذي تحادثه. يستطيع توزيع العمل على أربعة مساعدين، بشرط أن تكون قد قلت «نعم» لسؤال الوكلاء الفرعيين في البداية. المساعد لا يستطيع أن ينشئ مساعدًا آخر؛ الرئيسي وحده يوزّع.</p>
+    </div>
+    <div class="tbl-wrap"><table id="agent-table"></table></div>
+  </section>
+
+  <section class="part" id="trouble">
+    <div class="part-head">
+      <span class="eyebrow">للتشخيص</span>
+      <h2>تتبّع مشكلة: ما تراه، وأين مكانه</h2>
+      <p class="lead">ابدأ من العمود الأول بما تراه أمامك، ثم اذهب إلى المحطة المذكورة في المخطط الثاني.</p>
+    </div>
+    <div class="tbl-wrap"><table id="trouble-table"></table></div>
+  </section>
+</div>
+
+<script>
+const KIND = { skill: "م", agent: "و", file: "ملف", tool: "أداة", none: "—" };
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+const rich = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+
+/* ---------- Part 1 data ---------- */
+const JOURNEY = [
+  { you: true, title: "افتح مجلد القالب واطلب التعريب",
+    text: "افتح المجلد في Claude Code أو Codex، واكتب طلبك بكلامك.",
+    say: "<b>أنت:</b> عرّب لعبة «اسم اللعبة»، وهي مثبتة في المسار …",
+    tags: ["دقيقة واحدة"] },
+  { you: true, title: "أجب أسئلة البداية مرة واحدة",
+    text: "يسألك الوكيل مجموعة واحدة من الأسئلة، ويحفظ إجاباتك فلا يكررها في الجلسات القادمة.",
+    say: "أي نسخة من اللعبة؟ هل أثبّت التعريب على نسختك؟ هل أستعين بوكلاء فرعيين؟ هل نعرّب النص المرسوم داخل الصور؟ هل أشغّل اللعبة لفحص سريع؟",
+    tags: ["نحو ٥ دقائق", "تُحفظ في PROJECT.yaml"] },
+  { auto: true, text: "الوكيل يعمل وحده: يستكشف اللعبة، يستخرج نصوصها، يترجمها دفعةً دفعة، يدققها بوكيل آخر، يبني النسخة العربية ويثبّتها إن سمحت. قد يستغرق هذا ساعات أو أيامًا بحسب حجم اللعبة.",
+    chips: ["الاستكشاف", "الاستخراج", "الترجمة والتدقيق", "البناء والتثبيت"] },
+  { you: true, optional: true, title: "تابع اللوحة إن أحببت",
+    text: "افتح الملف <code>reports/dashboard.html</code> في المتصفح. يتحدث وحده كل ١٥ ثانية: المرحلة الحالية، نسب الترجمة والتدقيق، وما يعطّل التقدم الآن. أجب فقط إذا سألك الوكيل.",
+    say: "<b>الوكيل:</b> «Kai» في الحوار يخاطب امرأة أم رجلًا؟ أحتاج هذا لأختار صيغة الفعل.",
+    tags: ["اختياري", "لا يحتاج أوامر"] },
+  { you: true, title: "جرّب اللعبة بالعربية وأبلغ بكلامك",
+    text: "العب. إذا رأيت مشكلة فقلها كما تراها. الوكيل يحوّل كل بلاغ صغير إلى «إصلاح» محدود، ويعيد البناء، ولا يلمس ما سواه.",
+    say: "<b>أنت:</b> زر الحفظ مقصوص في شاشة الإعدادات، واسم البطلة مكتوب بطريقتين.",
+    tags: ["وقتك أنت", "أهم خطوة للجودة"] },
+  { you: true, title: "قل «قبلت»",
+    text: "يسجل الوكيل قبولك، ولا يسجله من تلقاء نفسه أبدًا. بعدها، وإن طلبت فقط، يجهّز حزمة تعريب قابلة للمشاركة.",
+    say: "<b>أنت:</b> قبلت النسخة.",
+    tags: ["ثوانٍ"] },
+];
+
+let n = 0;
+document.getElementById("journey").innerHTML = JOURNEY.map(s => {
+  if (s.auto) return `<div class="auto"><div class="rail"><span class="ring" aria-hidden="true"></span><span class="stem"></span></div>
+    <div class="auto-body"><p>${rich(s.text)}</p><div class="agent-chips">${s.chips.map(c => `<span>${c}</span>`).join("")}</div></div></div>`;
+  n += 1;
+  return `<div class="step"><div class="rail"><span class="big">${"١٢٣٤٥"[n - 1]}</span><span class="stem"></span></div>
+    <div class="step-body"><h3>${s.title}</h3><p>${s.text}</p>${s.say ? `<p class="say">${s.say}</p>` : ""}
+    <div class="tagrow">${s.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div></div></div>`;
+}).join("");
+
+/* ---------- Part 2 data ---------- */
+const STATIONS = [
+  { name: "البداية: أسئلة المشروع", who: "الوكيل الرئيسي + أنت",
+    input: "طلبك ومسار اللعبة", output: "إجاباتك وصلاحياتك محفوظة",
+    does: ["يسألك الأسئلة كلها دفعة واحدة", "يحفظ الإجابات ليقرأها في كل جلسة"],
+    doesnt: ["لا يلمس ملفات اللعبة", "لا يكرر الأسئلة في الجلسات التالية", "لا يعتبر «اسأل» موافقة"],
+    when: "مرة واحدة لكل لعبة جديدة.", notwhen: "عند استئناف مشروع قائم، أو إذا كانت الإجابات محفوظة.",
+    uses: [
+      { k: "file", n: "`PROJECT.yaml`", w: "دفتر المشروع: اسم اللعبة ومسارها وكل «نعم/لا» قلتها." },
+      { k: "file", n: "`references/project-run.md`", w: "تعليمات الوكيل: ماذا يسأل، وماذا لا يسأل." },
+      { k: "none", n: "لا وكلاء فرعيين", w: "الأسئلة تخصك أنت، فلا يُفوَّض فيها أحد." },
+    ],
+    gate: ["اسم اللعبة مكتوب", "مسار اللعبة موجود فعلًا", "أُجيب كل سؤال بنعم أو لا: التثبيت، الوكلاء، الصور، تشغيل اللعبة"],
+    stuck: "إذا علق هنا: سؤال لم تُجب عنه بعد. اسأل «ما الذي يعطّل المرحلة؟»." },
+  { name: "الاستكشاف", who: "الوكيل الرئيسي، ومعه الباحث إن سمحت",
+    input: "مجلد اللعبة (قراءة فقط)", output: "نوع المحرك، وطريقة عرض العربية، والمحوّل المناسب",
+    does: ["يتعرف على المحرك وإصداره", "يبحث عن أدوات وتعديلات عربية موجودة لهذه اللعبة", "يحسم: هل يعرض المحرك العربية بنفسه أم يحتاج تشكيلها مسبقًا؟"],
+    doesnt: ["لا يعدّل أي ملف في اللعبة", "لا يتجاوز حماية أو تشفيرًا", "لا يثبّت أداة دون تسجيل مصدرها ورخصتها"],
+    when: "مرة لكل لعبة.", notwhen: "يُعاد فقط عند تحديث اللعبة أو فشل أداة أو سؤال لم يُحسم.",
+    uses: [
+      { k: "skill", n: "مهارة الهندسة", w: "دليل فحص المحركات والملفات بأمان." },
+      { k: "agent", n: "الباحث", w: "يجيب سؤالًا بحثيًا واحدًا ويعود بدليل. لا يعدّل شيئًا.", c: "فقط إن قلت نعم للوكلاء. وإلا يبحث الرئيسي بنفسه." },
+      { k: "file", n: "`engines/<المحرك>.md`", w: "ما عُرف سابقًا عن هذا المحرك، يُقرأ ملف المحرك المكتشَف وحده." },
+      { k: "tool", n: "كاشف المحرك والحماية", w: "يتعرف على المحرك ويكشف التشفير قبل أي خطوة." },
+      { k: "file", n: "`work/NOTES.md`", w: "مسودة الملاحظات المؤقتة أثناء البحث." },
+    ],
+    gate: ["المحرك محدد", "ملف المحوّل موجود", "المحوّل يعلن: المحرك يعرض العربية بنفسه، أو يحتاج تشكيلها مسبقًا"],
+    stuck: "إذا علق هنا: لم يثبت بعد كيف يعرض المحرك العربية. هذا مقصود، فالخطأ فيه يكسر الحروف لاحقًا." },
+  { name: "الاستخراج", who: "الوكيل الرئيسي",
+    input: "ملفات اللعبة والمحوّل", output: "كل نصوص اللعبة سطرًا سطرًا، وخطة الدفعات",
+    does: ["يسحب كل جملة من اللعبة إلى سجل الوحدات", "يختبر المحوّل بثمانية فحوص: يستخرج ويعيد الكتابة دون كسر شيء", "يقسم العمل إلى دفعات ويكتبها في الخطة"],
+    doesnt: ["لا يترجم شيئًا", "لا يكتب في مجلد اللعبة", "لا يكمل إذا فشل أي فحص من الثمانية"],
+    when: "بعد الاستكشاف، ومرة أخرى عند تحديث اللعبة.", notwhen: "إذا لم يثبت المحوّل نجاحه على نسخة اللعبة الحالية.",
+    uses: [
+      { k: "file", n: "`adapters/`", w: "المحوّل: الجسر بين صيغة ملفات اللعبة وسجل الوحدات." },
+      { k: "tool", n: "فحص عقد المحوّل", w: "ثمانية فحوص تثبت أن الاستخراج وإعادة الكتابة آمنان." },
+      { k: "file", n: "`units/*.jsonl`", w: "سجل الوحدات: كل جملة وحالتها. مصدر كل النسب." },
+      { k: "file", n: "`PLAN.md`", w: "قائمة الدفعات بمربعات ☐ تُؤشَّر لاحقًا." },
+      { k: "none", n: "لا وكلاء فرعيين", w: "عمل هندسي دقيق يبقى عند الرئيسي." },
+    ],
+    gate: ["عقد المحوّل نجح على المحوّل الحالي ونصوص اللعبة الحالية", "توجد وحدات مستخرجة، وفحصها بلا أخطاء", "كل الدفعات مكتوبة في الخطة"],
+    stuck: "إذا علق هنا: غالبًا فشل فحص من الثمانية. اللعبة لها صيغة لم يتعامل معها المحوّل بعد." },
+  { name: "الترجمة والتدقيق", who: "المترجم، ثم مدقق مختلف",
+    input: "دفعة من الجمل + المسرد", output: "جمل مترجمة ومدققة، ودفعات مؤشَّرة ☑",
+    does: ["يجهّز لكل دفعة حزمة صغيرة: الجمل وسياقها والمصطلحات التي تخصها", "يترجم المترجم الدفعة", "يدققها وكيل آخر ويسجل ملاحظاته ونقاط الجودة", "يعرّب نص الصور إن كان ضمن النطاق"],
+    doesnt: ["المترجم لا يدقق ترجمته أبدًا", "لا يُكسر رمز برمجي مثل {name} أو [key]", "لا يخالف المسرد", "لا يلمس ملفات اللعبة"],
+    when: "دفعةً دفعة حتى تكتمل كل الدفعات.", notwhen: "لا تُرسل دفعة للتدقيق قبل اكتمال ترجمتها، ولا تُعرَّب الصور إن قلت لا.",
+    uses: [
+      { k: "skill", n: "مهارة الترجمة + مهارة التدقيق", w: "أسلوب العربية الفصحى للألعاب، وقائمة فحص المدقق." },
+      { k: "agent", n: "المترجم", w: "يترجم دفعة واحدة محددة.", c: "إن قلت نعم للوكلاء. وإلا يترجم الرئيسي." },
+      { k: "agent", n: "المدقق", w: "يدقق دفعة لم يترجمها.", c: "إن قلت لا للوكلاء: يدقق الرئيسي في جولة جديدة، باسم دور مختلف، دون ملاحظات ترجمته." },
+      { k: "agent", n: "معرّب الصور", w: "يعالج النص المرسوم داخل الصور.", c: "فقط إن قلت نعم لتعريب الصور." },
+      { k: "file", n: "`glossary.yaml`", w: "المسرد: الأسماء والمصطلحات المعتمدة والممنوعة." },
+      { k: "tool", n: "حزمة الدفعة والفحوص", w: "تجهز ما يحتاجه المترجم فقط، وتكشف المشكلات تلقائيًا." },
+    ],
+    gate: ["كل جملة قابلة للترجمة مدققة", "لا جملة تنتظر قرارًا", "لا مشكلات من مستوى «خطأ»: مسرد، رموز، صيغ ممنوعة", "كل دفعات الخطة مؤشَّرة ☑"],
+    stuck: "إذا علق هنا: دفعة لم تُدقق، أو مشكلة «خطأ» في جمل محددة. اللوحة تعرض العدد والنوع." },
+  { name: "البناء والتثبيت", who: "الوكيل الرئيسي",
+    input: "الجمل المدققة", output: "ملفات اللعبة بالعربية، ونسخة احتياطية من الأصل",
+    does: ["يبني ملفات العربية من الجمل المدققة وحدها", "ينسخ كل ملف أصلي احتياطيًا قبل استبداله", "يثبّت على نسختك إن قلت نعم", "يختار خطًا عربيًا مرخصًا إن احتاج المحرك"],
+    doesnt: ["لا يُدخل جملة غير مدققة", "لا يكتب فوق ملف دون نسخة احتياطية (يمنعه حارس في Claude Code)", "لا يثبّت إن قلت لا"],
+    when: "بعد اكتمال الترجمة والتدقيق، وبعد كل إصلاح.", notwhen: "قبل نجاح بوابة الترجمة.",
+    uses: [
+      { k: "skill", n: "مهارة الهندسة", w: "خطوات البناء والتثبيت القابل للتراجع." },
+      { k: "tool", n: "أدوات النسخ الاحتياطي", w: "تحفظ الأصل بمساره قبل أي تغيير." },
+      { k: "file", n: "`backups/`", w: "الملفات الأصلية. منها يُعاد كل شيء كما كان." },
+      { k: "file", n: "`fonts/`", w: "سجل الخطوط المستخدمة ورخصها." },
+      { k: "none", n: "لا وكلاء فرعيين", w: "لمس ملفات اللعبة يبقى عند الرئيسي." },
+    ],
+    gate: ["كل الجمل مدمجة في بناء", "فحص الوحدات بلا أخطاء"],
+    stuck: "إذا علق هنا: جمل لم تدخل البناء بعد، غالبًا لأنها تغيرت بعد التدقيق." },
+  { name: "تجربتك", who: "أنت، ثم الوكيل الرئيسي للإصلاح",
+    input: "النسخة العربية + بلاغاتك", output: "إصلاحات مغلقة، وقبولك مسجّل",
+    does: ["يحوّل كل بلاغ صغير إلى «إصلاح» يسجل فيه: ماذا يحدث، وماذا يجب أن يحدث، وما يجب ألا يتغير", "يعيد تدقيق ما أُصلح ويعيد البناء", "يسجل العيوب الكبيرة في مصفوفة الفحص"],
+    doesnt: ["لا يسجّل قبولك من نفسه", "لا يغلق إصلاحًا «ناجحًا» دون دليل، أو إذا تغيّر شيء خارجه", "لا يعيد مرحلة كاملة لمشكلة صغيرة"],
+    when: "بعد البناء، وكل مرة تبلغ فيها عن مشكلة.", notwhen: "قبل أن تقول بوضوح إنك جربت.",
+    uses: [
+      { k: "skill", n: "مهارة الفحص", w: "كيف تُفحص الشاشات وتُسجل العيوب." },
+      { k: "tool", n: "مسار الإصلاح السريع", w: "يفتح الإصلاح، ويقفل الجمل الأخرى، ويرفض الإغلاق إن تغيّر شيء آخر." },
+      { k: "file", n: "`qa/LQA_MATRIX.csv`", w: "مصفوفة العيوب: كل عيب مرة واحدة، مع شدته." },
+      { k: "agent", n: "المدقق", w: "يعيد تدقيق الجمل المُصلحة.", c: "إن قلت نعم للوكلاء، وإلا يفعلها الرئيسي في جولة منفصلة." },
+    ],
+    gate: ["لا عيوب حرجة مفتوحة", "لا إصلاحات مفتوحة", "قبولك مسجّل بكلامك"],
+    stuck: "إذا علق هنا: إصلاح لم يُغلق، أو عيب حرج مفتوح، أو لم تقل «قبلت» بعد." },
+  { optional: true, name: "النشر (اختياري)", who: "الوكيل الرئيسي، بطلبك فقط",
+    input: "النسخة المقبولة", output: "حزمة تعريب قابلة للمشاركة",
+    does: ["يجهز حزمة تثبيت وإزالة", "يفحص الرخص وما يُسمح بنشره"],
+    doesnt: ["لا ينشر شيئًا على الإنترنت دون طلبك", "لا يضم ملفات اللعبة الأصلية المحمية"],
+    when: "فقط إن طلبت مشاركة التعريب.", notwhen: "إذا كان التعريب لاستخدامك الشخصي.",
+    uses: [
+      { k: "file", n: "`references/release.md`", w: "شروط الحزمة قبل أن تصل إلى شخص آخر." },
+      { k: "tool", n: "أدوات الحزم", w: "تبني الحزمة وتختبر تثبيتها وإزالتها." },
+      { k: "none", n: "لا وكلاء فرعيين", w: "" },
+    ],
+    gate: null },
+];
+
+const li = xs => xs.map(x => `<li>${rich(x)}</li>`).join("");
+document.getElementById("stations").innerHTML = STATIONS.map((s, i) => {
+  const station = `<div class="station${s.optional ? " optional" : ""}">
+    <div class="card">
+      <div class="title"><h3>${s.name}</h3><span class="who">من يعمل: ${s.who}</span></div>
+      <div class="io"><div><span class="lbl">يدخل</span>${s.input}</div><div class="arrow" aria-hidden="true">←</div><div><span class="lbl">يخرج</span>${s.output}</div></div>
+      <div class="two"><div class="yes"><h4>يفعل</h4><ul>${li(s.does)}</ul></div><div class="no"><h4>لا يفعل</h4><ul>${li(s.doesnt)}</ul></div></div>
+      <div class="two"><div class="when"><h4>متى يعمل</h4><p>${s.when}</p></div><div class="notwhen"><h4>متى لا يعمل</h4><p>${s.notwhen}</p></div></div>
+    </div>
+    <div class="spine"><span class="num">${"١٢٣٤٥٦٧"[i]}</span><span class="stem"></span></div>
+    <div class="uses"><span class="head">ما يُستخدم هنا</span>${s.uses.map(u => `<div class="use"><span class="dot ${u.k}">${KIND[u.k]}</span>
+      <div class="txt"><span class="name">${rich(u.n)}</span>${u.w ? ` — ${rich(u.w)}` : ""}${u.c ? `<span class="cond">${rich(u.c)}</span>` : ""}</div></div>`).join("")}</div>
+  </div>`;
+  const gate = s.gate ? `<div class="gate-row"><div class="door"><h4><span class="dot gate" style="width:24px;height:24px;font-size:11px">ب</span>بوابة الانتقال: لا يتقدم المشروع إلا إذا</h4>
+      <ul>${li(s.gate)}</ul><p class="stuck">${s.stuck}</p></div>
+      <div class="spine"><span class="lock" aria-hidden="true"></span><span class="stem"></span></div><div></div></div>` : "";
+  return station + gate;
+}).join("");
+
+const ALWAYS = [
+  { k: "tool", t: "المايسترو: «أين نحن؟» و«هل نتقدم؟»", p: "أمر يخبر الوكيل بالمرحلة الحالية وما يعطّلها، وآخر يفحص الملفات قبل فتح البوابة. لا يثق بملخص الوكيل." },
+  { k: "file", t: "سجل الوحدات `units/`", p: "كل جملة في اللعبة وحالتها. النسب في اللوحة تُحسب منه فقط." },
+  { k: "file", t: "الخطة `PLAN.md`", p: "الهدف، الدفعات، القرارات، الأسئلة المفتوحة، والخطوة التالية. لا تتجاوز ١٥٠ سطرًا." },
+  { k: "file", t: "اللوحة `reports/dashboard.html`", p: "ما تراه أنت. تُولَّد آليًا بعد كل تغيير، ولا يكتبها أحد بيده." },
+  { k: "file", t: "سجل المراحل `state/`", p: "أين وصل المشروع، وتاريخ كل بوابة، والإصلاحات المفتوحة والمغلقة." },
+  { k: "tool", t: "الحراس (في Claude Code)", p: "تمنع الكتابة في اللعبة قبل النسخ الاحتياطي، وتفحص كل ملف بعد تعديله. في Codex يقوم الوكيل بهذه الفحوص بنفسه." },
+  { k: "file", t: "القواعد `AGENTS.md`", p: "أول ما يقرؤه الوكيل. مشترك بين Codex وClaude Code. ليس لك؛ هو للوكيل." },
+  { k: "tool", t: "مختار السياق", p: "يحدد للوكيل الملفات التي يقرؤها لكل مهمة فقط، فلا يقرأ القالب كله ويهدر التكلفة." },
+];
+document.getElementById("always").innerHTML = ALWAYS.map(a =>
+  `<div class="panel"><span class="dot ${a.k}">${KIND[a.k]}</span><h3>${rich(a.t)}</h3><p>${rich(a.p)}</p></div>`).join("");
+
+const LIFE = [
+  ["مستخرجة", "سحبها المحوّل من اللعبة", "١"],
+  ["مترجمة", "كتبها المترجم", "٢"],
+  ["مدققة", "راجعها مدقق آخر", "٣"],
+  ["مدمجة", "دخلت ملفات اللعبة", "٤"],
+  ["مختبرة", "ظهرت سليمة في تجربتك", "٥"],
+];
+document.getElementById("lifeline").innerHTML = LIFE.map((l, i) =>
+  `${i ? '<span class="ar" aria-hidden="true">←</span>' : ""}<div class="st"><span class="dot">${l[2]}</span><b>${l[0]}</b><span>${l[1]}</span></div>`).join("");
+
+const AGENTS = [
+  ["agent", "المترجم", "الترجمة والتدقيق", "لكل دفعة، إن قلت نعم للوكلاء", "إن قلت لا: يترجم الرئيسي بنفسه", "متوسط"],
+  ["agent", "المدقق", "الترجمة والتدقيق، والتجربة بعد الإصلاح", "بعد كل دفعة مترجمة، ويجب أن يختلف عن المترجم", "إن قلت لا: يدقق الرئيسي في جولة جديدة منفصلة", "متوسط"],
+  ["agent", "الباحث", "الاستكشاف", "لسؤال بحثي محدد عن المحرك أو الأدوات أو التعديلات", "لا يعدّل أي ملف أبدًا؛ للقراءة فقط", "خفيف"],
+  ["agent", "معرّب الصور", "الترجمة والتدقيق", "فقط إن قلت نعم لتعريب الصور", "إن كانت الصور خارج النطاق لا يُستدعى", "متوسط"],
+];
+document.getElementById("agent-table").innerHTML =
+  `<thead><tr><th>الوكيل</th><th>في أي محطة</th><th>متى يُستخدم</th><th>متى لا يُستخدم</th><th>قوة النموذج</th></tr></thead><tbody>` +
+  AGENTS.map(a => `<tr><td><span class="dot ${a[0]}">${KIND[a[0]]}</span><b>${a[1]}</b></td><td>${a[2]}</td><td>${a[3]}</td><td>${a[4]}</td><td>${a[5]}</td></tr>`).join("") + "</tbody>";
+
+const TROUBLE = [
+  ["الحروف العربية في اللعبة مفككة أو مقلوبة", "٢ الاستكشاف", "قرار عرض العربية كان خاطئًا لهذا المحرك. يُغيَّر في المحوّل إلى «يحتاج تشكيلًا مسبقًا» ثم يُعاد البناء."],
+  ["نص مقصوص أو خارج الإطار", "٦ تجربتك", "يُفتح إصلاح لتلك الجمل وحدها: صياغة أقصر أو تعديل حجم الخط."],
+  ["جملة خاطئة المعنى أو الجنس", "٦ تجربتك", "إصلاح صغير لتلك الجملة، ثم تدقيق جديد، ثم إعادة بناء."],
+  ["اسم أو مصطلح مترجم بطريقتين", "٤ الترجمة والتدقيق", "المسرد `glossary.yaml` ناقص. يُضاف المصطلح، فيكشف الفحص كل مخالفة."],
+  ["رسالة «LOCKED» من الوكيل", "٦ تجربتك", "محاولة تغيير جملة مدققة دون إصلاح مفتوح. الحماية تعمل كما يجب."],
+  ["الحارس منع الوكيل من الكتابة", "٥ البناء والتثبيت", "لا توجد نسخة احتياطية للملف بعد. الوكيل يأخذ نسخة ثم يكمل."],
+  ["اللوحة متوقفة عند «كل الدفعات مؤشَّرة»", "٤ الترجمة والتدقيق", "دفعة لم تُدقق بعد، أو لم يؤشّرها الوكيل في الخطة."],
+  ["اللعبة تحدّثت وظهرت جمل إنجليزية", "٣ الاستخراج", "تحديث الوحدات يضيف الجديد ويعلّم المتغير بـ«تحتاج إعادة كتابة»، ثم تعود الترجمة لتلك الجمل وحدها."],
+  ["اللعبة لا تعمل بعد التثبيت", "٥ البناء والتثبيت", "تُستعاد الملفات الأصلية من `backups/`، ثم يُفحص الملف الذي سبّب العطل."],
+];
+document.getElementById("trouble-table").innerHTML =
+  `<thead><tr><th>ما تراه</th><th>المحطة</th><th>ماذا يعني، وماذا يحدث</th></tr></thead><tbody>` +
+  TROUBLE.map(t => `<tr><td><b>${t[0]}</b></td><td>${t[1]}</td><td>${rich(t[2])}</td></tr>`).join("") + "</tbody>";
+</script>
+</body>
+</html>
