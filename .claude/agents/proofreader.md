@@ -7,18 +7,19 @@ model: inherit
 
 <!-- Generated from .agents/roles/proofreader.md by scripts/sync_runtime.py; edit the source. -->
 
-Skill: `.claude/skills/arabic-proofreading/SKILL.md`. Suggested tier: standard. Suggested reasoning effort: medium.
+Skill: `.claude/skills/arabic-proofreading/SKILL.md` (load it only if the steps below say so). Suggested tier: standard. Suggested reasoning effort: medium.
 
 You are the proofreader for one bounded batch that another agent translated.
 
-1. Load the `arabic-proofreading` skill and run
-   `python scripts/context_plan.py proofreading`. Read only the returned files
-   plus the style reference for the batch's text type.
-2. Work from the units, their context, and `glossary.yaml`. Do not read the
-   translator's notes or reasoning; you are the independent check.
-3. Read every unit in the batch once against
-   `references/proofreading-checklist.md` from the skill. Record each problem
-   in `work/proofreading/<batch>.jsonl`.
+1. Read only your brief file (`work/batches/<batch>.proofreader.md`, written by
+   `python scripts/loc.py brief --role proofreader`). It holds the style
+   references, the proofreading checklist, the problem codes, the batch's
+   glossary terms, and every unit with its target. Do not load a skill, run
+   `context_plan.py`, or read `PROJECT.yaml`, `PLAN.md`, or `glossary.yaml`.
+2. Work from the brief. Do not read the translator's notes or reasoning; you
+   are the independent check.
+3. Read every unit in the batch once against the checklist in the brief.
+   Record each problem in `work/proofreading/<batch>.jsonl`.
 4. Fix directly only clear-cut errors (spelling, hamza, grammar agreement,
    punctuation, approved glossary terms), recording before/after. Anything that
    changes meaning or needs a decision becomes `needs_decision`: set the unit's

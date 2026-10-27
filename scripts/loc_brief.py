@@ -4,7 +4,10 @@ Layer 1 (rules, role, project conventions, output contract) is byte-identical
 for every batch of a project and role, so a runtime can cache it as a prompt
 prefix. Layer 2 (character cards and the glossary slice) changes only with the
 characters and terms a batch uses. Layer 3 holds the batch itself: continuity
-lines and the units. A subagent needs nothing else to do its job.
+lines and the units. A subagent needs nothing else to do its job: layer 1
+also carries the style and review rules (STYLE_REFERENCES), so a delegated
+translator or proofreader reads no route, PROJECT.yaml, PLAN.md, or the full
+glossary.
 """
 from __future__ import annotations
 
@@ -15,8 +18,16 @@ from pathlib import Path
 LAYER_MARKS = ("<!-- layer 1: identical for every batch -->",
                "<!-- layer 2: characters and terms used by this batch -->",
                "<!-- layer 3: this batch -->")
-PROJECT_RULE_KEYS = ("register", "dialect_policy", "tone", "digits", "quotation_marks", "diacritics",
-                     "profanity_policy", "units_policy")
+STYLE_REFERENCES = {
+    "translator": ("references/translation-core.md", "references/ui-style.md", "references/dialogue-style.md",
+                   "references/subtitles-style.md"),
+    "proofreader": ("references/translation-core.md", "references/ui-style.md", "references/dialogue-style.md",
+                    "references/subtitles-style.md",
+                    ".agents/skills/arabic-proofreading/references/proofreading-checklist.md",
+                    "references/problem-codes.md"),
+}
+PROJECT_RULE_KEYS = ("register", "dialect_policy", "tone", "digits", "dates", "time_format", "quotation_marks",
+                     "diacritics", "profanity_policy", "units_policy")
 OUTPUT_CONTRACT = {
     "translator": [
         "Write one JSON object keyed by unit id: {\"<id>\": \"<Arabic target>\"} with exactly one non-empty entry",
@@ -55,7 +66,17 @@ def glossary_slice(sources: list[str], glossary: dict, entries) -> list[str]:
     return lines
 
 
-def layer_one(role: str, constraints: str, game: dict) -> str:
+def style_text(role: str, root: Path) -> str:
+    """The role's style and review references, inlined in a fixed order so layer 1 stays byte-identical."""
+    parts = []
+    for name in STYLE_REFERENCES[role]:
+        path = root / name
+        if path.is_file():
+            parts += [f"<!-- {name} -->", path.read_text(encoding="utf-8").replace("\r\n", "\n").strip(), ""]
+    return "\n".join(parts)
+
+
+def layer_one(role: str, constraints: str, game: dict, style: str = "") -> str:
     rules = [f"- {key}: {game[key]}" for key in PROJECT_RULE_KEYS if game.get(key)]
     return "\n".join([
         LAYER_MARKS[0],
@@ -67,6 +88,7 @@ def layer_one(role: str, constraints: str, game: dict) -> str:
         "## Output",
         *OUTPUT_CONTRACT[role],
         "",
+        *(["## Style and review rules", "", style] if style else []),
         "",
     ])
 
@@ -99,7 +121,7 @@ def unit_record(unit: dict, role: str, problems: list[str]) -> dict:
 
 def build(role: str, batch: str, batch_units: list[dict], file_units: list[dict], constraints: str,
           game: dict, cards: dict[str, dict], glossary: dict, entries, problems: dict[str, list[str]],
-          continuity: int = 5) -> str:
+          continuity: int = 5, style: str = "") -> str:
     """The full brief text: layer 1, layer 2, layer 3."""
     speakers = sorted({(u.get("context") or {}).get(k) for u in batch_units for k in ("speaker", "addressee")} - {None})
     known = [card_line(cards[s]) for s in speakers if s in cards]
@@ -129,4 +151,4 @@ def build(role: str, batch: str, batch_units: list[dict], file_units: list[dict]
         "```",
         "",
     ]
-    return layer_one(role, constraints, game) + "\n".join(layer_two) + "\n".join(layer_three)
+    return layer_one(role, constraints, game, style) +"\n".join(layer_two) + "\n".join(layer_three)

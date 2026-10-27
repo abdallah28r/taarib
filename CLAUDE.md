@@ -14,13 +14,11 @@
   عليها. مهارات أو وكلاء تضيفهم بنفسك في `.claude/` لا يحذفها التوليد.
 - **الأدوار:** أربعة وكلاء فرعيين في `.claude/agents/` مولَّدين من `.agents/roles/`:
   `translator` و`proofreader` و`researcher` (قراءة فقط) و`image-localizer`. استدعِ كل وكيل باسمه،
-  ومرّر له موجزًا من `python scripts/make_subagent_brief.py --role <role> --runtime claude-code`.
+  ومرّر له ملف الموجز: `python scripts/loc.py brief --batch <batch> --role translator|proofreader --runtime claude-code`
+  لدفعات النص، و`python scripts/make_subagent_brief.py --role <role> --runtime claude-code` للبحث والصور.
   لا يدقق الوكيل الدفعة التي ترجمها.
-- **النماذج:** القالب لا يسمّي أي نموذج، لأن الأسماء والنماذج تتغير. اختر بحرية كاملة درجة كل وكيل
-  فرعي (light: الأخف المتاح، standard: المتوسط، deep: الأقوى) ومستوى تفكيره، ثم اختر النموذج المطابق
-  من النماذج المتاحة لك لحظة العمل ومرّره عند الاستدعاء. ملفات الوكلاء تحمل `model: inherit`، ولا قاعدة
-  «الأخف أولًا»؛ درجات المسارات في `config/agent-policy.json` اقتراحات.
-  استخدم `python scripts/make_subagent_brief.py --runtime claude-code` لكتابة الموجز.
+- **النماذج:** ملفات الوكلاء تحمل `model: inherit`. اختر الدرجة ومستوى التفكير بحرية حسب
+  `MODEL_AND_SUBAGENT_POLICY.md`، ثم مرّر النموذج المطابق من المتاح لك لحظة الاستدعاء.
 - **التفويض المتداخل:** الوكيل الفرعي في Claude Code لا يستطيع إنشاء وكيل فرعي آخر.
   الوكيل الرئيسي هو من يوزع العمل على كل الوكلاء مباشرة.
 - **الـ hooks (`.claude/settings.json`):** تمنع كتابة ملف موجود داخل مجلد اللعبة قبل وجود

@@ -191,7 +191,43 @@ def check_extraction(project: Project, settings: dict, state: dict) -> list[tupl
         (bool(all_units), "توجد وحدات مستخرجة في units/"),
         (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
         (bool(plan_batches(project)), f"خطة الدفعات كاملة مكتوبة في PLAN.md تحت «الدفعات» (الآن: {len(plan_batches(project))})"),
+        *image_inventory(settings, state, all_units),
     ]
+
+
+def image_inventory(settings: dict, state: dict, all_units: list[dict]) -> list[tuple[bool, str]]:
+    """With images in scope, extraction needs image units or a recorded reason there are none."""
+    if yes_no((settings.get("workflow") or {}).get("image_scope")) != "yes":
+        return []
+    images = sum(1 for u in all_units if u.get("kind") == "image")
+    return [(bool(images) or bool(state.get("images_none")),
+             f"الصور ذات النص مجرودة وحدات kind: image، أو سُجّل أن لا صور (loc.py no-images؛ الآن: {images})")]
+
+
+def image_manifests(project: Project) -> list[Path]:
+    folder = project.root / "work" / "images"
+    return sorted(p for p in folder.glob("*.json") if p.name != "attempts.json") if folder.is_dir() else []
+
+
+def image_review(project: Project, all_units: list[dict]) -> list[tuple[bool, str]]:
+    """Translated image regions need region manifests in work/images/ that list them and pass check_image_regions."""
+    wanted = {Path(str(u.get("asset", ""))).name for u in all_units
+              if u.get("kind") == "image" and units.decision(u) == "translate"}
+    if not wanted:
+        return []
+    errors, listed = [], set()
+    checker = _load("check_image_regions", ROOT / "scripts" / "check_image_regions.py")
+    for path in image_manifests(project):
+        errors += [f"{path.name}: {e}" for e in checker.validate(path)]
+        try:
+            rows = json.loads(path.read_text(encoding="utf-8")).get("images")
+            listed |= {Path(str(r.get("image", ""))).name for r in rows if isinstance(r, dict)}
+        except (ValueError, AttributeError, TypeError):
+            pass
+    missing = sorted(wanted - listed)
+    detail = "، ".join(filter(None, [f"صور بلا سجل: {len(missing)} ({', '.join(missing[:3])})" if missing else "",
+                                     f"أخطاء: {len(errors)}، أولها {errors[0]}" if errors else ""])) or "سليم"
+    return [(not missing and not errors, f"كل صورة مترجمة مسجلة في work/images/*.json وفحص مناطقها ناجح ({detail})")]
 
 
 def check_localization(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
@@ -214,6 +250,7 @@ def check_localization(project: Project, settings: dict, state: dict) -> list[tu
         (not errors, "لا مشكلات من مستوى الخطأ، ومنها المسرد والصيغ الممنوعة ("
                      + ("، ".join(f"{c}={n}" for c, n in errors.items()) or "لا شيء") + ")"),
         (bool(batches) and all(batches), f"كل دفعات PLAN.md مؤشّرة ☑ (المتبقي: {batches.count(False)})"),
+        *image_review(project, all_units),
     ]
 
 
@@ -361,6 +398,15 @@ def close_fix(project: Project, ident: str, verdict: str, evidence: str, snapsho
     fix.update(status="closed", verdict=verdict, evidence=evidence, closed_at=now())
     project.save(state)
     return []
+
+
+def no_images(project: Project, reason: str) -> None:
+    """Record that a game with images in scope has no baked text worth an image unit."""
+    if not reason.strip():
+        raise ValueError("give the reason there are no text images (what was searched)")
+    state = project.state()
+    state["images_none"] = {"reason": reason.strip(), "at": now()}
+    project.save(state)
 
 
 def accept(project: Project, note: str) -> None:

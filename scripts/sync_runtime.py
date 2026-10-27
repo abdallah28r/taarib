@@ -85,7 +85,7 @@ def render_claude_agent(meta: dict, body: str, policy: dict, skills: Path = SKIL
     }
     front = "".join(f"{key}: {value}\n" for key, value in header.items())
     note = GENERATED_NOTE.format(name=meta["name"])
-    skill_line = (f"Skill: `.claude/skills/{meta['skill']}/SKILL.md`. "
+    skill_line = (f"Skill: `.claude/skills/{meta['skill']}/SKILL.md` (load it only if the steps below say so). "
                   f"Suggested tier: {route['tier']}. Suggested reasoning effort: {route['effort']}.")
     return f"---\n{front}---\n\n{note}\n\n{skill_line}\n\n{body}"
 

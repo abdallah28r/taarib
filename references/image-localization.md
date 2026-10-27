@@ -82,27 +82,40 @@ first candidate that passes; if every useful route fails, keep the source.
 
 Allowed when images are in scope and `PROJECT.yaml` →
 `image_localization.external_image_editing.enabled` is `"yes"` (the default),
-only for `TRANSLATE` regions, and only for this project's images.
+only for `TRANSLATE` regions, and only for this project's images. It runs
+through Codex's built-in image tool in both runtimes; Claude Code has no image
+tool of its own and reaches it with the same script:
 
-- `background-only`: send the untouched source and a tight text mask; remove
-  the lettering, rebuild the hidden background, add **no text**, change nothing
-  else (subjects, colors, lighting, framing, perspective, size, alpha). Then
-  typeset the approved Arabic yourself.
-- `full-text-candidate`: send the source, the tight region, and the exact
-  approved Arabic; replace only that lettering, matching placement,
-  perspective, fill, opacity, outline, shadow, glow, and texture (including
-  their absence); nothing else may change.
+```text
+python scripts/image_candidate.py codex --source <png> --box x0 y0 x1 y1 --text "<approved Arabic>" [--mask <png>]
+python scripts/image_candidate.py composite --source <png> --raw <raw png> --mask <png> --out <candidate png>
+```
 
-Add only image facts (file, source/target text, region, surface, protected
-subjects). The model may not reclassify or widen the region. Normalize
-size, composite from the untouched source, reject if fidelity cannot be
-restored. Every result is a candidate; check its Arabic visually.
+The first writes Codex's edit to `work/images/raw/`. The built-in tool takes no
+mask and no output size, so a raw edit is never a candidate:
+`composite` resizes it to the source and copies back only the pixels inside
+the mask (or box); everything outside is the untouched source. Then record the
+candidate and run `check_image_regions.py`.
+
+Each source image gets at most `image_localization.max_generative_attempts`
+Codex edits (default 5); the script counts them in `work/images/attempts.json`
+and refuses beyond the cap. Change one thing per retry (wording of the style,
+mask, or box). At the cap, keep the source or mark the region `REVIEW` with
+the reason. Codex usage limits are real: a refused or failed call is not a
+reason to switch to another service.
+
+Prefer deterministic typesetting (section 3) when the background is flat; use
+Codex when perspective, texture, or a rebuilt background is the hard part.
+The model may not reclassify or widen the region. Every result is a
+candidate; check its Arabic visually.
 
 ## 5. Records
 
 - Every region (including `KEEP`) is a `kind: image` translation unit
   (`references/translation-units.md`) so image text is searchable and counted.
-- Changed images also get one manifest entry under `images`: `image`,
+- Changed images also get one manifest entry under `images` in a
+  `work/images/*.json` region manifest (the localization gate checks every
+  translated image unit is listed there and passes): `image`,
   `source`, `source_sha256`, `regions` (`box`, `decision`, `reason`; plus
   `target_text` and `review_status` when translated). At image level: the
   candidate path, its SHA-256, `method`, `visual_reviewed: true`,

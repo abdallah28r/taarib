@@ -49,8 +49,10 @@ every resumed session. A user may revise any preference later.
 `python scripts/loc.py next` shows the phase and its open exit criteria;
 `python scripts/loc.py gate` advances only when all pass. Phases: intake →
 discovery → extraction (adapter contract passed, units extracted, every batch
-listed in `PLAN.md`) → localization (every translatable unit proofread, no
-open review, glossary clean, every batch ticked) →
+listed in `PLAN.md`; with images in scope, image units or `loc.py no-images`)
+→ localization (every translatable unit proofread, no open review, glossary
+clean, every batch ticked, every translated image in a passing region
+manifest) →
 integration (every unit integrated into a build) → playtest (no open
 blocker/critical defect, user acceptance recorded) → handoff (the experiences
 package built after acceptance and given to the user) → release, only if the

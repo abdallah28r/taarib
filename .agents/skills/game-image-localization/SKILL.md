@@ -24,8 +24,10 @@ review gates.
 3. Match the source treatment exactly; invent no outline, shadow, glow, panel,
    or contrast fix. Scale is matched by font and layout, never by stretching
    glyphs or resizing the image.
-4. Search adaptively, one candidate for simple assets and two for complex ones;
-   generated or inpainted output is only a candidate.
+4. Search adaptively, one candidate for simple assets and two for complex ones.
+   Generative edits go through `python scripts/image_candidate.py codex`, then
+   `composite` (both runtimes; at most `max_generative_attempts` per image).
+   Generated or inpainted output is only a candidate.
 5. Open source and candidate and compare them; record the finding and run
    `python scripts/check_image_regions.py <manifest.json>`. Numbers are
    gates, never proof of quality.

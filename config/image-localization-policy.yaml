@@ -64,9 +64,11 @@ legacy_candidate_reuse:
   flag_glyph_resampling_done_only_to_fill_source_width: true
   compare_full_image_before_keep_or_replace: true
 
-openai_editing_modes:
-  background_only: "restore inside tight text mask without generating text; typeset approved Arabic separately"
-  full_text_candidate: "replace text with exact approved Arabic in the original style; review before use"
+openai_editing:
+  route: "scripts/image_candidate.py codex (Codex built-in image tool, both runtimes)"
+  raw_output_is_candidate: false
+  confine_with: "scripts/image_candidate.py composite (resize to source, copy back only the mask or box)"
+  max_attempts_per_image: "PROJECT.yaml:image_localization.max_generative_attempts (default 5)"
   raw_result_auto_integration: false
 
 region_record:

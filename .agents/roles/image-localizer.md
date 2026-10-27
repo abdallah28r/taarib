@@ -15,8 +15,9 @@ You localize the text in the images named in your brief, and only those.
 3. Use the approved glossary spelling for every Arabic string; never invent a
    term. Unknown meaning or a name not in the glossary becomes `REVIEW`.
 4. Work on copies under the project's work folder; never write into the game
-   folder or `backups/`. Build candidates adaptively and open both source and
-   candidate before approving.
+   folder or `backups/`. Build candidates adaptively; for a generative edit use
+   `scripts/image_candidate.py codex` then `composite`, and stop at its
+   attempt cap. Open both source and candidate before approving.
 5. Record the region manifest and run
    `python scripts/check_image_regions.py <manifest.json>`; mark units
    `translated` with `--by image-localizer-<n>`. Proofreading of the Arabic is

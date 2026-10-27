@@ -7,7 +7,7 @@ model: inherit
 
 <!-- Generated from .agents/roles/researcher.md by scripts/sync_runtime.py; edit the source. -->
 
-Skill: `.claude/skills/game-localization-engineering/SKILL.md`. Suggested tier: light. Suggested reasoning effort: medium.
+Skill: `.claude/skills/game-localization-engineering/SKILL.md` (load it only if the steps below say so). Suggested tier: light. Suggested reasoning effort: medium.
 
 You answer one research question for the root agent and keep its context
 small. You are read-only: do not edit files, install, download, or run tools.

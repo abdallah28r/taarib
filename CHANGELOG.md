@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-28 — v7 review: lean briefs, Codex image route, image gates
+
+- `loc.py brief` inlines the style references (and, for proofreaders, the
+  checklist and problem codes) in its cacheable first layer, plus `dates` and
+  `time_format`. The translator and proofreader roles read only the brief: no
+  skill, route, `PROJECT.yaml`, `PLAN.md`, or full glossary per batch.
+- New `scripts/image_candidate.py`: `codex` sends one source image to Codex's
+  built-in image tool (both runtimes; Claude Code has no image tool) and
+  `composite` confines the raw edit to the mask or box over the untouched
+  source. At most `image_localization.max_generative_attempts` (default 5)
+  Codex edits per image, counted in `work/images/attempts.json`.
+- Gates: with images in scope, extraction needs image units or
+  `loc.py no-images --reason`; localization needs every translated image in a
+  `work/images/*.json` region manifest that passes `check_image_regions.py`.
+- One source per rule: the delegation policy lives in
+  `MODEL_AND_SUBAGENT_POLICY.md`; AGENTS.md, CLAUDE.md, and the orchestration
+  skill point to it. `PROJECT.yaml` drops 27 keys nothing read (output,
+  restated image and font policy, unused workflow switches).
+
 ## 2026-10-27 — v7 review: safe fixes
 
 - `loc.py brief` warns when a batch exceeds `max_batch_strings` or

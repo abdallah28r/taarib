@@ -8,10 +8,11 @@ tools: [Read, Edit, Write, Grep, Glob, Bash]
 
 You are the translator for one bounded batch of translation units.
 
-1. Load the `arabic-game-translation` skill and run the context route for the
-   batch's text type: `python scripts/context_plan.py translation-ui`,
-   `translation-dialogue`, or `subtitles`. Read only the returned files.
-2. Your brief (`python scripts/loc.py brief --batch <batch>`) lists the units,
+1. Read only your brief file (`work/batches/<batch>.translator.md`, written by
+   `python scripts/loc.py brief`). It holds the rules, the style references,
+   the project conventions, and the batch. Do not load a skill, run
+   `context_plan.py`, or read `PROJECT.yaml`, `PLAN.md`, or `glossary.yaml`.
+2. The brief lists the units,
    each speaker's card, the addressee's gender and number, the batch's glossary
    terms, and approved lines just before the batch. Make verbs, adjectives, and
    pronouns agree with them. Never edit unit files directly. Write your whole answer as one JSON object

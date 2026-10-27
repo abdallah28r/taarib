@@ -799,6 +799,16 @@ def cmd_reopen(args) -> int:
     return 0
 
 
+def cmd_no_images(args) -> int:
+    try:
+        pipeline.no_images(project_of(args), args.reason)
+    except ValueError as exc:
+        print(f"ERROR {exc}")
+        return 2
+    print("NO_IMAGES_RECORDED")
+    return 0
+
+
 def cmd_accept(args) -> int:
     try:
         pipeline.accept(project_of(args), args.note)
@@ -1019,7 +1029,8 @@ def cmd_brief(args) -> int:
     file_units = [u for u in every if u.get("file") == batch_units[0].get("file")]
     text = brief_tools.build(args.role, label, batch_units, file_units, constraints, settings.get("game") or {},
                              brief_tools.characters(ROOT / "loc-kit" / "CHARACTERS.yaml"), glossary,
-                             tools.glossary_entries(glossary), found, args.continuity)
+                             tools.glossary_entries(glossary), found, args.continuity,
+                             brief_tools.style_text(args.role, ROOT))
     out = args.out or ROOT / "work" / "batches" / f"{label}.{args.role}.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(text, encoding="utf-8", newline="\n")
@@ -1295,6 +1306,9 @@ def main(argv=None) -> int:
     p = with_project(sub.add_parser("accept", help="record the user's acceptance of the playtest build; only on their explicit words"))
     p.add_argument("--note", required=True, help="the user's words, build, and date")
     p.set_defaults(run=cmd_accept)
+    p = with_project(sub.add_parser("no-images", help="with images in scope, record that the game has no baked text images, and why"))
+    p.add_argument("--reason", required=True, help="what was searched (folders, archives, formats)")
+    p.set_defaults(run=cmd_no_images)
 
     p = sub.add_parser("apply", help="write a translator's batch answer (JSON keyed by unit id) only if every id matches")
     p.add_argument("answer", type=Path, help="JSON {id: target} or [{id, target}]")

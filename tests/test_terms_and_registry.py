@@ -98,7 +98,7 @@ class CommandDocumentationTests(unittest.TestCase):
         import subprocess
         help_text = subprocess.run([sys.executable, str(ROOT / "scripts" / "loc.py"), "--help"],
                                    capture_output=True, text=True, encoding="utf-8").stdout
-        commands = re.search(r"\{([a-z,]+)\}", help_text).group(1).split(",")
+        commands = re.search(r"\{([a-z,-]+)\}", help_text).group(1).split(",")
         reference = (ROOT / "references" / "translation-units.md").read_text(encoding="utf-8")
         table = reference[reference.index("## Commands"):reference.index("## Showing progress")]
         missing = [c for c in commands if f"| `{c}" not in table]

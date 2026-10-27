@@ -5,28 +5,25 @@ description: "Use when deciding whether to split localization work across subage
 
 # Localization subagent orchestration
 
-Subagents are always allowed and always used; never ask the user. Send every
-translation batch, proofreading pass, research question, and image set to its
-role; there is no fixed concurrency cap. Only a project whose `PROJECT.yaml`
-was later set to `subagent_preference: "no"` keeps the work with the root agent.
+`MODEL_AND_SUBAGENT_POLICY.md` is the delegation policy (authorization, model
+tiers, providers, brief contract); run `python scripts/context_plan.py
+delegation` once and read what it returns. This skill is only the procedure.
 
-## Required policy
-
-Run `python scripts/context_plan.py delegation` and read every returned file.
-The machine-readable policy is binding. Do not duplicate model/provider rules
-in a task prompt by memory.
-
-Generate each bounded contract with:
+## Briefs
 
 ```text
-python scripts/make_subagent_brief.py --route <route> --task <task> --scope <paths> --write-mode read-only|write
 python scripts/loc.py brief --batch <batch> --role translator|proofreader --runtime codex|claude-code
+python scripts/make_subagent_brief.py --role <role> --task <task> --scope <paths> --write-mode read-only|write
 ```
 
-For text batches use `loc.py brief`: its first layer (rules, role, project
-conventions, output contract) is byte-identical for every batch, so a runtime
-can cache it, and it reports `CACHEABLE_PREFIX_SHA` so you can confirm that.
-Give the agent the brief file; it needs nothing else.
+Text batches use `loc.py brief`. Its first layer (rules, role, project
+conventions, output contract, and the style and review references) is
+byte-identical for every batch of a role, so a runtime can cache it; it reports
+`CACHEABLE_PREFIX_SHA` to confirm that. Give the agent the brief file; it reads
+nothing else. Split a batch when the command prints a `WARNING` about
+`max_batch_*`. Research questions and image sets use `make_subagent_brief.py`.
+
+## Roles and order
 
 Roles in `.agents/roles/` (native subagents with the same names in Claude
 Code): `translator` and `proofreader` for text batches, `researcher` for
@@ -36,17 +33,9 @@ out of the root). Skip delegation for small games, adapter work, integration,
 and glossary decisions; the root agent owns those.
 Run them in sequence per batch (translate, then proofread by a different
 agent); different batches may run in parallel when their unit files are
-disjoint.
+disjoint. Give writers disjoint files; one writer owns each file at a time.
 
-- Give writers disjoint files; one writer owns each file at a time.
-- Nested delegation is allowed only when children inherit the complete policy
-  and keep disjoint scopes.
-- Choose any hosted model tier and effort of the active runtime by your own
-  judgment; there is no lightest-first rule. Route tiers are suggestions, and
-  the template names no models: pick one from those the runtime offers when
-  you start the subagent. Claude Code roles use `model: inherit` unless you
-  pass a model; for Codex briefs use `make_subagent_brief.py --tier --effort`.
-- Never ask for hidden chain-of-thought.
+## Merge and verify
 
 The root agent validates scope and diffs, runs deterministic format/token tests,
 checks terminology conflicts, and samples semantic high-risk cases. It does not

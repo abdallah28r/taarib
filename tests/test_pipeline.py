@@ -197,6 +197,42 @@ class PipelineWalkthrough(unittest.TestCase):
         checks = pipeline.check_playtest(project, project.settings(), {"acceptance": {"note": "x"}})
         self.assertIn((False, "لا أخطاء حرجة مفتوحة في qa/LQA_MATRIX.csv (case-9)"), checks)
 
+    def test_images_in_scope_need_an_inventory_or_a_reason(self):
+        settings = {"workflow": {"image_scope": "yes"}}
+        self.assertEqual(pipeline.image_inventory({"workflow": {"image_scope": "no"}}, {}, []), [])
+        self.assertFalse(pipeline.image_inventory(settings, {}, [{"kind": "text"}])[0][0])
+        self.assertTrue(pipeline.image_inventory(settings, {}, [{"kind": "image"}])[0][0])
+        project = pipeline.Project(root=self.dir, state_file=self.state)
+        with self.assertRaises(ValueError):
+            pipeline.no_images(project, " ")
+        pipeline.no_images(project, "searched game/gui and every archive: no PNG/DDS with text")
+        self.assertTrue(pipeline.image_inventory(settings, project.state(), [])[0][0])
+
+    def test_translated_image_regions_need_a_passing_manifest(self):
+        project = pipeline.Project(root=self.dir)
+        image = {"kind": "image", "id": "i1", "asset": "gui/title.png"}
+        self.assertEqual(pipeline.image_review(project, [{"kind": "image", "decision": "keep"}]), [])
+        self.assertFalse(pipeline.image_review(project, [image])[0][0])
+        folder = self.dir / "work" / "images"
+        folder.mkdir(parents=True)
+        (folder / "attempts.json").write_text("{}", encoding="utf-8")
+        (folder / "regions.json").write_text('{"images": "wrong"}', encoding="utf-8")
+        ok, message = pipeline.image_review(project, [image])[0]
+        self.assertFalse(ok)
+        self.assertIn("images must be an array", message)
+        (folder / "regions.json").write_text('{"images": []}', encoding="utf-8")
+        ok, message = pipeline.image_review(project, [image])[0]
+        self.assertFalse(ok)
+        self.assertIn("title.png", message)
+        checker = load_script("check_image_regions")
+        original = checker.validate
+        checker.validate = lambda path: []
+        try:
+            (folder / "regions.json").write_text('{"images": [{"image": "title.png"}]}', encoding="utf-8")
+            self.assertTrue(pipeline.image_review(project, [image])[0][0])
+        finally:
+            checker.validate = original
+
     def test_next_reports_phase_and_route(self):
         code, out = self.run_loc("next", *self.project_args())
         self.assertEqual(code, 0)

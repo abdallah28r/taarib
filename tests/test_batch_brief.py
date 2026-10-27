@@ -89,6 +89,16 @@ class BriefTests(unittest.TestCase):
                 shas.append(out.getvalue().split("CACHEABLE_PREFIX_SHA=")[1].strip())
             self.assertEqual(shas[0], shas[1])
 
+    def test_brief_carries_the_style_rules_so_agents_read_nothing_else(self):
+        translator, proofreader = brief.style_text("translator", ROOT), brief.style_text("proofreader", ROOT)
+        self.assertIn("<!-- references/translation-core.md -->", translator)
+        self.assertNotIn("proofreading-checklist", translator)
+        self.assertIn("proofreading-checklist.md -->", proofreader)
+        self.assertIn("<!-- references/problem-codes.md -->", proofreader)
+        text = brief.build("translator", "b", [self.one], self.file_units, "# Subagent brief", GAME, CARDS,
+                           GLOSSARY, tools.glossary_entries(GLOSSARY), {}, style=translator)
+        self.assertLess(text.index("## Style and review rules"), text.index(brief.LAYER_MARKS[1]))
+
     def test_oversized_batch_is_flagged(self):
         many = [unit(f"u{i}", "word " * 40, "b") for i in range(3)]
         self.assertEqual(loc.batch_limits(many, {"max_batch_strings": 5, "max_batch_source_tokens": 4000}), [])
