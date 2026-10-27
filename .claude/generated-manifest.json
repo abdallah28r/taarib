@@ -4,7 +4,7 @@
     ".claude/agents/image-localizer.md": "5d55311cc7294ecc5ee4b1cb648c1599a3b4894059e35ac0d3dc361b842f33bf",
     ".claude/agents/proofreader.md": "cc24a3c3fb43e97cd86c1141958cbf390bc228752e84acd4d527895f45acd530",
     ".claude/agents/researcher.md": "624772e15f95055f017eff3ccd73bcc12d78febed65f3f56ef256f559b202bb3",
-    ".claude/agents/translator.md": "bac23a2ea3d03fdab91ae75bb4549a0ff7c274751fa01217b9ad63e5603b58b8",
+    ".claude/agents/translator.md": "21639983bfc05a696fffb681fdc2728ce40c2f05bb289e669c1cbdc5e036c7ed",
     ".claude/skills/arabic-game-translation/SKILL.md": "a346dd49ca3fd1e5bb9393e69243560043e41d356a6d92fce02710b778426181",
     ".claude/skills/arabic-proofreading/SKILL.md": "cdd56de7a3c6e534d68de884b31f9af79c4db5a968b0a017a081d87b6f0ac8ac",
     ".claude/skills/arabic-proofreading/references/proofreading-checklist.md": "332e1bc74107a6dbcaba4d1ce6a0ae5980e031220f62c0d5277ed9396e95f8a1",
@@ -14,6 +14,6 @@
     ".claude/skills/game-localization-qa/references/lqa-severity.md": "a0ac103af69217c1b0a3621917798a11cf8ce4ad0faa3d1986f74358b7800178",
     ".claude/skills/localization-knowledge-capture/SKILL.md": "8b30e81d7eb51b6f56888352ea36b96fe72731ed43d06bf401ca84f099b00008",
     ".claude/skills/localization-project-maintenance/SKILL.md": "6eff13ffbe48b9361cd85332e389b89abe1b92aa053212d6e34fe40eeab28d25",
-    ".claude/skills/localization-subagent-orchestration/SKILL.md": "b9391550a9347e222b7810ffe7b2a4ced9340f0db2819ed39a93dabf4f3cf839"
+    ".claude/skills/localization-subagent-orchestration/SKILL.md": "517b5c1ca6499a8a8aa3808978df2d1e52a4c4d67babb1e3f2297f5eb7bfe672"
   }
 }

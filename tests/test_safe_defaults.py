@@ -17,8 +17,8 @@ class SafeDefaultTests(unittest.TestCase):
     def test_standing_defaults(self):
         project = load_yaml("PROJECT.yaml")
         self.assertEqual(project["workflow"]["install_to_user_copy"], "yes")
-        self.assertEqual(project["workflow"]["subagent_preference"], "yes")
-        self.assertIs(project["workflow"]["allow_subagents"], True)
+        for key in ("runtime", "subscription", "subagent_mode", "review_mode"):
+            self.assertEqual(project["workflow"][key], "ask")
         self.assertEqual(project["image_localization"]["external_image_editing"]["enabled"], "yes")
         self.assertEqual(project["workflow"]["image_scope"], "ask")
         self.assertIs(project["workflow"]["allow_launch_game"], False)

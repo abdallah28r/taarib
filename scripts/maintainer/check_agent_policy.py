@@ -31,10 +31,10 @@ def validate(root: Path = ROOT, policy_path: Path | None = None) -> list[str]:
         errors.append("subagents must be allowed by default")
     if auth.get("permission_persists") is not True:
         errors.append("default subagent permission must persist")
-    if auth.get("concurrency_policy") != "adaptive_no_fixed_limit":
-        errors.append("subagent concurrency must be adaptive with no fixed project limit")
+    if auth.get("concurrency_policy") != "at_most_PROJECT_yaml_workflow_subagent_concurrency":
+        errors.append("subagent concurrency must come from the user's PROJECT.yaml answer")
     if "max_concurrent_subagents" in auth:
-        errors.append("fixed max_concurrent_subagents must not be present")
+        errors.append("a fixed max_concurrent_subagents must not be present; the user sets it per project")
     if auth.get("single_writer_per_file") is not True:
         errors.append("single_writer_per_file must be true")
     if auth.get("nested_delegation") != "allowed_when_bounded_and_policy_compliant":

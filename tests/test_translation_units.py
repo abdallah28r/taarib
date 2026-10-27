@@ -74,6 +74,13 @@ class UnitValidationTests(unittest.TestCase):
                               translated_by="agent-1", proofread_by="agent-1")
         self.assertTrue(any("proofreader must differ" in e for e in errors_for(unit)))
 
+    def test_self_review_label_must_name_the_translator(self):
+        own = units.new_unit("a", "f", "Save", target="حفظ", translated_by="agent-1",
+                             proofread_by=units.SELF_REVIEW + "agent-1")
+        forged = dict(own, proofread_by=units.SELF_REVIEW + "agent-2")
+        self.assertFalse(any("self-review" in e for e in errors_for(own)))
+        self.assertTrue(any("must name the unit's translator" in e for e in errors_for(forged)))
+
     def test_image_unit_needs_asset_and_box(self):
         unit = units.new_unit("a", "f", "START", kind="image", box=[0, 0, 0, 5])
         found = errors_for(unit)

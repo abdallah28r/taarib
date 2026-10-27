@@ -43,6 +43,12 @@ OUTPUT_CONTRACT = {
         "Zero findings is a valid result; do not polish for taste.",
     ],
 }
+SELF_REVIEW_OUTPUT = [
+    "Review mode is self: after apply, reread every unit of this batch once against the proofreading checklist",
+    "in this brief, fix only clear-cut errors by applying the corrected answer again, list anything that needs a",
+    "decision with one question, then run `python scripts/loc.py mark --batch <batch> --status proofread",
+    "--self-review`. Do not mark units you listed for a decision.",
+]
 
 
 def characters(path: Path) -> dict[str, dict]:
@@ -76,7 +82,7 @@ def style_text(role: str, root: Path) -> str:
     return "\n".join(parts)
 
 
-def layer_one(role: str, constraints: str, game: dict, style: str = "") -> str:
+def layer_one(role: str, constraints: str, game: dict, style: str = "", self_review: bool = False) -> str:
     rules = [f"- {key}: {game[key]}" for key in PROJECT_RULE_KEYS if game.get(key)]
     return "\n".join([
         LAYER_MARKS[0],
@@ -87,6 +93,7 @@ def layer_one(role: str, constraints: str, game: dict, style: str = "") -> str:
         "",
         "## Output",
         *OUTPUT_CONTRACT[role],
+        *(SELF_REVIEW_OUTPUT if self_review else []),
         "",
         *(["## Style and review rules", "", style] if style else []),
         "",
@@ -121,7 +128,7 @@ def unit_record(unit: dict, role: str, problems: list[str]) -> dict:
 
 def build(role: str, batch: str, batch_units: list[dict], file_units: list[dict], constraints: str,
           game: dict, cards: dict[str, dict], glossary: dict, entries, problems: dict[str, list[str]],
-          continuity: int = 5, style: str = "") -> str:
+          continuity: int = 5, style: str = "", self_review: bool = False) -> str:
     """The full brief text: layer 1, layer 2, layer 3."""
     speakers = sorted({(u.get("context") or {}).get(k) for u in batch_units for k in ("speaker", "addressee")} - {None})
     known = [card_line(cards[s]) for s in speakers if s in cards]

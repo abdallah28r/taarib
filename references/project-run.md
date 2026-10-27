@@ -21,17 +21,57 @@ for missing project choices. Do not ask for facts already established. Include:
    confirmation; list several installations or editions and ask which copy;
    ask for the path if nothing matches. Never change anything while searching.
 3. Whether baked text in UI/art images is in scope (`yes`/`no`), recorded as
-   `workflow.image_scope`. Tell the user that image work takes noticeably
-   longer, works best under Codex, and sends in-scope images to official
-   OpenAI image editing. If yes, follow the image policy; this does not mean
-   translating every visible marking.
+   `workflow.image_scope`. Tell the user that each image takes about 5 minutes
+   or more, so many images add hours; image editing runs through Codex (also
+   from Claude Code) and uses its usage limit. If yes, follow the image policy;
+   this does not mean translating every visible marking.
 4. Whether the agent may launch the game for a smoke test (`yes`/`no`). Default
    is no; user playtesting is still required for final quality.
+5. Which runtime the user works in (`workflow.runtime`): `codex`,
+   `claude-code`, or `both`. For `both`, ask which one is the main agent
+   (`runtime_root`): the main agent plans, integrates, and checks; the other
+   does the delegated batches, research, and images through
+   `scripts/delegate.py`. Example: Claude Code main, Codex for the subagent
+   work, or the reverse.
+6. Their subscription in their words (`subscription`, e.g. "Claude Pro 20$",
+   "ChatGPT Plus 20$", "Max 100$"). It is only used to suggest the next
+   answers; say so.
+7. How much work goes to subagents (`subagent_mode`):
+   - `economic`: the main agent translates; subagents only proofread (when
+     review is separate), research, and do images. Slowest, least usage.
+   - `balanced`: every batch goes to a subagent, a few at a time.
+   - `fast`: many subagents at once; the main agent only coordinates. Fastest,
+     most usage.
+   For `balanced` and `fast`, ask how many subagents may run at the same time
+   (`subagent_concurrency`): more is faster but spends the limit faster.
+   Suggest numbers and accept any number the user types: about 20$ → economic,
+   or balanced with 2; about 100$ → balanced with 3 to 4; 200$ or more → fast
+   with 6 to 8.
+8. How each batch is checked (`review_mode`):
+   - `separate`: one agent translates and another reads the same text again to
+     proofread it. Higher quality, about twice the usage.
+   - `self`: the translating agent reviews its own batch in the same pass.
+     Less usage; quality may be lower depending on the game, not always.
+   The automatic checks and gates apply in both. Suggest `self` for about 20$
+   and `separate` above it.
+
+Ask everything in one message, each question with its suggested answer, so a
+limited plan spends one turn on it. Record every answer in `PROJECT.yaml`
+`workflow`; the intake gate checks them.
+
+**Codex subagent limit.** When the runtime includes Codex and
+`subagent_concurrency` is above the number Codex allows, raise Codex's limit
+once. Read the official Codex configuration docs to find the setting that caps
+concurrent agent threads (at the time of writing, `[agents]
+max_concurrent_threads_per_session` in `~/.codex/config.toml`; verify it, the
+name can change). Copy `config.toml` to `config.toml.bak-<date>` first, change
+only that value, and tell the user what changed and whether Codex must be
+restarted for it to apply (the docs say when config is read).
 
 Never ask, because the template fixes them: installation on the identified
-copy (`install_to_user_copy: "yes"`), subagents (`subagent_preference: "yes"`),
-and OpenAI image editing for in-scope images (`external_image_editing.enabled:
-"yes"`). A user may still change any of them later.
+copy (`install_to_user_copy: "yes"`), that subagents are allowed, and OpenAI
+image editing for in-scope images (`external_image_editing.enabled: "yes"`).
+A user may still change any of them later.
 
 Ask about tone, dialect, mature language, a preferred font, or accessibility
 only if the game evidence or user's wording leaves a material choice. Do not
@@ -66,7 +106,7 @@ Move through discovery → focused localization-mod research and evidence-based
 tool/route selection → extraction and small
 round-trip → contextual translation (including opted-in images) → structural
 and visual QA → validated build → checked installation on the user's copy.
-Parallelize independent work across subagents.
+Use subagents as `subagent_mode` says, at most `subagent_concurrency` at once.
 Before the first bulk translation batch, run `python scripts/loc.py estimate`
 to size batches.
 Run routine tests, fix bounded failures, and resume from `loc.py next` and `PLAN.md` without

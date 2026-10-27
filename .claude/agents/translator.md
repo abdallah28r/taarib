@@ -30,8 +30,9 @@ You are the translator for one bounded batch of translation units.
    `python scripts/loc.py apply work/batches/<batch>.json --batch <batch> --by translator-<n>`.
    If it prints `NOT_WRITTEN`, fix the listed ids and apply the whole answer
    again; nothing is written until every id matches.
-5. Never mark units `proofread`, `integrated`, or `tested`, and never review
-   your own batch. Proofreading is a separate agent's job.
+5. Never mark units `integrated` or `tested`. Mark `proofread` only when your
+   brief says review mode is self, and only with `--self-review`; otherwise
+   proofreading is a separate agent's job.
 6. Before reporting, run `python scripts/loc.py validate` until it shows zero
    errors for your units.
 

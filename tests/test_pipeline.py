@@ -76,7 +76,8 @@ class PipelineWalkthrough(unittest.TestCase):
     def answer_intake(self):
         self.edit_project(
             game={"name": "Station", "install_path": str(self.game)},
-            workflow={"install_to_user_copy": "yes", "subagent_preference": "no", "image_scope": "no"},
+            workflow={"install_to_user_copy": "yes", "image_scope": "no", "runtime": "claude-code",
+                      "subscription": "Claude Pro 20$", "subagent_mode": "economic", "review_mode": "separate"},
         )
 
     def units_file(self):
@@ -232,6 +233,21 @@ class PipelineWalkthrough(unittest.TestCase):
             self.assertTrue(pipeline.image_review(project, [image])[0][0])
         finally:
             checker.validate = original
+
+    def test_working_setup_questions(self):
+        flow = {"runtime": "both", "subscription": "ask", "subagent_mode": "fast", "subagent_concurrency": 0,
+                "review_mode": "self"}
+        failed = [m for ok, m in pipeline.working_setup(flow) if not ok]
+        self.assertEqual(len(failed), 3)  # runtime_root, subscription, concurrency
+        flow.update(runtime_root="claude-code", subscription="ChatGPT Plus 20$", subagent_concurrency=2)
+        self.assertTrue(all(ok for ok, _ in pipeline.working_setup(flow)))
+        economic = {"runtime": "codex", "subscription": "x", "subagent_mode": "economic", "review_mode": "separate"}
+        self.assertTrue(all(ok for ok, _ in pipeline.working_setup(economic)))
+
+    def test_self_review_is_refused_when_review_is_separate(self):
+        unit = {"proofread_by": "self-review:translator-1", "translated_by": "translator-1"}
+        self.assertFalse(pipeline.review_separation({"workflow": {"review_mode": "separate"}}, [unit])[0][0])
+        self.assertEqual(pipeline.review_separation({"workflow": {"review_mode": "self"}}, [unit]), [])
 
     def test_next_reports_phase_and_route(self):
         code, out = self.run_loc("next", *self.project_args())

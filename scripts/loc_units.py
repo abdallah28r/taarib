@@ -21,6 +21,7 @@ DECISIONS = ("translate", "keep", "review")
 # Arabic verbs, adjectives, and pronouns agree with the addressee, so the brief carries them.
 ADDRESSEE_GENDERS = ("m", "f", "mixed", "unknown")
 ADDRESSEE_NUMBERS = ("singular", "dual", "plural")
+SELF_REVIEW = "self-review:"  # proofread_by prefix when review_mode is self (loc.py mark --self-review)
 REQUIRED = ("id", "kind", "file", "source", "source_hash", "status")
 # Stable key order keeps one-line-per-unit diffs readable in Git.
 KEY_ORDER = (
@@ -163,6 +164,8 @@ def check_unit(unit: dict, where: str, profile: str, report: Report) -> None:
     translator, proofreader = unit.get("translated_by"), unit.get("proofread_by")
     if translator and proofreader and translator == proofreader:
         report.errors.append(f"{label}: proofreader must differ from translator ({translator})")
+    if str(proofreader or "").startswith(SELF_REVIEW) and proofreader != SELF_REVIEW + str(translator or ""):
+        report.errors.append(f"{label}: {proofreader} must name the unit's translator ({translator})")
 
     if unit["kind"] == "image":
         box = unit.get("box")

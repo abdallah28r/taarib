@@ -31,9 +31,14 @@ read-only discovery and mod questions (keeps web pages out of the root
 context), and `image-localizer` for image sets (keeps heavy visual context
 out of the root). Skip delegation for small games, adapter work, integration,
 and glossary decisions; the root agent owns those.
-Run them in sequence per batch (translate, then proofread by a different
-agent); different batches may run in parallel when their unit files are
+How much goes to them, how many run at once, and who proofreads come from
+`PROJECT.yaml` `workflow` (`subagent_mode`, `subagent_concurrency`,
+`review_mode`). With `review_mode: separate`, translate then proofread by a
+different agent; with `self`, the translator's brief already carries the
+review. Different batches may run in parallel when their unit files are
 disjoint. Give writers disjoint files; one writer owns each file at a time.
+With `runtime: both`, send each brief to the other runtime with
+`python scripts/delegate.py --brief <file>`.
 
 ## Merge and verify
 

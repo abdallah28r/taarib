@@ -4,9 +4,14 @@ This policy is binding for the root agent and every delegated agent in this work
 
 ## Authorization
 
-- Subagents are always allowed and always used (`workflow.subagent_preference: "yes"`, `workflow.allow_subagents: true`). Never ask the user whether to use them. Delegate every translation batch, proofreading pass, research question, and image set to its role (`translator`, `proofreader`, `researcher`, `image-localizer`); the root agent orchestrates, integrates, and verifies. Only if a user later sets `subagent_preference: "no"` for a project, honor it.
+- Subagents are always allowed; never ask whether to use them. How much work they get is the user's intake answer `workflow.subagent_mode`:
+  - `economic`: the root agent translates; subagents proofread (when `review_mode` is `separate`), research, and do image sets.
+  - `balanced`: every translation batch, proofreading pass, research question, and image set goes to its role (`translator`, `proofreader`, `researcher`, `image-localizer`).
+  - `fast`: as balanced, with more batches in flight; the root agent only orchestrates, integrates, and verifies.
+- `workflow.subagent_concurrency` is the most subagents running at once (balanced and fast). Use fewer when there is less independent work; never more.
+- `workflow.review_mode`: `separate` means a different agent proofreads each batch; `self` means the translator reviews its own batch in the same pass and marks it with `loc.py mark --status proofread --self-review`. The gate refuses self-reviewed units when the mode is `separate`.
 - Keep strict sequential dependencies and simultaneous edits to one shared file with one responsible writer.
-- There is no fixed project limit on concurrent subagents. Choose any useful number dynamically from the amount of genuinely independent work, available runtime capacity, usage budget, context and merge cost. Do not create idle or overlapping agents merely to increase the count.
+- Do not create idle or overlapping agents merely to increase the count.
 - Nested delegation is allowed when it is bounded, useful, and supported by the runtime. Every child must inherit this policy, the same provider restrictions, a precise scope, and the one-writer-per-file rule. Where the runtime does not support it (Claude Code subagents cannot start subagents), the root agent fans out the work itself.
 - The root agent owns task decomposition, conflict resolution, integration, verification, usage-budget awareness, and the final answer.
 
@@ -24,7 +29,7 @@ The workspace runs under Codex, Claude Code, or both on the same project.
 
 - **Codex** reads `AGENTS.md` and `.agents/skills/`.
 - **Claude Code** reads `CLAUDE.md`, which imports `AGENTS.md`, and `.claude/skills/`, a generated copy of `.agents/skills/` (`python scripts/sync_runtime.py`). Edit skills only under `.agents/skills/`.
-- **Both:** all shared state lives in files (`PROJECT.yaml`, `PLAN.md`, `glossary.yaml`, units, `state/`), so either runtime can resume the other's work. The one-writer-per-file rule holds across runtimes: before writing, record the runtime and the files it owns under the active-work note in `PLAN.md`, and do not write files another runtime has claimed.
+- **Both:** `workflow.runtime_root` is the main agent; it sends delegated briefs to the other runtime with `python scripts/delegate.py --brief <file>` (one call per agent, up to `subagent_concurrency` at once). Image edits always go through Codex (`scripts/image_candidate.py`). All shared state lives in files (`PROJECT.yaml`, `PLAN.md`, `glossary.yaml`, units, `state/`), so either runtime can resume the other's work. The one-writer-per-file rule holds across runtimes: before writing, record the runtime and the files it owns under the active-work note in `PLAN.md`, and do not write files another runtime has claimed.
 
 ## Roles
 

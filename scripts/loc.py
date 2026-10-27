@@ -75,6 +75,15 @@ MEANING_NOTE = (
 )
 
 
+def review_mode() -> str:
+    import yaml
+    try:
+        project = yaml.safe_load((ROOT / "PROJECT.yaml").read_text(encoding="utf-8")) or {}
+    except OSError:
+        return "separate"
+    return (project.get("workflow") or {}).get("review_mode") or "separate"
+
+
 def token_profile() -> str:
     try:
         import yaml
@@ -548,7 +557,10 @@ def cmd_mark(args) -> int:
     if evidence_key and not args.evidence:
         print(f"ERROR status {args.status} requires --evidence (stored as evidence.{evidence_key})")
         return 2
-    if args.status == "proofread" and not args.by:
+    if args.self_review and (args.status != "proofread" or review_mode() != "self"):
+        print("ERROR --self-review is only for status proofread when PROJECT.yaml workflow.review_mode is self")
+        return 2
+    if args.status == "proofread" and not args.by and not args.self_review:
         print("ERROR status proofread requires --by with the proofreader's role label")
         return 2
     before = set(units.validate(files, token_profile()).errors)
@@ -568,7 +580,7 @@ def cmd_mark(args) -> int:
         if args.by and args.status == "translated":
             unit["translated_by"] = args.by
         if args.status == "proofread":
-            unit["proofread_by"] = args.by
+            unit["proofread_by"] = (units.SELF_REVIEW + str(unit.get("translated_by") or "")) if args.self_review else args.by
             unit["proofread_hash"] = units.source_hash(unit.get("target") or "")
         elif wanted < units.STATUSES.index("proofread"):
             unit.pop("proofread_by", None)
@@ -1016,6 +1028,7 @@ def cmd_brief(args) -> int:
         print("ERROR no units selected; give --batch or --ids")
         return 2
     label = args.batch or "selection"
+    self_review = args.role == "translator" and review_mode() == "self"
     brief_module = _load("make_subagent_brief")
     policy, roles = brief_module.load_policy(), brief_module.load_roles()
     role = roles[args.role]
@@ -1030,7 +1043,7 @@ def cmd_brief(args) -> int:
     text = brief_tools.build(args.role, label, batch_units, file_units, constraints, settings.get("game") or {},
                              brief_tools.characters(ROOT / "loc-kit" / "CHARACTERS.yaml"), glossary,
                              tools.glossary_entries(glossary), found, args.continuity,
-                             brief_tools.style_text(args.role, ROOT))
+                             brief_tools.style_text("proofreader" if self_review else args.role, ROOT), self_review)
     out = args.out or ROOT / "work" / "batches" / f"{label}.{args.role}.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(text, encoding="utf-8", newline="\n")
@@ -1167,6 +1180,8 @@ def experience_facts(project, all_units: list[dict]) -> dict:
         "game": {"name": game.get("name"), "engine": flow.get("engine_profile"),
                  "adapter": Path(flow.get("adapter") or "").name, "token_profile": game.get("token_profile"),
                  "image_scope": flow.get("image_scope")},
+        "setup": {key: flow.get(key) for key in ("runtime", "runtime_root", "subscription", "subagent_mode",
+                                                 "subagent_concurrency", "review_mode")},
         "contract": state.get("contract"),
         "units": {"total": group.get("total", 0), "reached": group.get("reached", {}),
                   "keep": group.get("keep", 0), "review": group.get("review", 0)},
@@ -1247,6 +1262,8 @@ def main(argv=None) -> int:
     p.add_argument("--evidence", help="required for integrated (build) and tested (what was observed)")
     p.add_argument("--by", help="agent or person label for translated/proofread")
     p.add_argument("--force", action="store_true", help="allow moving a unit backward")
+    p.add_argument("--self-review", action="store_true",
+                   help="the translator marks its own reviewed batch proofread; only when review_mode is self")
     p.set_defaults(run=cmd_mark)
 
     p = sub.add_parser("extract", help="write units from a game through an adapter, once the adapter contract passes")

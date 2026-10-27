@@ -4,7 +4,7 @@
   "authorization": {
     "subagents": "allowed_by_default",
     "permission_persists": true,
-    "concurrency_policy": "adaptive_no_fixed_limit",
+    "concurrency_policy": "at_most_PROJECT_yaml_workflow_subagent_concurrency",
     "nested_delegation": "allowed_when_bounded_and_policy_compliant",
     "single_writer_per_file": true,
     "model_selection": "free_choice_by_root_agent_routes_are_suggestions"

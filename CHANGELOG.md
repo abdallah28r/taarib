@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-28 — Intake: runtime, usage, and review choices
+
+- Four new intake questions, asked with the others in one message and checked
+  by the intake gate: `workflow.runtime` (codex, claude-code, both; with both,
+  `runtime_root`), `subscription` (only to suggest numbers),
+  `subagent_mode` (economic, balanced, fast) with `subagent_concurrency` for
+  balanced and fast, and `review_mode` (separate or self). They replace
+  `subagent_preference` and `allow_subagents`; subagents stay allowed.
+- `review_mode: self`: the translator's brief carries the proofreading
+  checklist and it marks its batch with `loc.py mark --status proofread
+  --self-review` (`proofread_by: self-review:<translator>`). With `separate`,
+  the localization gate refuses self-reviewed units.
+- New `scripts/delegate.py`: with `runtime: both`, the main agent runs a brief
+  in the other runtime (`codex exec` or `claude -p`).
+- The image question says each image takes about 5 minutes or more. With
+  Codex in use, the agent raises Codex's concurrent-agent limit to the user's
+  number after reading Codex's docs and backing up `config.toml`.
+- The experiences package records these choices under `setup`.
+
 ## 2026-10-28 — v7 review: lean briefs, Codex image route, image gates
 
 - `loc.py brief` inlines the style references (and, for proofreaders, the

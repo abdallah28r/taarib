@@ -110,7 +110,32 @@ def check_intake(project: Project, settings: dict, state: dict) -> list[tuple[bo
         (filled(path) and Path(path).is_dir(), "مسار اللعبة محدد وموجود (game.install_path)"),
         (yes_no(flow.get("image_scope")) is not None, "أُجيب سؤال تعريب الصور بنعم/لا (image_scope)"),
         (isinstance(flow.get("allow_launch_game"), bool), "حُدد السماح بتشغيل اللعبة (allow_launch_game)"),
+        *working_setup(flow),
     ]
+    return checks
+
+
+RUNTIMES = ("codex", "claude-code", "both")
+SUBAGENT_MODES = ("economic", "balanced", "fast")
+REVIEW_MODES = ("separate", "self")
+
+
+def working_setup(flow: dict) -> list[tuple[bool, str]]:
+    """The intake answers about runtimes, usage, and review that change how the work is run."""
+    runtime, mode = flow.get("runtime"), flow.get("subagent_mode")
+    concurrency = flow.get("subagent_concurrency")
+    checks = [(runtime in RUNTIMES, "حُددت بيئة العمل: codex أو claude-code أو both (runtime)")]
+    if runtime == "both":
+        checks.append((flow.get("runtime_root") in ("codex", "claude-code"),
+                       "حُدد النموذج الأساسي عند استخدام الاثنين (runtime_root)"))
+    checks += [
+        (filled(flow.get("subscription")) and flow.get("subscription") != "ask", "سُجل نوع الاشتراك (subscription)"),
+        (mode in SUBAGENT_MODES, "حُدد نمط استخدام الوكلاء الفرعيين: economic أو balanced أو fast (subagent_mode)"),
+    ]
+    if mode in ("balanced", "fast"):
+        checks.append((isinstance(concurrency, int) and not isinstance(concurrency, bool) and concurrency >= 1,
+                       f"حُدد عدد الوكلاء المتزامنين (subagent_concurrency؛ الآن: {concurrency})"))
+    checks.append((flow.get("review_mode") in REVIEW_MODES, "حُددت طريقة التدقيق: separate أو self (review_mode)"))
     return checks
 
 
@@ -251,7 +276,16 @@ def check_localization(project: Project, settings: dict, state: dict) -> list[tu
                      + ("، ".join(f"{c}={n}" for c, n in errors.items()) or "لا شيء") + ")"),
         (bool(batches) and all(batches), f"كل دفعات PLAN.md مؤشّرة ☑ (المتبقي: {batches.count(False)})"),
         *image_review(project, all_units),
+        *review_separation(settings, all_units),
     ]
+
+
+def review_separation(settings: dict, all_units: list[dict]) -> list[tuple[bool, str]]:
+    """With review_mode separate, no unit may carry a self-review."""
+    if ((settings.get("workflow") or {}).get("review_mode") or "separate") != "separate":
+        return []
+    own = sum(1 for u in all_units if str(u.get("proofread_by") or "").startswith(units.SELF_REVIEW))
+    return [(not own, f"التدقيق منفصل كما اخترت: لا وحدة دققها مترجمها (الآن: {own})")]
 
 
 def check_integration(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:

@@ -20,11 +20,15 @@ workflow:
   engine_profile: ""
   adapter: ""  # e.g. adapters/renpy.py; proven by scripts/adapter_contract.py before bulk translation
   adapter_options: {}
-  subagent_preference: "yes"  # always yes, never asked: translation, proofreading, research and images go to subagents
+  runtime: "ask"  # codex | claude-code | both
+  runtime_root: ""  # only when both: claude-code | codex is the main agent; the other runs delegated work (scripts/delegate.py)
+  subscription: "ask"  # the user's plan in their words, e.g. "Claude Pro 20$"; only used to suggest the numbers below
+  subagent_mode: "ask"  # economic | balanced | fast: how much work goes to subagents (always allowed)
+  subagent_concurrency: 0  # subagents at the same time, the user's number; required for balanced and fast
+  review_mode: "ask"  # separate: another agent proofreads each batch | self: the translating agent reviews its own batch
   image_scope: "ask"  # yes/no; image policy still controls what is translated
   install_to_user_copy: "yes"  # always yes, never asked: the checked, reversible build goes on the user's identified copy
   allow_launch_game: false
-  allow_subagents: true  # always allowed
   max_batch_strings: 500
   max_batch_source_tokens: 4000  # loc.py brief warns above either ceiling
   # أسئلة البداية تُطرح دفعة واحدة. المرحلة الحالية في state/pipeline.json وتتقدم فقط بـ loc.py gate؛ الأسئلة غير المانعة تُجمع في PLAN.md.
