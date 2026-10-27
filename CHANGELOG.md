@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-28 — Pilot phase: see Arabic in the game before bulk translation
+
+- New phase `pilot` (التجربة الأولى) between extraction and localization. The
+  first batch, `pilot`, holds the main menu, settings, and the first 20 to 40
+  lines of the first scene, with a mixed-text line and the longest choice. It
+  is translated, proofread, installed, and checked by the user; its gate needs
+  those units `integrated` and `loc.py pilot-ok --note`, recorded only on the
+  user's words. Rendering fixes go in the display layer; the translations stay.
+- Reopening the pilot or an earlier phase clears the confirmation.
+- AGENTS.md lists the pilot as the second planned stop; the map shows the new
+  user step and station.
+
 ## 2026-10-28 — Intake: runtime, usage, and review choices
 
 - Four new intake questions, asked with the others in one message and checked

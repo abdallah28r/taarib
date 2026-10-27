@@ -231,8 +231,9 @@ td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right}ul{paddin
 
 
 PHASE_LABELS = {
-    "intake": "الاستقبال", "discovery": "الاكتشاف", "extraction": "الاستخراج", "localization": "التعريب",
-    "integration": "الدمج", "playtest": "التجربة", "handoff": "التسليم", "release": "النشر",
+    "intake": "الاستقبال", "discovery": "الاكتشاف", "extraction": "الاستخراج", "pilot": "التجربة الأولى",
+    "localization": "التعريب", "integration": "الدمج", "playtest": "التجربة", "handoff": "التسليم",
+    "release": "النشر",
 }
 # Ships with the template (an empty project's page) and lives in every game copy beside the map.
 DASHBOARD = ROOT / "dashboard.html"
@@ -821,6 +822,17 @@ def cmd_no_images(args) -> int:
     return 0
 
 
+def cmd_pilot_ok(args) -> int:
+    try:
+        pipeline.confirm_pilot(project_of(args), args.note)
+    except ValueError as exc:
+        print(f"ERROR {exc}")
+        return 2
+    auto_dashboard(args.state, args.units, args.qa)
+    print("PILOT_CONFIRMED")
+    return 0
+
+
 def cmd_accept(args) -> int:
     try:
         pipeline.accept(project_of(args), args.note)
@@ -1320,6 +1332,9 @@ def main(argv=None) -> int:
     p.add_argument("phase", choices=pipeline.PHASES)
     p.add_argument("--reason", required=True)
     p.set_defaults(run=cmd_reopen)
+    p = with_project(sub.add_parser("pilot-ok", help="record the user's word that the pilot batch shows correct Arabic in the game"))
+    p.add_argument("--note", required=True, help="the user's words, what they checked, and the build")
+    p.set_defaults(run=cmd_pilot_ok)
     p = with_project(sub.add_parser("accept", help="record the user's acceptance of the playtest build; only on their explicit words"))
     p.add_argument("--note", required=True, help="the user's words, build, and date")
     p.set_defaults(run=cmd_accept)

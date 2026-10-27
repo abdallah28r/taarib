@@ -9,8 +9,8 @@ format integrity, and a reversible installation. Explicit user instructions and
 0. Run `python scripts/loc.py next`: it prints the current phase, what still
    blocks it, and which route to load. Phases advance only through
    `python scripts/loc.py gate`, which re-checks files instead of trusting a
-   summary. Record `loc.py accept` only on the user's explicit acceptance in
-   chat, and use `loc.py reopen <phase> --reason ...` for a game update or a
+   summary. Record `loc.py pilot-ok` and `loc.py accept` only on the user's
+   explicit words in chat, and use `loc.py reopen <phase> --reason ...` for a game update or a
    finding that sends work back.
 1. Read `PROJECT.yaml`, then `PLAN.md` and only the glossary sections needed.
 2. Select the narrow task route with
@@ -111,7 +111,8 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
   ordinary QA, or a failed local check that can be repaired safely. Give concise
   progress updates, not phase-completion approval requests. Ask again only for
   missing authority, an unresolved meaning-changing choice, a safety blocker,
-  or the planned user playtest/acceptance gate.
+  or the two planned user checks: the pilot (Arabic shown in the game before
+  bulk translation) and the final playtest/acceptance.
 
 ## Scripts you write
 

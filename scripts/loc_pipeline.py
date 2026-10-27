@@ -32,11 +32,13 @@ def _load(name, path):
 units = _load("loc_units", ROOT / "scripts" / "loc_units.py")
 tools = _load("loc_tools", ROOT / "scripts" / "loc_tools.py")
 
-PHASES = ("intake", "discovery", "extraction", "localization", "integration", "playtest", "handoff", "release")
+PHASES = ("intake", "discovery", "extraction", "pilot", "localization", "integration", "playtest", "handoff", "release")
 ROUTES = {
     "intake": "references/project-run.md (a bare «عرّب اللعبة» starts it: ask the grouped intake questions once)",
     "discovery": "python scripts/context_plan.py discovery, then mod-research",
     "extraction": "python scripts/context_plan.py extraction (write/prove the adapter, then loc.py extract)",
+    "pilot": "translate, proofread, build and install batch pilot (main menu, settings, first scene), then ask the "
+             "user to check the Arabic in the game; record loc.py pilot-ok only on their words",
     "localization": "python scripts/context_plan.py translation-ui|translation-dialogue, then proofreading",
     "integration": "python scripts/context_plan.py integration (loc.py rebuild, back up, install, mark integrated)",
     "playtest": "hand the build to the user; fix reports with qa-rendering; record acceptance only on the user's words",
@@ -255,6 +257,23 @@ def image_review(project: Project, all_units: list[dict]) -> list[tuple[bool, st
     return [(not missing and not errors, f"كل صورة مترجمة مسجلة في work/images/*.json وفحص مناطقها ناجح ({detail})")]
 
 
+PILOT_BATCH = "pilot"
+
+
+def check_pilot(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
+    """A small batch reaches the user's game and the user confirms the Arabic shows correctly before bulk work."""
+    all_units, report = unit_report(project, settings)
+    pilot = [u for u in all_units if u.get("batch") == PILOT_BATCH]
+    pending = [u for u in pilot if units.decision(u) == "translate" and units.stage(u) < 3]
+    return [
+        (bool(pilot), f"دفعة التجربة محددة: وحدات batch: {PILOT_BATCH} من القائمة الرئيسية والإعدادات وأول مشهد "
+                      f"(الآن: {len(pilot)})"),
+        (not report.errors, f"فحص الوحدات بلا أخطاء (الآن: {len(report.errors)})"),
+        (bool(pilot) and not pending, f"دفعة التجربة مترجمة ومدققة ومثبتة في اللعبة (المتبقي: {len(pending)})"),
+        (bool(state.get("pilot")), "تأكيدك أن العربي يظهر صحيحًا في اللعبة مسجل (loc.py pilot-ok)"),
+    ]
+
+
 def check_localization(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
     all_units, report = unit_report(project, settings)
     pending = [u for u in all_units if units.decision(u) == "translate" and units.stage(u) < 2]
@@ -346,7 +365,7 @@ def check_release(project: Project, settings: dict, state: dict) -> list[tuple[b
 
 
 CRITERIA = {
-    "intake": check_intake, "discovery": check_discovery, "extraction": check_extraction,
+    "intake": check_intake, "discovery": check_discovery, "extraction": check_extraction, "pilot": check_pilot,
     "localization": check_localization, "integration": check_integration,
     "playtest": check_playtest, "handoff": check_handoff, "release": check_release,
 }
@@ -386,6 +405,8 @@ def reopen(project: Project, phase: str, reason: str) -> None:
     state["history"].append({"event": "reopened", "phase": phase, "from": state["phase"], "reason": reason, "at": now()})
     state["phase"] = phase
     state.pop("acceptance", None)
+    if PHASES.index(phase) <= PHASES.index("pilot"):
+        state.pop("pilot", None)
     project.save(state)
 
 
@@ -440,6 +461,14 @@ def no_images(project: Project, reason: str) -> None:
         raise ValueError("give the reason there are no text images (what was searched)")
     state = project.state()
     state["images_none"] = {"reason": reason.strip(), "at": now()}
+    project.save(state)
+
+
+def confirm_pilot(project: Project, note: str) -> None:
+    state = project.state()
+    if state["phase"] != "pilot":
+        raise ValueError("the pilot check is recorded only during the pilot phase")
+    state["pilot"] = {"note": note, "at": now()}
     project.save(state)
 
 

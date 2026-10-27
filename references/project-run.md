@@ -90,7 +90,9 @@ every resumed session. A user may revise any preference later.
 `python scripts/loc.py gate` advances only when all pass. Phases: intake →
 discovery → extraction (adapter contract passed, units extracted, every batch
 listed in `PLAN.md`; with images in scope, image units or `loc.py no-images`)
-→ localization (every translatable unit proofread, no open review, glossary
+→ pilot (batch `pilot` translated, proofread, installed, and the user's word
+that the Arabic shows correctly, recorded with `loc.py pilot-ok`) →
+localization (every translatable unit proofread, no open review, glossary
 clean, every batch ticked, every translated image in a passing region
 manifest) →
 integration (every unit integrated into a build) → playtest (no open
@@ -99,6 +101,25 @@ package built after acceptance and given to the user) → release, only if the
 user asked for a shareable package. The gates are
 the stop rule: when `next` reports a phase ready, gate it and move on instead
 of reviewing again.
+
+## Pilot before bulk translation
+
+Do not translate the whole game before the user has seen Arabic in it. While
+writing the batch plan, make the first batch `pilot`: the main menu, the
+settings screen, and the first 20 to 40 lines of the first scene. Include on
+purpose one line that mixes Arabic with a number or a Latin name, and the
+longest choice or button text. If the main menu is an image, use settings and
+dialogue lines instead; no images in the pilot.
+
+Translate and proofread it as any batch, build it, back up and install it on
+the user's copy, and mark the units `integrated`. Then ask the user, in one
+short message, to open the game and check: letters joined, right to left,
+numbers and Latin names in place, nothing cut off, the font readable; ask for a
+screenshot of any problem. This is a planned stop. Fix any rendering problem
+in the display layer (font, shaping, direction, wrap width), never by
+reversing or reshaping the stored Arabic, reinstall, and ask again. Record
+`loc.py pilot-ok --note "<their words>"` only on the user's words. The pilot's
+translations stay and count toward the game.
 
 ## Continuous execution after intake
 

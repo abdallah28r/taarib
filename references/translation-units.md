@@ -66,6 +66,7 @@ its options. This table is the one map of when to use each.
 | localization | `brief --batch --role --runtime` | Before sending a batch to a translator or proofreader. |
 | localization | `apply <answer.json> --batch --by` | Translator: write a batch answer keyed by unit id; refused unless every id matches. |
 | extraction | `no-images --reason` | Images in scope but the game has no baked text images; say what was searched. |
+| pilot | `pilot-ok --note` | Only on the user's words that the pilot batch shows correct Arabic in their game. |
 | localization | `mark --status translated --by` | Only for units whose target was written another way (images). |
 | localization | `validate` | After every batch and every edit; zero errors before integration. |
 | localization | `terms` (`--allow <id> <term>`) | Proofreader first step; the gate needs zero misses. |

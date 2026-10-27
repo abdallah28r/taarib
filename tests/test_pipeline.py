@@ -109,24 +109,39 @@ class PipelineWalkthrough(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("TODO خطة الدفعات كاملة مكتوبة في PLAN.md", out)
         self.plan.write_text(self.plan.read_text(encoding="utf-8").replace(
-            "## الدفعات\n", "## الدفعات\n- [ ] batch-001 — الكل — translator-1 / proofreader-1\n"), encoding="utf-8")
+            "## الدفعات\n", "## الدفعات\n- [ ] pilot — القائمة والإعدادات وأول مشهد — translator-1 / proofreader-1\n"
+                            "- [ ] batch-001 — الكل — translator-1 / proofreader-1\n"), encoding="utf-8")
+        self.assertEqual(self.gate()[0], 0)
+        self.assertEqual(self.phase(), "pilot")
+
+        code, out = self.gate()
+        self.assertIn("TODO دفعة التجربة محددة", out)
+        rows = [json.loads(line) for line in self.units_file().read_text(encoding="utf-8").splitlines()]
+        for index, row in enumerate(rows):
+            row["target"] = "عربي " + row["source"]
+            row["batch"] = "pilot" if index < 2 else "batch-001"
+        self.units_file().write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+        ids = [r["id"] for r in rows]
+        pilot, rest = ids[:2], ids[2:]
+        path = ["--path", str(self.units_file())]
+        for status, flag in (("translated", ["--by", "translator-1"]), ("proofread", ["--by", "proofreader-1"]),
+                             ("integrated", ["--evidence", "pilot build p1"])):
+            self.assertEqual(self.run_loc("mark", *path, "--ids", *pilot, "--status", status, *flag)[0], 0)
+        code, out = self.gate()
+        self.assertIn("PASS دفعة التجربة مترجمة ومدققة ومثبتة", out)
+        self.assertIn("TODO تأكيدك أن العربي يظهر صحيحًا", out)
+        self.assertEqual(self.run_loc("pilot-ok", "--note", "user: menu and scene 1 read right to left, joined",
+                                      *self.project_args())[0], 0)
         self.assertEqual(self.gate()[0], 0)
         self.assertEqual(self.phase(), "localization")
 
         code, out = self.gate()
-        self.assertIn("TODO كل وحدة قابلة للترجمة مدققة لغويًا (المتبقي: 8)", out)
-        rows = [json.loads(line) for line in self.units_file().read_text(encoding="utf-8").splitlines()]
-        for row in rows:
-            row["target"] = "عربي " + row["source"]
-        self.units_file().write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
-        ids = [r["id"] for r in rows]
-        path = ["--path", str(self.units_file())]
-        self.assertEqual(self.run_loc("mark", *path, "--ids", *ids, "--status", "translated", "--by", "translator-1")[0], 0)
-        self.assertEqual(self.run_loc("mark", *path, "--ids", *ids, "--status", "proofread", "--by", "proofreader-1")[0], 0)
+        self.assertIn("TODO كل وحدة قابلة للترجمة مدققة لغويًا (المتبقي: 6)", out)
+        self.assertEqual(self.run_loc("mark", *path, "--ids", *rest, "--status", "translated", "--by", "translator-1")[0], 0)
+        self.assertEqual(self.run_loc("mark", *path, "--ids", *rest, "--status", "proofread", "--by", "proofreader-1")[0], 0)
         code, out = self.gate()
-        self.assertIn("TODO كل دفعات PLAN.md مؤشّرة ☑ (المتبقي: 1)", out)
-        self.plan.write_text(self.plan.read_text(encoding="utf-8").replace("- [ ] batch-001", "- [x] batch-001"),
-                             encoding="utf-8")
+        self.assertIn("TODO كل دفعات PLAN.md مؤشّرة ☑ (المتبقي: 2)", out)
+        self.plan.write_text(self.plan.read_text(encoding="utf-8").replace("- [ ] ", "- [x] "), encoding="utf-8")
         self.assertEqual(self.gate()[0], 0)
         self.assertEqual(self.phase(), "integration")
 
@@ -153,7 +168,7 @@ class PipelineWalkthrough(unittest.TestCase):
         self.assertEqual(self.phase(), "release")
         history = json.loads(self.state.read_text(encoding="utf-8"))["history"]
         self.assertEqual([h["phase"] for h in history],
-                         ["intake", "discovery", "extraction", "localization", "integration", "playtest", "handoff"])
+                         ["intake", "discovery", "extraction", "pilot", "localization", "integration", "playtest", "handoff"])
 
     def test_changed_game_text_invalidates_the_recorded_contract(self):
         self.answer_intake()
@@ -234,6 +249,21 @@ class PipelineWalkthrough(unittest.TestCase):
         finally:
             checker.validate = original
 
+    def test_pilot_confirmation_rules(self):
+        project = pipeline.Project(state_file=self.state)
+        with self.assertRaises(ValueError):
+            pipeline.confirm_pilot(project, "too early")
+        self.state.parent.mkdir(parents=True, exist_ok=True)
+        self.state.write_text(json.dumps({"schema_version": 1, "phase": "pilot", "history": []}), encoding="utf-8")
+        pipeline.confirm_pilot(project, "user saw joined Arabic in the menu")
+        state = project.state()
+        state["phase"] = "integration"
+        project.save(state)
+        pipeline.reopen(project, "localization", "typo pass")
+        self.assertIn("pilot", project.state())
+        pipeline.reopen(project, "pilot", "font broke after a game update")
+        self.assertNotIn("pilot", project.state())
+
     def test_working_setup_questions(self):
         flow = {"runtime": "both", "subscription": "ask", "subagent_mode": "fast", "subagent_concurrency": 0,
                 "review_mode": "self"}
@@ -252,7 +282,7 @@ class PipelineWalkthrough(unittest.TestCase):
     def test_next_reports_phase_and_route(self):
         code, out = self.run_loc("next", *self.project_args())
         self.assertEqual(code, 0)
-        self.assertIn("PHASE 1/8: intake", out)
+        self.assertIn("PHASE 1/9: intake", out)
         self.assertIn("LOAD: references/project-run.md", out)
 
 
