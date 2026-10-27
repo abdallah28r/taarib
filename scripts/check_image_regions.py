@@ -26,6 +26,30 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _region_mask(region: dict, box: list[int], size: tuple[int, int], base: Path,
+                 area: str, errors: list[str]) -> Image.Image:
+    """The region's pixels: its tight mask when one is given (it must stay inside the box), else the box."""
+    result = Image.new("1", size, 0)
+    mask_value = region.get("mask")
+    if not mask_value:
+        ImageDraw.Draw(result).rectangle(tuple(box), fill=1)
+        return result
+    mask_path = _path(str(mask_value), base)
+    if not mask_path.is_file():
+        errors.append(f"{area}: mask file missing")
+        return result
+    with Image.open(mask_path) as im:
+        mask_image = im.convert("L")
+    if mask_image.size != size:
+        errors.append(f"{area}: mask dimensions differ")
+        return result
+    tight_mask = mask_image.point(lambda value: 255 if value else 0).convert("1")
+    ImageDraw.Draw(result).rectangle(tuple(box), fill=1)
+    if ImageChops.logical_xor(tight_mask, ImageChops.logical_and(tight_mask, result)).getbbox():
+        errors.append(f"{area}: mask extends beyond box")
+    return tight_mask
+
+
 def validate(manifest_path: Path) -> list[str]:
     errors: list[str] = []
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -56,7 +80,6 @@ def validate(manifest_path: Path) -> list[str]:
             source_image = im.copy()
         allowed = Image.new("1", source_image.size, 0)
         kept = Image.new("1", source_image.size, 0)
-        kept_draw = ImageDraw.Draw(kept)
         for region_index, region in enumerate(regions):
             area = f"{label}.regions[{region_index}]"
             if not isinstance(region, dict):
@@ -77,26 +100,8 @@ def validate(manifest_path: Path) -> list[str]:
                 errors.append(f"{area}: decision and reason are required")
                 continue
             if decision == "TRANSLATE":
-                mask_value = region.get("mask")
-                if mask_value:
-                    mask_path = _path(str(mask_value), manifest_path.parent)
-                    if not mask_path.is_file():
-                        errors.append(f"{area}: mask file missing")
-                    else:
-                        with Image.open(mask_path) as im:
-                            mask_image = im.convert("L")
-                        if mask_image.size != source_image.size:
-                            errors.append(f"{area}: mask dimensions differ")
-                        else:
-                            tight_mask = mask_image.point(lambda value: 255 if value else 0).convert("1")
-                            box_mask = Image.new("1", source_image.size, 0)
-                            ImageDraw.Draw(box_mask).rectangle(tuple(box), fill=1)
-                            inside = ImageChops.logical_and(tight_mask, box_mask)
-                            if ImageChops.logical_xor(tight_mask, inside).getbbox():
-                                errors.append(f"{area}: mask extends beyond box")
-                            allowed = ImageChops.logical_or(allowed, tight_mask)
-                else:
-                    ImageDraw.Draw(allowed).rectangle(tuple(box), fill=1)
+                allowed = ImageChops.logical_or(allowed, _region_mask(
+                    region, box, source_image.size, manifest_path.parent, area, errors))
                 state = region.get("review_status")
                 if state not in REVIEW_STATES or not str(region.get("target_text", "")).strip():
                     errors.append(f"{area}: target_text and valid review_status required")
@@ -114,9 +119,10 @@ def validate(manifest_path: Path) -> list[str]:
                             or not str(review.get("findings", "")).strip()):
                         errors.append(f"{area}: approval needs an agent visual-review record")
             elif decision == "KEEP":
-                kept_draw.rectangle(tuple(box), fill=1)
+                kept = ImageChops.logical_or(kept, _region_mask(
+                    region, box, source_image.size, manifest_path.parent, area, errors))
         if ImageChops.logical_and(allowed, kept).getbbox():
-            errors.append(f"{label}: TRANSLATE and KEEP boxes overlap")
+            errors.append(f"{label}: TRANSLATE and KEEP regions overlap")
         candidate_value = item.get("candidate")
         if candidate_value is None:
             if any(r.get("review_status") == "approved" for r in regions if isinstance(r, dict)):

@@ -13,6 +13,11 @@ is risk-based; do not spend tokens rereading every low-risk approved line.
 - Contextual glossary conformance and suspicious Latin/mojibake/control text.
 - Renderer matrix for Arabic joining, BiDi, fonts, mixed text, wrapping, and
   clipping when the relevant layer changes.
+- Text complete in the units is not proof it shows complete: measure long
+  strings in the real font against their box (choices, buttons), then check
+  in the renderer.
+- Visible text outside the translation catalogue: literals in screen or UI
+  code, labels that appear only after an unlock, and baked images.
 
 ## Semantic sampling
 

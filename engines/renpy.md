@@ -32,6 +32,25 @@ the actual game font, substitutions, neutral strings, and tags such as `{w}` and
 Use a font or FontGroup with Arabic coverage. Keep logical Arabic in source and
 translation memory; do not store presentation forms as the canonical target.
 
+Verified on one project (Ren'Py 8.0.3, 2026-10-17); re-test on any other build:
+
+- Words came out in reverse order although each word's letters were right: the
+  renderer split text into segments at spaces, tags, and font changes. The fix
+  stayed in the display layer (one Arabic/Latin font for the line,
+  `config.rtl` set on language change, visible segments reordered, timing tags
+  kept); the translation files stayed logical Arabic.
+- Choice text complete in the files was still cut off inside the choice button.
+  Measure the Arabic width in the real font against the button, then set a
+  language-specific wrap width; never shrink every font.
+- Some screen labels are literal strings in `screens.rpy`, outside the
+  translation catalogue (one appeared only after a feature unlocked). Search
+  the screens for literals and visit unlockable states.
+- `main_menu` stays true on screens opened from the main menu (for example
+  `preferences`). To show something only on the main menu itself, test
+  `renpy.get_screen("main_menu") is not None`.
+- The game's own Ren'Py can parse the Arabic `.rpy` files without launching the
+  game; that checks syntax only, not rendering.
+
 ## Optional runtime filter
 
 A game-specific text filter may substitute approved translations or collect

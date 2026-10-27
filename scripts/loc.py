@@ -1026,7 +1026,21 @@ def cmd_brief(args) -> int:
     layer_one = text.split(brief_tools.LAYER_MARKS[1])[0]
     print(f"BRIEF={out} UNITS={len(batch_units)} ESTIMATED_TOKENS={round(len(text) / 3.5)} "
           f"CACHEABLE_PREFIX_SHA={hashlib.sha256(layer_one.encode('utf-8')).hexdigest()[:12]}")
+    for warning in batch_limits(batch_units, settings.get("workflow") or {}):
+        print(f"WARNING {warning}")
     return 0
+
+
+def batch_limits(batch_units: list[dict], flow: dict) -> list[str]:
+    """PROJECT.yaml batch ceilings a brief exceeds; an oversized batch should be split before delegation."""
+    out = []
+    strings, tokens = flow.get("max_batch_strings"), flow.get("max_batch_source_tokens")
+    if isinstance(strings, int) and len(batch_units) > strings:
+        out.append(f"batch has {len(batch_units)} units, over max_batch_strings={strings}; split it")
+    source = sum(tools.estimate_text(u.get("source") or "") for u in batch_units)
+    if isinstance(tokens, int) and source > tokens:
+        out.append(f"batch source is ~{source} tokens, over max_batch_source_tokens={tokens}; split it")
+    return out
 
 
 def target_snapshot(all_units: list[dict], exclude: set[str]) -> dict[str, str]:

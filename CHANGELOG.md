@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-27 — v7 review: safe fixes
+
+- `loc.py brief` warns when a batch exceeds `max_batch_strings` or
+  `max_batch_source_tokens`; before this, nothing read those ceilings.
+- `check_image_regions.py`: a `KEEP` region's mask is honoured like a
+  `TRANSLATE` mask, so a label beside a logo in one box no longer reports a
+  false overlap.
+- `engines/renpy.md`: five Ren'Py findings from the Slay the Princess
+  experience pack (segment word order, choice width, literal screen strings,
+  `renpy.get_screen`, parse-only check). `references/qa-strategy.md`: width and
+  off-catalogue text checks.
+- `AGENTS.md`: removed the stale "tiers mapped per runtime" line.
+
 ## 2026-10-27 — Handoff phase: the experiences package
 
 - New phase `handoff` (التسليم) between playtest and release. Its gate needs

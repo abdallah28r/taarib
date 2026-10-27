@@ -89,6 +89,13 @@ class BriefTests(unittest.TestCase):
                 shas.append(out.getvalue().split("CACHEABLE_PREFIX_SHA=")[1].strip())
             self.assertEqual(shas[0], shas[1])
 
+    def test_oversized_batch_is_flagged(self):
+        many = [unit(f"u{i}", "word " * 40, "b") for i in range(3)]
+        self.assertEqual(loc.batch_limits(many, {"max_batch_strings": 5, "max_batch_source_tokens": 4000}), [])
+        warnings = loc.batch_limits(many, {"max_batch_strings": 2, "max_batch_source_tokens": 50})
+        self.assertEqual(len(warnings), 2)
+        self.assertIn("max_batch_strings=2", warnings[0])
+
     def test_addressee_fields_are_validated(self):
         bad = unit("x", "Hi", "b", context={"addressee_gender": "female", "addressee_number": "two"})
         errors = units.validate([units.UnitFile(Path("u.jsonl"), [bad])]).errors

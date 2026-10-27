@@ -62,6 +62,18 @@ class ImageRegionChecks(unittest.TestCase):
             data["images"][0]["regions"][0]["mask"] = mask.name
             manifest.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
             self.assertEqual(MODULE.validate(manifest), [])
+            keep_mask = root / "keep.png"
+            keep_image = Image.new("L", (8, 8), 0)
+            keep_image.putpixel((3, 3), 255)
+            keep_image.save(keep_mask)
+            keep = {"box": [1, 1, 4, 4], "decision": "KEEP", "reason": "logo beside the label", "mask": keep_mask.name}
+            data["images"][0]["regions"].append(keep)
+            manifest.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertEqual(MODULE.validate(manifest), [])
+            keep_image.putpixel((2, 2), 255)
+            keep_image.save(keep_mask)
+            self.assertTrue(any("regions overlap" in error for error in MODULE.validate(manifest)))
+            data["images"][0]["regions"].pop()
             mask_image.putpixel((2, 2), 0)
             mask_image.save(mask)
             self.assertTrue(any("outside TRANSLATE boxes" in error for error in MODULE.validate(manifest)))
