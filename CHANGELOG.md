@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-10-27 — Handoff phase: the experiences package
+
+- New phase `handoff` (التسليم) between playtest and release. Its gate needs
+  `experiences-<game>-<date>.zip`, built after the user's acceptance.
+- `loc.py lesson add|list` records lessons for the developer in
+  `work/experiences.jsonl` (template bug, limit, lesson, engine, translation,
+  tool, workflow), each with evidence and an optional suggested change and file.
+- `loc.py experiences` packs the lessons, facts the code collects (engine,
+  adapter contract, fixes, reopened phases, problem counts, phase times), the
+  engine profile, the adapter, and reusable scripts. Game text, game files,
+  user paths, and secrets stay out; free text is capped. It prints where to
+  send it: the Hoshibana Discord server or X, from `config/feedback.json`.
+  The dashboard shows the lesson count and, once built, the file and contacts.
+- `scripts/maintainer/import_experiences.py` unpacks received zips safely into
+  `work/experiences-inbox/`, lists lessons not yet decided, and records each
+  decision in `knowledge/experiences-ledger.json` by a content key.
+
 ## 2026-10-21 — Remove what nobody reads
 
 - Deleted files no route loads and no skill links: four skill references

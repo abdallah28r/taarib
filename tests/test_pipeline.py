@@ -138,10 +138,21 @@ class PipelineWalkthrough(unittest.TestCase):
         self.assertIn("TODO قبولك للنسخة مسجل", out)
         self.assertEqual(self.run_loc("accept", "--note", "user accepted r1", *self.project_args())[0], 0)
         self.assertEqual(self.gate()[0], 0)
+        self.assertEqual(self.phase(), "handoff")
+
+        code, out = self.gate()
+        self.assertIn("TODO ملف الخبرات مبني بعد قبولك", out)
+        lessons = self.dir / "experiences.jsonl"
+        self.assertEqual(self.run_loc("lesson", "add", "--type", "limit", "--what", "w", "--evidence", "e",
+                                      "--path", str(lessons))[0], 0)
+        code, out = self.run_loc("experiences", "--out", str(self.dir), "--lessons", str(lessons), *self.project_args())
+        self.assertEqual(code, 0, out)
+        self.assertIn("https://discord.gg/", out)
+        self.assertEqual(self.gate()[0], 0)
         self.assertEqual(self.phase(), "release")
         history = json.loads(self.state.read_text(encoding="utf-8"))["history"]
         self.assertEqual([h["phase"] for h in history],
-                         ["intake", "discovery", "extraction", "localization", "integration", "playtest"])
+                         ["intake", "discovery", "extraction", "localization", "integration", "playtest", "handoff"])
 
     def test_changed_game_text_invalidates_the_recorded_contract(self):
         self.answer_intake()
@@ -189,7 +200,7 @@ class PipelineWalkthrough(unittest.TestCase):
     def test_next_reports_phase_and_route(self):
         code, out = self.run_loc("next", *self.project_args())
         self.assertEqual(code, 0)
-        self.assertIn("PHASE 1/7: intake", out)
+        self.assertIn("PHASE 1/8: intake", out)
         self.assertIn("LOAD: references/project-run.md", out)
 
 

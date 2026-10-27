@@ -75,6 +75,8 @@ its options. This table is the one map of when to use each.
 | integration | `mark --status integrated --evidence` | After installing a build, naming it. |
 | playtest | `mark --status tested --evidence` | Only for what was observed in the running game. |
 | playtest | `accept --note` | Only on the user's explicit acceptance in chat. |
+| any | `lesson add\|list` | The moment you find a template bug, limit, engine quirk, translation lesson, tool result, or workflow problem. |
+| handoff | `experiences` | After acceptance: build `experiences-<game>-<date>.zip` and tell the user where to send it. |
 | playtest | `fix open\|close\|list` | A small reported problem: record current / expected / unchanged, change the units with `apply --fix`, re-proofread, close with a verdict. |
 | maintenance | `update --adapter --game --path` (`--dry-run`) | A new game version arrived; then `reopen`. |
 | maintenance | `normalize` | After resetting a changed unit to `extracted`. |

@@ -167,6 +167,13 @@ with a test, through `localization-project-maintenance`.
 - `work/NOTES.md`: temporary findings during a phase.
 - `engines/<engine>.md`: the one place for knowledge that outlives a game;
   discovery loads it for the next game on that engine.
+- `work/experiences.jsonl`: lessons for the template's developer. Whenever you
+  find a template bug, a limit, an engine quirk, a translation lesson, a tool
+  result, or a workflow problem, record it at once with
+  `loc.py lesson add --type ... --what ... --evidence ... [--suggest ... --file ...]`.
+  Never paste game text beyond a short quote. At the handoff phase,
+  `loc.py experiences` packs them into `experiences-<game>-<date>.zip`; give the
+  user its path and where to send it (it prints both). Never send it yourself.
 
 Capture raw discoveries in `work/NOTES.md`; promote reusable findings once at
 the phase boundary, or immediately only if a verified fact changes a safety or

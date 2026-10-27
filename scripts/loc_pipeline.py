@@ -32,7 +32,7 @@ def _load(name, path):
 units = _load("loc_units", ROOT / "scripts" / "loc_units.py")
 tools = _load("loc_tools", ROOT / "scripts" / "loc_tools.py")
 
-PHASES = ("intake", "discovery", "extraction", "localization", "integration", "playtest", "release")
+PHASES = ("intake", "discovery", "extraction", "localization", "integration", "playtest", "handoff", "release")
 ROUTES = {
     "intake": "references/project-run.md (a bare «عرّب اللعبة» starts it: ask the grouped intake questions once)",
     "discovery": "python scripts/context_plan.py discovery, then mod-research",
@@ -40,7 +40,8 @@ ROUTES = {
     "localization": "python scripts/context_plan.py translation-ui|translation-dialogue, then proofreading",
     "integration": "python scripts/context_plan.py integration (loc.py rebuild, back up, install, mark integrated)",
     "playtest": "hand the build to the user; fix reports with qa-rendering; record acceptance only on the user's words",
-    "release": "python scripts/context_plan.py release",
+    "handoff": "python scripts/loc.py experiences, then give the user the file and where to send it",
+    "release": "python scripts/context_plan.py release (only if the user asked for a shareable package)",
 }
 PLACEHOLDER = "["
 SEVERE = ("blocker", "critical")
@@ -249,6 +250,26 @@ def open_fixes(state: dict) -> list[dict]:
     return [f for f in state.get("fixes", []) if f.get("status") == "open"]
 
 
+def check_handoff(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
+    packed = state.get("experiences") or {}
+    path = project.resolve(packed["path"]) if packed.get("path") else None
+    after = packed.get("at", "") >= (state.get("acceptance") or {}).get("at", "")
+    return [
+        (bool(path) and path.is_file() and after,
+         "ملف الخبرات مبني بعد قبولك ومسلَّم لك (loc.py experiences)"),
+    ]
+
+
+def record_experiences(project: Project, path: Path, digest: str, lessons: int) -> None:
+    state = project.state()
+    try:
+        shown = str(path.resolve().relative_to(project.root.resolve()))
+    except ValueError:
+        shown = str(path)
+    state["experiences"] = {"path": shown, "sha256": digest, "lessons": lessons, "at": now()}
+    project.save(state)
+
+
 def check_release(project: Project, settings: dict, state: dict) -> list[tuple[bool, str]]:
     return [(False, "النشر هو المرحلة الأخيرة؛ اتبع references/release.md")]
 
@@ -256,7 +277,7 @@ def check_release(project: Project, settings: dict, state: dict) -> list[tuple[b
 CRITERIA = {
     "intake": check_intake, "discovery": check_discovery, "extraction": check_extraction,
     "localization": check_localization, "integration": check_integration,
-    "playtest": check_playtest, "release": check_release,
+    "playtest": check_playtest, "handoff": check_handoff, "release": check_release,
 }
 
 

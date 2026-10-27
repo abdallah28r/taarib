@@ -52,7 +52,9 @@ discovery → extraction (adapter contract passed, units extracted, every batch
 listed in `PLAN.md`) → localization (every translatable unit proofread, no
 open review, glossary clean, every batch ticked) →
 integration (every unit integrated into a build) → playtest (no open
-blocker/critical defect, user acceptance recorded) → release. The gates are
+blocker/critical defect, user acceptance recorded) → handoff (the experiences
+package built after acceptance and given to the user) → release, only if the
+user asked for a shareable package. The gates are
 the stop rule: when `next` reports a phase ready, gate it and move on instead
 of reviewing again.
 
@@ -86,6 +88,18 @@ the sole original, or claim a runtime pass it did not observe. An inability to
 test a live renderer is a stated limitation, not a reason to skip other work.
 Researching a mod is not permission to modify or bundle it. Use
 `references/localization-mods.md` for the decision and approval boundaries.
+
+## Handoff: the experiences package
+
+After acceptance, run `python scripts/loc.py experiences`. It packs the lessons
+recorded during the work, facts the code collects (engine, adapter contract,
+fixes and their verdicts, reopened phases, problem counts, phase times), the
+engine profile, the adapter, and scripts marked reusable into
+`experiences-<game>-<date>.zip` in this folder, without game text, game files,
+user paths, or secrets. Tell the user in Arabic what it contains, where it is,
+and where to send it (Discord server and X account from `config/feedback.json`,
+printed by the command). Then `loc.py gate`. The command also works earlier,
+for example when a project stops halfway; a stopped project teaches limits too.
 
 ## Install, user trial, then shareable package
 

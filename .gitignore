@@ -20,3 +20,7 @@ fonts/licenses/*
 reports/*.json
 work/updates/
 work/batches/
+# Each game's lessons and its handoff package; the template ships neither
+work/experiences.jsonl
+work/experiences-inbox/
+experiences-*.zip

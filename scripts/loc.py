@@ -14,6 +14,8 @@
     python scripts/loc.py update --adapter adapters/renpy.py --game <game_root> --path units/game.jsonl
     python scripts/loc.py estimate | tmx --out memory.tmx | pseudo --adapter ... --game ... --out builds/pseudo
     python scripts/loc.py fix open --title ... --current ... --expected ... --unchanged ... --ids <ids>
+    python scripts/loc.py lesson add --type limit --what ... --evidence ... [--suggest ... --file ...]
+    python scripts/loc.py experiences           # handoff: experiences-<game>-<date>.zip for the developer
     python scripts/loc.py next                  # current phase, what blocks it, what to load
     python scripts/loc.py gate [--check]        # advance when every exit criterion passes
     python scripts/loc.py reopen extraction --reason "game update 1.1"
@@ -55,6 +57,7 @@ adapter_base = _load("loc_adapter_base", ROOT / "adapters" / "base.py")
 pipeline = _load("loc_pipeline")
 tools = _load("loc_tools")
 brief_tools = _load("loc_brief")
+experiences = _load("loc_experiences")
 
 LABELS = {
     "extracted": "مستخرج",
@@ -220,7 +223,7 @@ td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right}ul{paddin
 
 PHASE_LABELS = {
     "intake": "الاستقبال", "discovery": "الاكتشاف", "extraction": "الاستخراج", "localization": "التعريب",
-    "integration": "الدمج", "playtest": "التجربة", "release": "النشر",
+    "integration": "الدمج", "playtest": "التجربة", "handoff": "التسليم", "release": "النشر",
 }
 # Ships with the template (an empty project's page) and lives in every game copy beside the map.
 DASHBOARD = ROOT / "dashboard.html"
@@ -289,6 +292,17 @@ def progress_html(groups: dict, qa: dict, problems: dict | None = None) -> str:
     return "".join(parts)
 
 
+def experiences_html(state: dict, lessons: int) -> str:
+    packed = state.get("experiences")
+    if not lessons and not packed:
+        return ""
+    esc = html.escape
+    rows = [f"<li>خبرات مسجلة لمطوّر القالب: {lessons} (loc.py lesson list)</li>"]
+    if packed:
+        rows += [f"<li>{esc(line)}</li>" for line in experiences.send_message(Path(packed["path"]).name).splitlines()]
+    return f'<div class="card"><p class="muted">ملف الخبرات</p><ul>{"".join(rows)}</ul></div>'
+
+
 def phase_html(state: dict, checks) -> str:
     esc, current = html.escape, state.get("phase", pipeline.PHASES[0])
     passed = {event["phase"] for event in state.get("history", []) if event.get("event") == "passed"}
@@ -329,7 +343,7 @@ def quality_html(quality: dict | None) -> str:
 
 
 def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, state: dict, checks, title: str,
-                     problems: dict | None = None, quality: dict | None = None) -> str:
+                     problems: dict | None = None, quality: dict | None = None, lessons: int = 0) -> str:
     esc = html.escape
     return "".join([
         '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">',
@@ -341,7 +355,7 @@ def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, sta
         + (f"آخر تغيير في بيانات المشروع: {esc(generated)}. " if generated
            else "لم يبدأ العمل بعد: افتح هذا المجلد مشروعًا في Claude Code أو Codex وقل «عرّب اللعبة». ")
         + f'{esc(MEANING_NOTE)} <a href="{MAP_PAGE}">خريطة القالب</a> تشرح ما تفعله أنت وكيف يعمل النظام.</p>',
-        "<h2>المرحلة</h2>", phase_html(state, checks),
+        "<h2>المرحلة</h2>", phase_html(state, checks), experiences_html(state, lessons),
         "<h2>التقدم</h2>", progress_html(groups, qa, problems),
         quality_html(quality),
         '<h2>الخطة والملاحظات</h2><div class="card plan">', markdown_html(plan_text), "</div>",
@@ -382,7 +396,9 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
         findings, _ = read_findings(finding_files)
         covered = [u for u in all_units if u.get("batch") in {f.stem for f in finding_files}]
         quality = mqm_score([f for _, f in findings], covered) if covered else None
-    page = render_dashboard(groups, qa_cases(qa_file), changed, plan_text, state, checks, str(title), problems, quality)
+    lessons = len(experiences.load_lessons()) if units_dir == units.UNITS_DIR else 0
+    page = render_dashboard(groups, qa_cases(qa_file), changed, plan_text, state, checks, str(title), problems,
+                            quality, lessons)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8", newline="\n")
     return out
@@ -1088,6 +1104,85 @@ def cmd_terms(args) -> int:
     return 1 if problems else 0
 
 
+def cmd_lesson(args) -> int:
+    """Record what this project taught us for the template's developer; packed at handoff."""
+    if args.lesson_command == "list":
+        lessons = experiences.load_lessons(args.path)
+        for lesson in lessons:
+            print(f"{lesson['id']} [{lesson['type']}] {lesson['what']}")
+        print(f"LESSONS={len(lessons)}")
+        return 0
+    try:
+        lesson = experiences.add_lesson(args.type, args.what, args.evidence, args.suggest or "", args.file or "",
+                                        args.by or "", args.path)
+    except ValueError as exc:
+        print(f"ERROR {exc}")
+        return 2
+    auto_dashboard(args.path if args.path != experiences.LESSONS_FILE else units.UNITS_DIR)
+    print(f"LESSON_RECORDED={lesson['id']}")
+    return 0
+
+
+def experience_facts(project, all_units: list[dict]) -> dict:
+    """What the code knows about this project without asking the agent."""
+    settings, state = project.settings(), project.state()
+    flow, game = settings.get("workflow", {}), settings.get("game", {})
+    changelog = ROOT / "CHANGELOG.md"
+    template = next((line[3:].strip() for line in changelog.read_text(encoding="utf-8").splitlines()
+                     if line.startswith("## ")), "") if changelog.is_file() else ""
+    try:
+        found, overrides = find_problems(all_units)
+        problems = tools.problem_counts(found, overrides)
+    except Exception:
+        problems = {}
+    group = compute(all_units)["all"] if all_units else {"total": 0}
+    return {
+        "template": template,
+        "phase": state.get("phase"),
+        "game": {"name": game.get("name"), "engine": flow.get("engine_profile"),
+                 "adapter": Path(flow.get("adapter") or "").name, "token_profile": game.get("token_profile"),
+                 "image_scope": flow.get("image_scope")},
+        "contract": state.get("contract"),
+        "units": {"total": group.get("total", 0), "reached": group.get("reached", {}),
+                  "keep": group.get("keep", 0), "review": group.get("review", 0)},
+        "problems": problems,
+        "fixes": [{"title": f["title"], "status": f["status"], "verdict": f.get("verdict"), "units": len(f["ids"])}
+                  for f in state.get("fixes", [])],
+        "reopened": [{"phase": e["phase"], "from": e.get("from"), "reason": e.get("reason"), "at": e.get("at")}
+                     for e in state.get("history", []) if e.get("event") == "reopened"],
+        "phases": [{"phase": e["phase"], "at": e.get("at")} for e in state.get("history", []) if e.get("event") == "passed"],
+    }
+
+
+def cmd_experiences(args) -> int:
+    """Pack lessons, facts, and engine/adapter knowledge into experiences-<game>-<date>.zip for the developer."""
+    project = project_of(args)
+    settings = project.settings()
+    flow, game = settings.get("workflow", {}), settings.get("game", {})
+    all_units = units.all_units(units.load(args.units, units.Report()))
+    files = {}
+    engine = flow.get("engine_profile") or ""
+    if engine and (ROOT / "engines" / f"{engine}.md").is_file():
+        files[f"engines/{engine}.md"] = ROOT / "engines" / f"{engine}.md"
+    if pipeline.filled(flow.get("adapter", "")) and project.resolve(flow["adapter"]).is_file():
+        files[f"adapters/{Path(flow['adapter']).name}"] = project.resolve(flow["adapter"])
+    registry = ROOT / "tools" / "project-scripts.json"
+    for entry in (json.loads(registry.read_text(encoding="utf-8")).get("scripts", []) if registry.is_file() else []):
+        if entry.get("reusable") is True and (ROOT / entry["path"]).is_file():
+            files[f"scripts/{Path(entry['path']).name}"] = ROOT / entry["path"]
+    name = game.get("name") if pipeline.filled(game.get("name")) else ROOT.name
+    sanitizer = experiences.Sanitizer({"<GAME>": game.get("install_path") if pipeline.filled(game.get("install_path")) else "",
+                                       "<PROJECT>": str(ROOT), "<HOME>": str(Path.home())})
+    lessons = experiences.load_lessons(args.lessons)
+    target = experiences.pack(lessons, experience_facts(project, all_units), files, args.out, str(name), sanitizer)
+    pipeline.record_experiences(project, target, experiences.sha256(target), len(lessons))
+    auto_dashboard(args.state, args.units, args.qa)
+    print(f"EXPERIENCES={target}")
+    print(f"LESSONS={len(lessons)} FILES={len(files)}")
+    print(experiences.send_message(target.name))
+    return 0
+
+
 def cmd_dashboard(args) -> int:
     out = write_dashboard(args.units, args.qa, args.out, project_of(args))
     print(f"DASHBOARD={out}")
@@ -1156,6 +1251,23 @@ def main(argv=None) -> int:
         return p
 
     with_project(sub.add_parser("next", help="show the phase, its blockers, and what to load; at session start or when unsure")).set_defaults(run=cmd_next)
+    p = sub.add_parser("lesson", help="record what this project taught us (template bug, limit, lesson, engine, translation, tool, workflow)")
+    lesson_sub = p.add_subparsers(dest="lesson_command", required=True)
+    q = lesson_sub.add_parser("add", help="one lesson: what happened, its evidence, and the change it suggests")
+    q.add_argument("--type", required=True, choices=sorted(experiences.LESSON_TYPES))
+    q.add_argument("--what", required=True, help="what happened or what was learned")
+    q.add_argument("--evidence", required=True, help="command, unit id, screenshot name, or test that shows it")
+    q.add_argument("--suggest", help="the change to the template it suggests")
+    q.add_argument("--file", help="the template file that change touches")
+    q.add_argument("--by", help="role label of the agent recording it")
+    q.add_argument("--path", type=Path, default=experiences.LESSONS_FILE, help=argparse.SUPPRESS)
+    q = lesson_sub.add_parser("list", help="every recorded lesson")
+    q.add_argument("--path", type=Path, default=experiences.LESSONS_FILE, help=argparse.SUPPRESS)
+    p.set_defaults(run=cmd_lesson)
+    p = with_project(sub.add_parser("experiences", help="handoff: pack lessons and facts into experiences-<game>-<date>.zip for the developer"))
+    p.add_argument("--out", type=Path, default=ROOT, help="folder for the zip (default: this project's folder)")
+    p.add_argument("--lessons", type=Path, default=experiences.LESSONS_FILE, help=argparse.SUPPRESS)
+    p.set_defaults(run=cmd_experiences)
     p = with_project(sub.add_parser("dashboard", help="regenerate dashboard.html; in Codex after editing PLAN.md or the LQA matrix"))
     p.add_argument("--out", type=Path, default=DASHBOARD)
     p.set_defaults(run=cmd_dashboard)

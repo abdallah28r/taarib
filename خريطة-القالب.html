@@ -228,7 +228,7 @@ td .dot { width: 28px; height: 28px; display: inline-grid; vertical-align: middl
   <section class="part" id="user">
     <div class="part-head">
       <span class="eyebrow">المخطط الأول</span>
-      <h2>أنت كمستخدم: تحضير واحد، ثم خمس لحظات</h2>
+      <h2>أنت كمستخدم: تحضير واحد، ثم ست لحظات</h2>
       <p class="lead">الدوائر الممتلئة هي ما تفعله أنت. الدوائر المتقطعة هي ما يفعله الوكيل وحده بينها، دون أن ينتظرك.</p>
     </div>
 
@@ -301,7 +301,7 @@ td .dot { width: 28px; height: 28px; display: inline-grid; vertical-align: middl
   <section class="part" id="system">
     <div class="part-head">
       <span class="eyebrow">المخطط الثاني</span>
-      <h2>كيف يعمل من الداخل: سبع محطات وبوابة بعد كل واحدة</h2>
+      <h2>كيف يعمل من الداخل: ثماني محطات وبوابة بعد كل واحدة</h2>
       <p class="lead">كل محطة فيها: ما تأخذه وما تخرجه، ما تفعله وما لا تفعله، متى تعمل ومتى لا تعمل. وبجانبها دوائر بما تستخدمه وفائدة كل شيء. تحت كل محطة بوابة: لا ينتقل المشروع إلى المحطة التالية حتى يفحص البرنامج الملفات بنفسه، فلا يكفي أن يقول الوكيل «انتهيت».</p>
     </div>
 
@@ -402,9 +402,13 @@ const JOURNEY = [
     say: "<b>أنت:</b> زر الحفظ مقصوص في شاشة الإعدادات، واسم البطلة مكتوب بطريقتين.",
     tags: ["وقتك أنت", "أهم خطوة للجودة"] },
   { you: true, title: "قل «قبلت»",
-    text: "يسجل الوكيل قبولك، ولا يسجله من تلقاء نفسه أبدًا. بعدها، وإن طلبت فقط، يجهّز حزمة تعريب قابلة للمشاركة.",
+    text: "يسجل الوكيل قبولك، ولا يسجله من تلقاء نفسه أبدًا.",
     say: "<b>أنت:</b> قبلت النسخة.",
     tags: ["ثوانٍ"] },
+  { you: true, title: "أرسل ملف الخبرات للمطوّر",
+    text: "بعد قبولك يجهّز الوكيل ملفًا مضغوطًا واحدًا باسم <code>experiences-اسم-اللعبة-التاريخ.zip</code> في مجلد العمل: ما تعلّمه من هذا التعريب من أخطاء في القالب وحدود ودروس وملاحظات محرك، مع التعديلات التي يقترحها. لا يحتوي نصوص اللعبة ولا ملفاتها ولا مسارات جهازك. الوكيل لا يرسله بنفسه؛ أنت ترسله.",
+    say: "<b>الوكيل:</b> ملف الخبرات جاهز. أرسله إلى مطوّر القالب في سيرفر Discord «Hoshibana»: <code>https://discord.gg/NwhYY4YJTY</code> أو على X: <code>https://x.com/abdallah28r</code>",
+    tags: ["دقيقة واحدة", "به يتحسن القالب للجميع"] },
 ];
 
 let n = 0;
@@ -416,7 +420,7 @@ document.getElementById("journey").innerHTML = JOURNEY.map(s => {
   const howto = s.howto ? `<div class="howto">${s.howto.map(h => `<div><b>${h[0]}</b><p>${h[1]}</p></div>`).join("")}</div>` : "";
   const tree = s.tree ?`<div class="tree">${s.tree.map(r => `<div class="row ${r[0]}"><span class="kind">${r[1]}</span>
     <code class="path">${esc(r[2])}</code><span class="what">${r[3]}</span></div>`).join("")}</div><p class="muted">${s.note}</p>` : "";
-  return `<div class="step"><div class="rail"><span class="big">${"٠١٢٣٤٥"[n - 1]}</span><span class="stem"></span></div>
+  return `<div class="step"><div class="rail"><span class="big">${"٠١٢٣٤٥٦"[n - 1]}</span><span class="stem"></span></div>
     <div class="step-body"><h3>${s.title}</h3><p>${s.text}</p>${sub}${howto}${tree}${s.say ? `<div class="say">${s.say}</div>` : ""}
     <div class="tagrow">${s.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div></div></div>`;
 }).join("");
@@ -538,6 +542,20 @@ const STATIONS = [
     ],
     gate: ["لا عيوب حرجة مفتوحة", "لا إصلاحات مفتوحة", "قبولك مسجّل بكلامك"],
     stuck: "إذا علق هنا: إصلاح لم يُغلق، أو عيب حرج مفتوح، أو لم تقل «قبلت» بعد." },
+  { name: "التسليم: ملف الخبرات", who: "الوكيل الرئيسي، ثم أنت",
+    input: "الدروس المسجلة أثناء العمل + بيانات المشروع", output: "ملف experiences-…zip ورسالة بمكان إرساله",
+    does: ["يجمع الدروس التي سجلها الوكيل لحظة اكتشافها: خطأ في القالب، حدّ، ملاحظة محرك، خبرة تعريب، أداة", "يضيف آليًا ما يعرفه الكود: المحرك، فحص المحوّل، الإصلاحات ونتائجها، المراحل المعاد فتحها، أكثر المشكلات تكرارًا", "يضم ملف المحرك والمحوّل والسكربتات القابلة لإعادة الاستخدام", "يخبرك أين ترسله: سيرفر Hoshibana على Discord أو X"],
+    doesnt: ["لا يضع نصوص اللعبة ولا ملفاتها", "لا يترك مسارات جهازك ولا اسم المستخدم ولا أي مفتاح سري", "لا يرسل الملف بنفسه أبدًا"],
+    when: "بعد قبولك للنسخة، وفي أي وقت يتوقف فيه المشروع.", notwhen: "قبل أن تقبل النسخة، إلا لمشروع توقف.",
+    uses: [
+      { k: "tool", n: "تسجيل الدروس", w: "أمر يسجل كل درس لحظة اكتشافه مع دليله والتعديل المقترح." },
+      { k: "file", n: "`work/experiences.jsonl`", w: "الدروس المسجلة أثناء العمل." },
+      { k: "tool", n: "حزم الخبرات", w: "يبني الملف المضغوط وينظّفه من المسارات والأسرار." },
+      { k: "file", n: "`config/feedback.json`", w: "اسم سيرفر Discord ورابطه وحساب X." },
+      { k: "none", n: "لا وكلاء فرعيين", w: "" },
+    ],
+    gate: ["ملف الخبرات مبني بعد قبولك ومسلَّم لك"],
+    stuck: "إذا علق هنا: لم يُبنَ ملف الخبرات بعد. اطلب «جهّز ملف الخبرات»." },
   { optional: true, name: "النشر (اختياري)", who: "الوكيل الرئيسي، بطلبك فقط",
     input: "النسخة المقبولة", output: "حزمة تعريب قابلة للمشاركة",
     does: ["يجهز حزمة تثبيت وإزالة", "يفحص الرخص وما يُسمح بنشره"],
@@ -560,7 +578,7 @@ document.getElementById("stations").innerHTML = STATIONS.map((s, i) => {
       <div class="two"><div class="yes"><h4>يفعل</h4><ul>${li(s.does)}</ul></div><div class="no"><h4>لا يفعل</h4><ul>${li(s.doesnt)}</ul></div></div>
       <div class="two"><div class="when"><h4>متى يعمل</h4><p>${s.when}</p></div><div class="notwhen"><h4>متى لا يعمل</h4><p>${s.notwhen}</p></div></div>
     </div>
-    <div class="spine"><span class="num">${"١٢٣٤٥٦٧"[i]}</span><span class="stem"></span></div>
+    <div class="spine"><span class="num">${"١٢٣٤٥٦٧٨"[i]}</span><span class="stem"></span></div>
     <div class="uses"><span class="head">ما يُستخدم هنا</span>${s.uses.map(u => `<div class="use"><span class="dot ${u.k}">${KIND[u.k]}</span>
       <div class="txt"><span class="name">${rich(u.n)}</span>${u.w ? ` — ${rich(u.w)}` : ""}${u.c ? `<span class="cond">${rich(u.c)}</span>` : ""}</div></div>`).join("")}</div>
   </div>`;

@@ -21,9 +21,12 @@ Use when discovery, engineering, QA, or release work produces reusable evidence.
    renderer behavior, verified mod compatibility, and uninstall behavior.
    Discovery loads that file for the next game on the same engine; nothing
    else carries knowledge between games.
-3. Leave the single resumable next action in `PLAN.md`; progress comes from units.
-   If a finding should change the template itself, tell the user in one line
-   in chat; do not write a proposals file.
+3. Anything the template's developer should learn — a template bug, a limit,
+   an engine quirk, a translation lesson, a tool result, a workflow problem —
+   goes into `loc.py lesson add` the moment it is verified, with its evidence
+   and, when you can, the change it suggests and the file it touches. The
+   handoff phase packs these into the experiences zip for the user to send.
+4. Leave the single resumable next action in `PLAN.md`; progress comes from units.
 
 Every promoted item needs an evidence state: `verified-project`,
 `documented-external`, `candidate`, or `rejected`. Include applicability,
