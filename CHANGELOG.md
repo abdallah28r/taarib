@@ -16,7 +16,7 @@
   `work/images/*.json` region manifest that passes `check_image_regions.py`.
 - One source per rule: the delegation policy lives in
   `MODEL_AND_SUBAGENT_POLICY.md`; AGENTS.md, CLAUDE.md, and the orchestration
-  skill point to it. `PROJECT.yaml` drops 27 keys nothing read (output,
+  skill point to it. `PROJECT.yaml` drops 29 keys nothing read (output,
   restated image and font policy, unused workflow switches).
 
 ## 2026-10-27 — v7 review: safe fixes
