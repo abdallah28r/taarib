@@ -62,10 +62,10 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
 - Do not guess meaning-changing context, gender, kinship, puzzles, or gameplay.
   Batch non-blocking uncertainties; ask only when the decision blocks safe work.
 - Run the validator appropriate to the changed artifact before integration.
-- When selecting an external tool, record only the version actually adopted in
-  `tools/selected-tools.json` with source, license, digest, and decision. The
-  broad catalog is a candidate list, not evidence of installation, compatibility,
-  redistribution permission, or a complete license review.
+- External tools follow step 4 of `game-localization-engineering`: pinned,
+  from upstream, under `.tools/`, and recorded in `tools/selected-tools.json`.
+  The catalog `tools/open-source-tools.json` is a candidate list, not evidence
+  of installation, compatibility, or redistribution permission.
 - For game-text or image fonts, use `references/font-sourcing.md` when selecting
   a new face. Search/download verified candidates as the project policy allows;
   install only a selected font for the current Windows user if the renderer
@@ -74,10 +74,11 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
 - Do not launch the game, upload data, install models, or contact an external AI
   service without the authority required by `PROJECT.yaml` and current user
   instructions.
-- Three defaults are standing permission and are never asked: that subagents
+- Four defaults are standing permission and are never asked: that subagents
   are allowed, installing the checked build on the user's identified copy,
-  and official OpenAI image editing for in-scope images (its results are
-  review-only candidates). Discovery, extraction, translation, and non-destructive checks
+  official OpenAI image editing for in-scope images (its results are
+  review-only candidates), and installing pinned open-source tools under
+  `.tools/` (not into the game folder or system-wide). Discovery, extraction, translation, and non-destructive checks
   need no per-phase approval. Verify the target, originals, and restorable
   backups before installing. Never modify another person's installation or
   publish a package implicitly.

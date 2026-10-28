@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-28 — Tool installation procedure and SIGNALIS Unity findings
+
+- `game-localization-engineering` step 4 now tells the agent how to get tools:
+  `tool_doctor.py --profile`, one pinned upstream release under `.tools/`
+  (Python packages in `.tools/venv` from `setup_tools.ps1`), and a record in
+  `tools/selected-tools.json` checked by `check_tool_provenance.py`. Both
+  scripts existed but no instruction named them.
+- Installing pinned open-source tools under `.tools/` is a fourth standing
+  default; a tool that goes into the game folder still needs the user's
+  approval for that game.
+- `engines/unity.md`: what SIGNALIS verified (IL2CPP marker, `member:path ID`
+  identity, legacy TMP needing a display bridge, texture round-trip limits,
+  separate removable loader) and the tool versions it tried, as candidates.
+
 ## 2026-10-28 — Pilot phase: see Arabic in the game before bulk translation
 
 - New phase `pilot` (التجربة الأولى) between extraction and localization. The

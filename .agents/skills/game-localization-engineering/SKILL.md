@@ -38,19 +38,30 @@ the detected engine/profile, not every option.
    localization-only mod. Record plausible candidates and why one route is
    preferred; follow the route's legal, compatibility, and approval gates.
    Do not survey unrelated gameplay mods or silently install a runtime hook.
-4. Prefer loose/native localization, then a removable override or patch, and
+4. Tools, once the engine is known: run `python scripts/tool_doctor.py
+   --profile <profile>` (profiles in `tools/open-source-tools.json`) to see
+   what is present. For a missing tool the route needs, take one pinned
+   release from its upstream source and keep it under `.tools/` in this folder
+   (Python packages go in `.tools/venv`, which `scripts/setup_tools.ps1`
+   creates; `pip install <package>==<version>`), and add it to
+   `tools/selected-tools.json` (catalog id, version, source, license, SHA-256,
+   reason; `check_tool_provenance.py` validates it; add a catalog entry first
+   for a tool the catalog lacks). No system-wide install,
+   no admin rights. A tool that goes into the game folder (loader, plugin) is
+   part of the route and needs the user's approval for this game.
+5. Prefer loose/native localization, then a removable override or patch, and
    only then modification of original containers.
-5. Preserve native structure, keys, context, plurals, ordering, encoding, and
+6. Preserve native structure, keys, context, plurals, ordering, encoding, and
    rebuild data. CSV/TSV is an interchange format, not universal truth.
-6. Prove a small no-semantic-change extract/rebuild round trip before bulk
+7. Prove a small no-semantic-change extract/rebuild round trip before bulk
    translation: write or reuse an adapter under `adapters/` and pass
    `python scripts/adapter_contract.py --adapter <adapter> --game <copy>`.
    Then `python scripts/loc.py extract` writes one unit per player-visible
    string to `units/`; see `adapters/README.md` and
    `references/translation-units.md`. Back up every game file before mutation and record paths and
    checksums.
-7. Merge game updates by stable identity and source state, never row position.
-8. Record exact tool/version and the reproducible command once when a route is
+8. Merge game updates by stable identity and source state, never row position.
+9. Record exact tool/version and the reproducible command once when a route is
    proven or changes, not after every batch. Promote reusable notes once at the
    phase boundary (or immediately for a safety-changing decision) with
    `localization-knowledge-capture`.

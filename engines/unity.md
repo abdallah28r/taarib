@@ -68,6 +68,37 @@ Arabic corpus where possible and verify mixed Arabic/Latin/digits/placeholders.
 Detect the exact Unity build, perform a no-change extract/rebuild, test one
 Arabic table, then create a removable locale or patch package.
 
+## Verified on one project (SIGNALIS, Unity 2020.3.36f1 IL2CPP, 2026-10)
+
+Re-prove each point on any other game; never reuse its hashes, path IDs, or
+measurements.
+
+- IL2CPP was confirmed by `global-metadata.dat` starting with bytes
+  `af1bb1fa`; the data archive `data.unity3d` started with `UnityFS`.
+- An image or text asset's stable identity was `<archive member>:<path ID>`
+  (for example `sharedassets14.assets:112`). Path IDs can change with a game
+  update; re-map them after one.
+- Legacy TextMesh Pro under IL2CPP needed an Arabic font and a separate display
+  bridge. A glyph present in the font did not mean correct order or readable
+  menus: test logical Unicode in the renderer first.
+- After rebuilding a texture, decode it again and compare pixels, mode, size,
+  format, and mip count with the approved candidate. That proves the data,
+  not readability: 8 px labels on a 3D surface were rejected by the user, and
+  some surfaces were too small on camera for any Arabic.
+- The loader (BepInEx) and the display bridge were installed as files separate
+  from `data.unity3d`, each with its own removal record.
+
+Versions that project tried (state `candidate`: staged and tested in
+isolation, not proven installed in the game):
+
+| Tool | Version | Use there |
+| --- | --- | --- |
+| UnityPy | 1.25.4 | read and rebuild the UnityFS archive in an isolated copy |
+| BepInEx Unity IL2CPP | 6.0.0-be.704 | removable loader |
+| XUnity.AutoTranslator (BepInEx IL2CPP) | 5.6.2 | only to register a TMP fallback font; its translation services disabled |
+| RTLTMPro | commit ba92e02 | shaping subset compiled into an isolated display bridge |
+| fontTools | 4.60.1 | font coverage checks, variable-font instancing |
+
 ## Limitations
 
 Serialized assets, Addressables, IL2CPP, and runtime hooks vary by version;

@@ -29,6 +29,13 @@ class ToolProvenanceTests(unittest.TestCase):
             file.write_bytes(b"v2")
             self.assertTrue(any("hash mismatch" in error for error in validate(lock, verify_files=True)))
 
+    def test_the_engineering_skill_tells_the_agent_how_to_get_tools(self):
+        root = Path(__file__).resolve().parents[1]
+        skill = (root / ".agents" / "skills" / "game-localization-engineering" / "SKILL.md").read_text(encoding="utf-8")
+        for name in ("tool_doctor.py", "setup_tools.ps1", "tools/selected-tools.json", "check_tool_provenance.py",
+                     ".tools/"):
+            self.assertIn(name, skill)
+
 
 if __name__ == "__main__":
     unittest.main()
