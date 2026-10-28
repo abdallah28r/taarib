@@ -116,8 +116,7 @@ def gate_checks(state_file: Path, phase: str) -> list[tuple[bool, str]]:
     if not any(t["phase"] == phase for t in load(state_file)):
         return []
     left = open_in_phase(state_file, phase)
-    shown = "، ".join(t["id"] for t in left[:5]) or "لا شيء"
-    return [(not left, f"كل مهام المرحلة منجزة أو مؤجلة بسبب (loc.py task list؛ المفتوحة: {len(left)} — {shown})")]
+    return [(not left, f"مهام المرحلة كلها منجزة أو مؤجلة أو ملغاة بسبب (المفتوحة: {len(left)}، في لوحة المهام)")]
 
 
 BATCH_LINE = re.compile(r"^\s*[-*] \[( |x|X)\]\s+(.+)$")
@@ -134,8 +133,10 @@ def plan_batch_cards(plan_file: Path) -> list[dict]:
             continue
         match = BATCH_LINE.match(line) if inside else None
         if match:
-            text = match.group(2).strip()
-            status = "done" if match.group(1).lower() == "x" else "doing" if "unfinished" in text else "next"
-            cards.append({"id": text.split()[0], "title": text, "kind": "translation", "status": status,
-                          "from_plan": True})
+            parts = [p.strip() for p in re.split(r"\s+[—–-]\s+", match.group(2).strip())]
+            progress = next((p.split(":", 1)[-1].strip() for p in parts if p.startswith("unfinished")), "")
+            rest = [p for p in parts[1:] if not p.startswith("unfinished")]
+            status = "done" if match.group(1).lower() == "x" else "doing" if progress else "next"
+            cards.append({"id": parts[0], "title": rest[0] if rest else parts[0], "who": " — ".join(rest[1:]),
+                          "progress": progress, "kind": "translation", "status": status, "from_plan": True})
     return cards

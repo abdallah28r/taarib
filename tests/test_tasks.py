@@ -62,7 +62,7 @@ class TaskBoardTests(unittest.TestCase):
 
     def test_gate_refuses_a_phase_with_open_tasks(self):
         def task_check():
-            return [c for c in pipeline.evaluate(self.project)[1] if "loc.py task list" in c[1]]
+            return [c for c in pipeline.evaluate(self.project)[1] if "في لوحة المهام" in c[1]]
         self.assertEqual(task_check(), [], "no criterion while the phase has no tasks")
         ident = board.add(self.state, "Find the save folder", "research", "intake", "later")
         self.assertFalse(task_check()[0][0], "a task for later still blocks its phase")
@@ -90,6 +90,8 @@ class TaskBoardTests(unittest.TestCase):
         cards = board.plan_batch_cards(self.plan)
         self.assertEqual([(c["id"], c["status"]) for c in cards],
                          [("batch-001", "done"), ("batch-002", "doing"), ("batch-003", "next")])
+        self.assertEqual((cards[1]["title"], cards[1]["who"], cards[1]["progress"]),
+                         ("scene 1", "t1 / p1", "40/90"))
 
     def test_cli_and_page(self):
         code, out = self.run_loc("task", "add", "Ask about the city name", "--kind", "question")
@@ -106,7 +108,7 @@ class TaskBoardTests(unittest.TestCase):
         self.assertIn("batch-002", page)
         self.assertIn('href="dashboard.html"', page)
         summary = loc.tasks_summary_html(board.load(self.state), [], "tasks.html")
-        self.assertIn("بانتظارك: T-001", summary)
+        self.assertIn("بانتظارك (1)", summary)
 
     def test_watch_runs_and_stops(self):
         out = io.StringIO()

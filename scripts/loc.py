@@ -37,7 +37,7 @@ import json
 import re
 import sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -227,6 +227,8 @@ main{max-width:760px;margin:0 auto;padding:24px 16px}h1{font-size:1.5rem;margin:
 .plan h2,.plan h3,.plan h4{font-size:1rem;margin:16px 0 6px}.plan p{margin:4px 0}
 .checks{list-style:none;padding:0;margin:0}.checks li{padding:4px 0}.checks li.ok{color:var(--fill)}
 bdi{unicode-bidi:isolate}.checks li.err{color:#c0392b}
+.card.wait{border-color:#c0392b}.pages{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.pages a{padding:6px 14px;border:1px solid var(--line);
+border-radius:999px;background:var(--card);color:var(--ink);text-decoration:none}.pages a:hover{border-color:var(--fill)}
 td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right}ul{padding-inline-start:20px}
 @media (max-width:480px){.row{grid-template-columns:6.5rem 1fr 3.5rem}}
 """
@@ -244,6 +246,15 @@ EVENT_LABELS = {"passed": "عبرت بوابة", "reopened": "أُعيد فتح"
 MAP_PAGE = "template-map.html"
 PLAN_FILE = ROOT / "PLAN.md"
 PLAN_MAX_LINES = 150
+
+
+def local_time(stamp: str) -> str:
+    """A recorded UTC time (2026-10-28T13:52:37Z) in this computer's time, as the user reads a clock."""
+    try:
+        moment = datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return html.escape(str(stamp or ""))
+    return moment.astimezone().strftime("%Y-%m-%d %H:%M")
 
 
 def markdown_html(text: str) -> str:
@@ -338,7 +349,7 @@ def phase_html(state: dict, checks) -> str:
     recent = state.get("history", [])[-5:]
     if recent:
         rows = "".join(
-            f'<li>{esc(e.get("at", ""))} — {esc(EVENT_LABELS.get(e.get("event"), e.get("event", "")))} '
+            f'<li>{local_time(e.get("at", ""))} — {esc(EVENT_LABELS.get(e.get("event"), e.get("event", "")))} '
             f'{PHASE_LABELS.get(e.get("phase"), "")}'
             f'{esc(" (ناقص " + str(e["missing"]) + ")") if e.get("missing") else ""}'
             f'{esc(" — " + e["reason"]) if e.get("reason") else ""}</li>'
@@ -362,10 +373,12 @@ def tasks_summary_html(tasks: list[dict], cards: list[dict], page: str) -> str:
     counts = Counter(t["status"] for t in [*tasks, *cards])
     shown = "، ".join(f"{board.LABELS[s]} {counts[s]}" for s in board.STATUSES if counts[s]) or "لا مهام مسجلة بعد"
     waiting = [t for t in tasks if t["status"] == "waiting"]
-    rows = "".join(f'<li class="err">بانتظارك: {html.escape(t["id"])} — {html.escape(t["title"])}'
+    rows = "".join(f'<li class="err">{html.escape(t["title"])}'
                    f'{html.escape(" — " + t["reason"]) if t.get("reason") else ""}</li>' for t in waiting[:5])
-    return (f'<div class="card"><p class="muted">مهام الوكيل — <a href="{page}">لوحة المهام</a></p>'
-            f'<ul class="checks"><li>{html.escape(shown)}</li>{rows}</ul></div>')
+    head = (f'<div class="card wait"><p><b>بانتظارك ({len(waiting)})</b></p><ul class="checks">{rows}</ul></div>'
+            if waiting else "")
+    return (f'{head}<div class="card"><p class="muted">مهام الوكيل — <a href="{page}">لوحة المهام</a></p>'
+            f'<p>{html.escape(shown)}</p></div>')
 
 
 def probe_html(probe: dict | None) -> str:
@@ -386,17 +399,18 @@ def task_card(t: dict) -> str:
     esc = html.escape
     tags = [board.KIND_LABELS.get(t.get("kind"), "")]
     if t.get("from_plan"):
-        tags.append("دفعة من PLAN.md")
+        tags.append("دفعة")
     elif t.get("phase"):
         tags.append(PHASE_LABELS.get(t["phase"], t["phase"]))
     if t["status"] == "dropped":
         tags.append("أُلغيت")
-    history = "".join(f'<li>{esc(h["at"])} — {board.LABELS.get(h["status"], h["status"])}'
+    history = "".join(f'<li>{local_time(h["at"])} — {board.LABELS.get(h["status"], h["status"])}'
                       f'{esc(" — " + h["note"]) if h.get("note") else ""}</li>' for h in t.get("history", []))
     detail = (f'<details><summary>المراحل ({len(t["history"])})</summary><ul>{history}</ul></details>'
               if history else "")
-    extra = "".join(f'<p class="muted">{label}: {esc(t[key])}</p>'
-                    for key, label in (("reason", "السبب"), ("evidence", "الدليل")) if t.get(key))
+    extra = "".join(f'<p class="muted">{label}: <bdi>{esc(t[key])}</bdi></p>'
+                    for key, label in (("who", "يعمل عليها"), ("progress", "توقفت عند"), ("reason", "السبب"),
+                                       ("evidence", "الدليل")) if t.get(key))
     return (f'<article class="task{" dropped" if t["status"] == "dropped" else ""}">'
             f'<p class="muted"><bdi>{esc(t["id"])}</bdi> · {" · ".join(esc(x) for x in tags if x)}</p>'
             f'<p>{esc(t["title"])}</p>{extra}{detail}</article>')
@@ -422,17 +436,18 @@ def render_tasks(tasks: list[dict], cards: list[dict], title: str, generated: st
         'ثانية. لا تُغلق مرحلة وفيها مهمة مفتوحة. اضغط «المراحل» لترى مسار أي مهمة. '
         f'<a href="{DASHBOARD.name}">لوحة التعريب</a>'
         + (f" — آخر تغيير: {esc(generated)}" if generated else "") + "</p>",
+        "".join(f'<div class="card wait"><p><b>بانتظارك:</b> {esc(t["title"])}</p>'
+                f'<p class="muted">{esc(t.get("reason", ""))}</p></div>' for t in tasks if t["status"] == "waiting"),
         f'<div class="board">{"".join(columns)}</div></main></body></html>\n',
     ])
 
 
 TASKS_STYLE = """
-main.wide{max-width:none}.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:12px;
-overflow-x:auto;padding-bottom:8px}.col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+main.wide{max-width:1400px}.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;
+margin-top:12px;align-items:start}.col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
 .col h2{margin:0 0 8px;font-size:1rem}.task{border:1px solid var(--line);border-radius:10px;padding:8px 10px;
 margin-bottom:8px;background:var(--bg)}.task p{margin:2px 0}.task.dropped p:not(.muted){text-decoration:line-through}
 .col.waiting{border-color:#c0392b}.col.doing{border-color:var(--fill)}details{font-size:.85rem}
-@media (max-width:640px){.board{grid-auto-flow:row;grid-auto-columns:auto}}
 """
 
 
@@ -450,7 +465,8 @@ def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, sta
         + (f"آخر تغيير في بيانات المشروع: {esc(generated)}. " if generated
            else "لم يبدأ العمل بعد: افتح هذا المجلد مشروعًا في Claude Code أو Codex وقل «عرّب اللعبة». ")
         + f'{esc(MEANING_NOTE)} <a href="{MAP_PAGE}">خريطة القالب</a> تشرح ما تفعله أنت وكيف يعمل النظام.</p>',
-        "<h2>المرحلة</h2>", phase_html(state, checks), tasks_html, probe, experiences_html(state, lessons),
+        f'<nav class="pages"><a href="{TASKS_PAGE.name}">لوحة المهام</a><a href="{MAP_PAGE}">خريطة القالب</a></nav>',
+        tasks_html, "<h2>المرحلة</h2>", phase_html(state, checks), probe, experiences_html(state, lessons),
         "<h2>التقدم</h2>", progress_html(groups, qa, problems),
         quality_html(quality),
         '<h2>الخطة والملاحظات</h2><div class="card plan">', markdown_html(plan_text), "</div>",
@@ -485,7 +501,7 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
     data_files = [*unit_files, *(p for p in (project.state_file, task_file, plan_file, qa_file) if p.is_file())]
     # The time of the newest project data, not of this render, so an unchanged project gives the same page.
     changed = (datetime.fromtimestamp(max(p.stat().st_mtime for p in data_files)).strftime("%Y-%m-%d %H:%M:%S")
-               if unit_files or project.state_file.is_file() else "")
+               if unit_files or project.state_file.is_file() or task_file.is_file() else "")
     finding_files = sorted((ROOT / "work" / "proofreading").glob("*.jsonl")) if units_dir == units.UNITS_DIR else []
     quality = None
     if finding_files:
