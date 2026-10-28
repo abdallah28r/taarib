@@ -88,14 +88,14 @@ def font_report(path: Path, data: bytes | None = None) -> dict:
         if suffix in {".ttf", ".otf", ".ttc"}:
             import io
             from fontTools.ttLib import TTFont
-            font = TTFont(io.BytesIO(data) if data else str(path), lazy=True, fontNumber=0)
-            cmap = set(font.getBestCmap())
+            with TTFont(io.BytesIO(data) if data else str(path), lazy=True, fontNumber=0) as font:
+                cmap = set(font.getBestCmap())
+                scripts = set()
+                script_list = getattr(font["GSUB"].table, "ScriptList", None) if "GSUB" in font else None
+                if script_list is not None:  # some fonts carry a GSUB table without a script list
+                    scripts = {r.ScriptTag for r in script_list.ScriptRecord}
             letters = sum(0x0621 <= c <= 0x064A for c in cmap)
             forms = sum(0xFE70 <= c <= 0xFEFF for c in cmap)
-            scripts = set()
-            script_list = getattr(font["GSUB"].table, "ScriptList", None) if "GSUB" in font else None
-            if script_list is not None:  # some fonts carry a GSUB table without a script list
-                scripts = {r.ScriptTag for r in script_list.ScriptRecord}
             info.update(arabic_letters=letters, presentation_forms=forms, shapes_arabic="arab" in scripts,
                         verdict="arabic" if letters >= 36 else "partial-arabic" if letters else "no-arabic")
         elif suffix == ".fnt" and path.stat().st_size < 4_000_000:
@@ -212,7 +212,8 @@ def preview(font: Path, size: float, width: float, lines: list[str], out: Path, 
     from PIL import Image, ImageDraw, ImageFont, features
     from fontTools.ttLib import TTFont
     shaping = _load("arabic_shaping")
-    cmap = set(TTFont(str(font), lazy=True, fontNumber=0).getBestCmap())
+    with TTFont(str(font), lazy=True, fontNumber=0) as opened:
+        cmap = set(opened.getBestCmap())
     measure = shaping.font_measure(font, size, keep_codes=True)  # the image draws {name} as written
     if native and not features.check("raqm"):
         return {"error": "Pillow on this machine has no raqm (HarfBuzz layout); native preview unavailable"}

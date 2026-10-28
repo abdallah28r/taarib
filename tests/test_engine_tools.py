@@ -259,11 +259,32 @@ class ReviewFixTests(Temp):
         # Started by the user through Steam, the same Steam failure is a real error.
         self.assertEqual(boot.judge([log], 60)["verdict"], "booted_with_errors")
 
-    KELMSCOTT = Path("C:/Program Files (x86)/Steam/steamapps/common/Slay the Princess/game/gui/fonts/KelmscottRomanNF.ttf")
-
-    @unittest.skipUnless(KELMSCOTT.is_file(), "needs Slay the Princess installed")
-    def test_real_font_with_gsub_but_no_script_list(self):
-        self.assertEqual(probe.font_report(self.KELMSCOTT)["verdict"], "no-arabic")
+    def test_font_with_gsub_but_no_script_list(self):
+        # Seen in a shipped Ren'Py game font: a GSUB table whose ScriptList is empty.
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.pens.ttGlyphPen import TTGlyphPen
+        from fontTools.ttLib import newTable
+        from fontTools.ttLib.tables import otTables
+        builder = FontBuilder(1000, isTTF=True)
+        builder.setupGlyphOrder([".notdef", "A"])
+        builder.setupCharacterMap({65: "A"})
+        empty = TTGlyphPen(None).glyph()
+        builder.setupGlyf({".notdef": empty, "A": empty})
+        builder.setupHorizontalMetrics({".notdef": (500, 0), "A": (500, 0)})
+        builder.setupHorizontalHeader()
+        builder.setupNameTable({"familyName": "T", "styleName": "R"})
+        builder.setupOS2()
+        builder.setupPost()
+        gsub, table = newTable("GSUB"), otTables.GSUB()
+        table.Version, table.ScriptList, table.FeatureList, table.LookupList = 0x00010000, None, None, None
+        gsub.table = table
+        builder.font["GSUB"] = gsub
+        font = self.dir / "no-scripts.ttf"
+        builder.save(str(font))
+        self.assertEqual(probe.font_report(font)["verdict"], "no-arabic")
+        self.assertEqual(shaping.font_measure(font, 20)("AA"), 20)
+        self.assertEqual(font_bank.coverage(font, {"A"}), {})
+        font.unlink()  # every reader closed the file; Windows refuses to delete an open one
 
     def test_characters_the_original_draws_keep_their_byte(self):
         build, original, seed = self.dir / "b.txt", self.dir / "o.txt", self.dir / "s.json"

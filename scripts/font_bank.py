@@ -41,7 +41,8 @@ def assign_bank(needed: list[str], used_bytes: set[int], start: int = 0x80,
 def coverage(font_path: Path, chars: set[str]) -> dict[str, str]:
     """{missing char: its single-letter NFKC base if the font has it, else '!'}."""
     from fontTools.ttLib import TTFont
-    cmap = set(TTFont(str(font_path), lazy=True).getBestCmap())
+    with TTFont(str(font_path), lazy=True) as font:
+        cmap = set(font.getBestCmap())
     missing = {}
     for char in sorted(chars):
         if ord(char) in cmap or char.isspace():

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-10-28 — Ready for GitHub as «taarib»
+
+- `README.md` in English: what the template does, engines, quick start,
+  phases, safety, development, license, acknowledgments.
+- `LICENSE` names abdallah28r. `THIRD_PARTY_NOTICES.md` no longer says no
+  third-party code was copied; it says which MIT code and CC BY 4.0 documents
+  are adapted, and that the CC BY documents keep their license.
+- Every font reader (`font_report`, the probe preview, `font_measure`,
+  `font_bank.coverage`, `check_font.py`) now closes the font file; before, it
+  stayed open, and Windows refused to delete or replace it in the same process.
+- The test for a font with a GSUB table but no script list builds its own font
+  instead of needing a game installed, and checks that the readers released it.
+- Map: the repository and its license, the «one fix, every copy» rule, and a
+  problem row for a fixed mistake that shows up elsewhere.
+
 ## 2026-10-28 — Tried on a real game: automatic launch and boot verdict
 
 Tried on Slay the Princess (Ren'Py 8.0.3, already localized into Arabic):

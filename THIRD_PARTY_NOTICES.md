@@ -3,10 +3,12 @@
 This file lists material actually copied into or distributed with a release.
 Merely researching or invoking a separately installed tool does not add it here.
 
-At the time this template was audited on 2026-09-26, no third-party application
-source code or binary from `compliance/RESEARCH_SOURCE_REGISTER.json` was copied
-into the template. Python requirements are installation dependencies, not
-vendored packages. A packaged executable or offline bundle must be audited again
+The template ships no third-party binary, font, or game asset. The only
+third-party code in it is the MIT-licensed material listed under "Material
+adapted into the template" below; everything else is original work under this
+repository's MIT License. The CC BY 4.0 documents listed there stay under
+CC BY 4.0. Python requirements are installation dependencies, not vendored
+packages. A packaged executable or offline bundle must be audited again
 because it may embed those dependencies.
 
 For every shipped external component record:

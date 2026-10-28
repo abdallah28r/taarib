@@ -58,11 +58,11 @@ def main(argv=None) -> int:
     if not sample:
         sample = "ابتثجحخدذرزسشصضطظعغفقكلمنهويءآأؤإئىةًٌٍَُِّْ،؛؟…٪٠١٢٣٤٥٦٧٨٩"
 
-    font = TTFont(args.font, lazy=True)
     cmap = set()
-    for table in font["cmap"].tables:
-        if table.isUnicode():
-            cmap.update(table.cmap)
+    with TTFont(args.font, lazy=True) as font:
+        for table in font["cmap"].tables:
+            if table.isUnicode():
+                cmap.update(table.cmap)
 
     required = sorted({ord(ch) for ch in sample if not ch.isspace()})
     missing = [cp for cp in required if cp not in cmap]

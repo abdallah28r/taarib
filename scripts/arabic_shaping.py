@@ -245,10 +245,11 @@ def font_measure(font_path, size: float, keep_codes: bool = False) -> Callable[[
     is measured as the font's .notdef glyph, the box the player would see.
     """
     from fontTools.ttLib import TTFont
-    font = TTFont(str(font_path), lazy=True, fontNumber=0)  # fontNumber: the first face of a .ttc
-    cmap, metrics = font.getBestCmap(), font["hmtx"].metrics
-    scale = size / font["head"].unitsPerEm
-    notdef = metrics.get(".notdef", (font["head"].unitsPerEm // 2, 0))[0]
+    # fontNumber: the first face of a .ttc; closed at once so the file is not left locked
+    with TTFont(str(font_path), lazy=True, fontNumber=0) as font:
+        cmap, metrics, em = font.getBestCmap(), dict(font["hmtx"].metrics), font["head"].unitsPerEm
+    scale = size / em
+    notdef = metrics.get(".notdef", (em // 2, 0))[0]
     advance = {}
 
     def measure(text: str) -> float:
