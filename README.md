@@ -168,5 +168,5 @@ others. The exact list and attributions are in
 ## Feedback
 
 Each project can pack its lessons with `python scripts/loc.py experiences`.
-Send the file to the Hoshibana Discord server (https://discord.gg/NwhYY4YJTY)
+Send the file to the Hoshibana Discord server (https://discord.gg/8vFUB9VnQ3)
 or to [@abdallah28r](https://x.com/abdallah28r) on X.
