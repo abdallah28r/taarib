@@ -5,6 +5,10 @@ agent — [Claude Code](https://claude.com/claude-code), OpenAI Codex, or both �
 localize a PC game into natural Modern Standard Arabic, from finding the text
 to a removable patch you install on your own copy.
 
+**Website:** [abdallah28r.github.io/taarib](https://abdallah28r.github.io/taarib/) — how it works, an
+illustrated install guide for Claude Code and Codex, and screenshots of the follow-up pages
+([English](https://abdallah28r.github.io/taarib/en/)).
+
 The agent does the work; the template keeps it honest. Phases advance only when
 a script re-checks the files, every translated line is proofread before it can
 enter the game, every game file is backed up before it changes, and progress is
