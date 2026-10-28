@@ -115,7 +115,12 @@ Translate and proofread it as any batch, build it, back up and install it on
 the user's copy, and mark the units `integrated`. Then ask the user, in one
 short message, to open the game and check: letters joined, right to left,
 numbers and Latin names in place, nothing cut off, the font readable; ask for a
-screenshot of any problem. Choose the pilot lines so that between them they
+screenshot of any problem. Once the user says the game is open (or you
+launched it with `workflow.allow_launch_game`), run
+`python scripts/boot_verdict.py --engine <engine> --game <game_root>` (or
+`--log <file>`) first: a crash, new errors, or Arabic letters missing from the
+font are fixed before the user is asked anything; `booted_clean` still needs
+their words. Choose the pilot lines so that between them they
 cover: a short line, lines that wrap to two and three lines, a number, a
 percentage, brackets, a Latin word, and a placeholder or variable name. This is a planned stop. Fix any rendering problem
 in the display layer (font, shaping, direction, wrap width), never by

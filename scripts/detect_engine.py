@@ -33,6 +33,10 @@ MARKERS = {
     "gamemaker": {"data.win": 8, ".yyz": 4},
     "paradox-clausewitz": {"launcher-settings.json": 4, "fonts.font": 3, "_l_english.yml": 4},
     "bannerlord": {"submodule.xml": 6, "language_data.xml": 4, "bannerlordconfig.txt": 3},
+    # Weights beat the generic markers these games also carry (Unity for RimWorld, .NET for Stardew).
+    "age-of-empires-ii": {"aoe2de_s.exe": 10, "key-value-strings-utf8.txt": 6, "aok hd.exe": 10, "resources/_common": 2},
+    "stardew-valley": {"stardew valley.dll": 10, "stardew valley.exe": 10, "content/fonts": 2, "stardewmoddingapi.exe": 3},
+    "rimworld": {"rimworldwin64_data": 10, "data/core/languages": 4, "data/core/defs": 2},
 }
 
 LOADERS = {
@@ -40,6 +44,7 @@ LOADERS = {
     "ue4ss": ("ue4ss", "ue4ss.dll", "ue4ss-settings.ini"),
     "melonloader": ("melonloader", "version.dll"),
     "reipatcher": ("reipatcher",),
+    "smapi": ("stardewmoddingapi.exe", "smapi-internal"),
 }
 
 

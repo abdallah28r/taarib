@@ -44,7 +44,7 @@ BOOT = re.compile(r"Initialize engine version|Mono path|LogInit|Engine Version|E
                   r"|SMAPI \d|Launching mods|Loading game|RimWorld \d|Unity Engine|Platform assembly", re.I)
 CRASH = re.compile(r"Crash!!!|Unhandled exception|Fatal error|=== Critical error|Assertion failed"
                    r"|Segmentation fault|Access violation|has crashed|FATAL", re.I)
-ERROR = re.compile(r"\b(?:Exception|Error)\b|\[(?:\d\d:\d\d:\d\d )?ERROR|^ERROR:|SCRIPT ERROR", re.I)
+ERROR = re.compile(r"\b\w*(?:Exception|Error)\b|\[(?:\d\d:\d\d:\d\d )?ERROR|^ERROR:|SCRIPT ERROR", re.I)
 ARABIC = r"(?:06[0-9A-F]{2}|07[5-7][0-9A-F]|08[A-F][0-9A-F]|F[B-D][0-9A-F]{2}|FE[7-9A-F][0-9A-F])"
 MISSING_GLYPH = re.compile(rf"(?:Unicode value \\u{ARABIC}\b.*not found|(?:missing|no) glyph.*\b(?:U\+|\\u){ARABIC}\b)", re.I)
 NOISE = re.compile(r"\d+|0x[0-9a-f]+|\b[0-9a-f]{8,}\b", re.I)  # numbers and addresses differ between runs

@@ -16,12 +16,16 @@
     "godot": "Godot PCK and native internationalization",
     "renpy": "Ren'Py scripts and RPA archives",
     "visual-novel": "Multi-engine visual-novel archives and scripts",
-    "danganronpa": "Danganronpa-specific fallback tooling"
+    "danganronpa": "Danganronpa-specific fallback tooling",
+    "age-of-empires": "Age of Empires II DE/HD strings and font atlases",
+    "stardew": "Stardew Valley custom languages, content packs, and bitmap fonts",
+    "rimworld": "RimWorld language mods and runtime text patches"
   },
   "engines": {
     "unity": ["unity"], "unreal": ["unreal"], "godot": ["godot"], "renpy": ["renpy"],
     "gamemaker": ["gamemaker", "binary"], "source-engine": ["source"], "rpg-maker": ["visual-novel"],
-    "danganronpa": ["danganronpa"], "bannerlord": [], "paradox-clausewitz": []
+    "danganronpa": ["danganronpa"], "bannerlord": [], "paradox-clausewitz": [],
+    "age-of-empires-ii": ["age-of-empires"], "stardew-valley": ["stardew"], "rimworld": ["rimworld"]
   },
   "tools": [
     {"id":"python","name":"Python","profiles":["core"],"license":"PSF","url":"https://www.python.org/","commands":["python"],"tier":"core","note":"Runs the deterministic project scripts."},
@@ -78,6 +82,13 @@
     {"id":"msdf-atlas-gen","name":"msdf-atlas-gen","profiles":["fonts"],"license":"MIT","url":"https://github.com/Chlumsky/msdf-atlas-gen","tier":"conditional","note":"Multi-channel signed-distance-field atlas generation for Arabic-capable fonts."},
     {"id":"subtitle-edit","name":"Subtitle Edit","profiles":["media"],"license":"GPL-3.0","url":"https://github.com/SubtitleEdit/subtitleedit","tier":"conditional","note":"Subtitle timing, format conversion and visual review."},
     {"id":"pysubs2","name":"pysubs2","profiles":["media"],"license":"MIT","url":"https://github.com/tkarabela/pysubs2","tier":"recommended","note":"Deterministic subtitle parsing and writing."},
-    {"id":"gettext","name":"GNU gettext","profiles":["qa"],"license":"GPL-3.0+","url":"https://savannah.gnu.org/projects/gettext/","tier":"conditional","note":"PO/MO validation and msgfmt checks."}
+    {"id":"gettext","name":"GNU gettext","profiles":["qa"],"license":"GPL-3.0+","url":"https://savannah.gnu.org/projects/gettext/","tier":"conditional","note":"PO/MO validation and msgfmt checks."},
+    {"id":"aoe2de-font-generator","name":"AoE2 DE Custom Font Generator","profiles":["age-of-empires"],"license":"MIT","url":"https://github.com/sgjsakura/AOE2DE-FontGenerator","tier":"conditional","note":"Windows GUI that builds the DE in-game font atlases (.dds/.box) from chosen typefaces and charsets; needs DirectXTex texconv. Write into a mod, not over resources/_common/fonts; the main menu fonts are separate."},
+    {"id":"genie-rs","name":"genie-rs","profiles":["age-of-empires"],"license":"GPL-3.0","url":"https://github.com/SiegeEngineers/genie-rs","tier":"conditional","note":"Rust libraries reading Age of Empires I/II formats (including HD language files). Use as an external tool only; do not copy GPL code into the template."},
+    {"id":"smapi","name":"SMAPI","profiles":["stardew"],"license":"LGPL-3.0","url":"https://github.com/Pathoschild/SMAPI","tier":"recommended","note":"Stardew Valley mod loader the player installs; writes ErrorLogs/SMAPI-latest.txt (read by boot_verdict.py)."},
+    {"id":"content-patcher","name":"Content Patcher","profiles":["stardew"],"license":"MIT","url":"https://github.com/Pathoschild/StardewMods","tier":"recommended","note":"SMAPI mod that applies JSON content packs: adds the Data/AdditionalLanguages entry, the font, and the text patches without repacking game files."},
+    {"id":"stardewxnbhack","name":"StardewXnbHack","profiles":["stardew"],"license":"MIT","url":"https://github.com/Pathoschild/StardewXnbHack","tier":"conditional","note":"One-way XNB unpacker for reading source text and fonts; never used to repack."},
+    {"id":"bmfont","name":"AngelCode BMFont","profiles":["stardew"],"license":"zlib (verify on the download page)","url":"https://www.angelcode.com/products/bmfont/","tier":"conditional","note":"Windows bitmap font generator producing text .fnt plus page images from a TTF; include the Arabic presentation forms the build uses."},
+    {"id":"harmony","name":"Harmony (Lib.Harmony)","profiles":["rimworld"],"license":"MIT","url":"https://github.com/pardeike/Harmony","tier":"conditional","note":"Runtime method patching for .NET/Mono games; RimWorld mods ship it. Only for an approved runtime RTL route; never bypass protection."}
   ]
 }

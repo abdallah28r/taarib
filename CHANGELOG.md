@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-10-28 — Boot verdict from game logs; AoE II, Stardew Valley, RimWorld profiles
+
+- New `scripts/boot_verdict.py` (read-only): after the user opens the patched
+  game, it reads the engine's usual log (Unity/BepInEx, Unreal/UE4SS, Ren'Py,
+  Godot, SMAPI, RimWorld) and reports `crashed`, `missing_arabic_glyphs`
+  (TextMeshPro and similar missing-character warnings for Arabic code points),
+  `booted_with_errors` (new against a `--baseline` clean boot),
+  `booted_clean`, or that no fresh log exists. Used in the pilot before the
+  user is asked; the user's words still confirm the Arabic.
+- New engine profiles `age-of-empires-ii`, `stardew-valley`, `rimworld`, each
+  with its tools, Arabic route, workflow, and log path; `detect_engine.py`
+  recognizes them (RimWorld over plain Unity) and reports SMAPI.
+- Catalog: AoE2 DE Custom Font Generator, genie-rs, SMAPI, Content Patcher,
+  StardewXnbHack, AngelCode BMFont, Harmony; engine map updated.
+
 ## 2026-10-28 — Arabic display fixes, measured wrapping, rendering lessons
 
 From the review of six Arabic localization repositories and the Miqbas/FLTAH

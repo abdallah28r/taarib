@@ -35,6 +35,24 @@ class DiscoveryToolTests(unittest.TestCase):
             self.assertEqual(report["scripting_backend"], "il2cpp")
             self.assertIn("bepinex", report["existing_loaders"])
 
+    def test_detects_rimworld_over_unity_and_stardew_and_aoe2(self):
+        layouts = {
+            "rimworld": ["UnityPlayer.dll", "RimWorldWin64_Data/globalgamemanagers",
+                         "RimWorldWin64_Data/resources.assets", "Data/Core/Languages/English/Keyed/a.xml"],
+            "stardew-valley": ["Stardew Valley.dll", "StardewModdingAPI.exe", "Content/Fonts/a.xnb"],
+            "age-of-empires-ii": ["AoE2DE_s.exe", "resources/en/strings/key-value/key-value-strings-utf8.txt"],
+        }
+        for engine, files in layouts.items():
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                for name in files:
+                    (root / name).parent.mkdir(parents=True, exist_ok=True)
+                    (root / name).touch()
+                report = detect_engine.detect(root)
+                self.assertEqual(report["engine"], engine)
+                if engine == "stardew-valley":
+                    self.assertIn("smapi", report["existing_loaders"])
+
     def test_protection_marker_stops(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
