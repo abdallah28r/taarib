@@ -13,6 +13,7 @@ PLAN.md
 THIRD_PARTY_NOTICES.md
 template-map.html
 dashboard.html
+tasks.html
 .gitignore
 .gitattributes
 .releaseinclude

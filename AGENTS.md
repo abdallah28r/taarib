@@ -34,7 +34,7 @@ deep) in `config/agent-policy.json`; the template names no models.
 do their work yourself: `scripts/safe_backup.py` before changing a game file;
 `loc.py validate` after editing units, `loc.py findings <file>` after a findings
 file, `scripts/check_yaml.py` after YAML, `scripts/sync_runtime.py` after skills
-or roles, and `loc.py dashboard` after `PLAN.md` or the LQA matrix.
+or roles (any `loc.py` command, or `loc.py watch`, refreshes the pages).
 
 For a new game's end-to-end request, follow `references/project-run.md`:
 one grouped startup intake, then continuous work through a verified build and,
@@ -160,11 +160,12 @@ with a test, through `localization-project-maintenance`.
 - `PLAN.md` never holds counts, the phase, intake answers, backup paths, or command logs:
   those live in units, `state/pipeline.json`, `PROJECT.yaml`, backup
   manifests, and Git. Write at batch or phase boundaries, one line per item.
-- `dashboard.html` (in this folder, beside `template-map.html`): the
-  user's progress page for this game, generated from the files above after
-  every change (hooks in Claude Code; every `loc.py` command that changes
-  state, in both runtimes). Never write it by hand.
-  Every `loc.py` command and when to use it: `references/translation-units.md`.
+- `dashboard.html` and `tasks.html` (beside `template-map.html`): the user's
+  progress page and your task board, rebuilt from these records by code. Put
+  every piece of work worth a line on the board with `loc.py task` before you
+  start it, and anything for later at once; a gate refuses a phase with open
+  tasks (`references/project-run.md`). Never write either page by hand. Every
+  `loc.py` command: `references/translation-units.md`.
 - `glossary.yaml`: approved terminology, names, context variants, and voices.
 - `work/NOTES.md`: temporary findings during a phase.
 - `engines/<engine>.md`: the one place for knowledge that outlives a game;
@@ -189,8 +190,7 @@ action in `PLAN.md`. Do not repeat the same finding across records.
 - Translation units: `python scripts/loc.py validate` after every batch and
   before integration; zero errors required. Build with `loc.py rebuild`, which
   includes only proofread units by default.
-- Translation artifacts: `loc_qa.py` or `format_qa.py` as appropriate.
-- Template changes: `python scripts/verify_template.py`.
+- Translation artifacts: `loc_qa.py` or `format_qa.py`; template changes: `verify_template.py`.
 - After any fix, assume the mistake repeats: find every place built the same way
   (code, term, file, engine, screen), fix or check each, and guard against it.
 - Release-only checks (SBOM, manifest, public ZIP): the release route only.

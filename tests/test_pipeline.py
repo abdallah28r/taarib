@@ -167,8 +167,11 @@ class PipelineWalkthrough(unittest.TestCase):
         self.assertEqual(self.gate()[0], 0)
         self.assertEqual(self.phase(), "release")
         history = json.loads(self.state.read_text(encoding="utf-8"))["history"]
-        self.assertEqual([h["phase"] for h in history],
+        self.assertEqual([h["phase"] for h in history if h["event"] == "passed"],
                          ["intake", "discovery", "extraction", "pilot", "localization", "integration", "playtest", "handoff"])
+        blocked = [h for h in history if h["event"] == "blocked"]
+        self.assertTrue(blocked, "a refused gate is recorded")
+        self.assertEqual(len(blocked), len({(h["phase"], h["missing"]) for h in blocked}), "once per shortfall")
 
     def test_changed_game_text_invalidates_the_recorded_contract(self):
         self.answer_intake()

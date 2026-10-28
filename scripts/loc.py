@@ -56,6 +56,7 @@ def _load(name, path=None):
 units = _load("loc_units")
 adapter_base = _load("loc_adapter_base", ROOT / "adapters" / "base.py")
 pipeline = _load("loc_pipeline")
+board = pipeline.tasks
 tools = _load("loc_tools")
 brief_tools = _load("loc_brief")
 experiences = _load("loc_experiences")
@@ -238,6 +239,8 @@ PHASE_LABELS = {
 }
 # Ships with the template (an empty project's page) and lives in every game copy beside the map.
 DASHBOARD = ROOT / "dashboard.html"
+TASKS_PAGE = ROOT / "tasks.html"
+EVENT_LABELS = {"passed": "عبرت بوابة", "reopened": "أُعيد فتح", "blocked": "محاولة عبور لم تكتمل في"}
 MAP_PAGE = "template-map.html"
 PLAN_FILE = ROOT / "PLAN.md"
 PLAN_MAX_LINES = 150
@@ -335,7 +338,9 @@ def phase_html(state: dict, checks) -> str:
     recent = state.get("history", [])[-5:]
     if recent:
         rows = "".join(
-            f'<li>{esc(e.get("at", ""))} — {esc(e.get("event", ""))} {PHASE_LABELS.get(e.get("phase"), "")}'
+            f'<li>{esc(e.get("at", ""))} — {esc(EVENT_LABELS.get(e.get("event"), e.get("event", "")))} '
+            f'{PHASE_LABELS.get(e.get("phase"), "")}'
+            f'{esc(" (ناقص " + str(e["missing"]) + ")") if e.get("missing") else ""}'
             f'{esc(" — " + e["reason"]) if e.get("reason") else ""}</li>'
             for e in reversed(recent)
         )
@@ -353,8 +358,87 @@ def quality_html(quality: dict | None) -> str:
             f'<li>حسب البُعد: {dims}</li></ul></div>')
 
 
+def tasks_summary_html(tasks: list[dict], cards: list[dict], page: str) -> str:
+    counts = Counter(t["status"] for t in [*tasks, *cards])
+    shown = "، ".join(f"{board.LABELS[s]} {counts[s]}" for s in board.STATUSES if counts[s]) or "لا مهام مسجلة بعد"
+    waiting = [t for t in tasks if t["status"] == "waiting"]
+    rows = "".join(f'<li class="err">بانتظارك: {html.escape(t["id"])} — {html.escape(t["title"])}'
+                   f'{html.escape(" — " + t["reason"]) if t.get("reason") else ""}</li>' for t in waiting[:5])
+    return (f'<div class="card"><p class="muted">مهام الوكيل — <a href="{page}">لوحة المهام</a></p>'
+            f'<ul class="checks"><li>{html.escape(shown)}</li>{rows}</ul></div>')
+
+
+def probe_html(probe: dict | None) -> str:
+    """The last loc.py probe: engine, fonts with Arabic, and the boot verdict from the game's log."""
+    if not probe:
+        return ""
+    esc = html.escape
+    fonts = probe.get("fonts") or {}
+    rows = [f'<li>المحرك: <bdi>{esc(str(probe.get("engine") or "?"))}</bdi></li>',
+            f'<li>خطوط فيها حروف عربية: {fonts.get("arabic", 0)} من {fonts.get("total", 0)}</li>']
+    if probe.get("boot"):
+        rows.append(f'<li>حكم الإقلاع من السجل: <bdi>{esc(probe["boot"])}</bdi></li>')
+    return (f'<div class="card"><p class="muted">آخر فحص للعبة (loc.py probe) — {esc(probe.get("at", ""))}</p>'
+            f'<ul>{"".join(rows)}</ul></div>')
+
+
+def task_card(t: dict) -> str:
+    esc = html.escape
+    tags = [board.KIND_LABELS.get(t.get("kind"), "")]
+    if t.get("from_plan"):
+        tags.append("دفعة من PLAN.md")
+    elif t.get("phase"):
+        tags.append(PHASE_LABELS.get(t["phase"], t["phase"]))
+    if t["status"] == "dropped":
+        tags.append("أُلغيت")
+    history = "".join(f'<li>{esc(h["at"])} — {board.LABELS.get(h["status"], h["status"])}'
+                      f'{esc(" — " + h["note"]) if h.get("note") else ""}</li>' for h in t.get("history", []))
+    detail = (f'<details><summary>المراحل ({len(t["history"])})</summary><ul>{history}</ul></details>'
+              if history else "")
+    extra = "".join(f'<p class="muted">{label}: {esc(t[key])}</p>'
+                    for key, label in (("reason", "السبب"), ("evidence", "الدليل")) if t.get(key))
+    return (f'<article class="task{" dropped" if t["status"] == "dropped" else ""}">'
+            f'<p class="muted"><bdi>{esc(t["id"])}</bdi> · {" · ".join(esc(x) for x in tags if x)}</p>'
+            f'<p>{esc(t["title"])}</p>{extra}{detail}</article>')
+
+
+def render_tasks(tasks: list[dict], cards: list[dict], title: str, generated: str) -> str:
+    """tasks.html: the agent's tasks and PLAN.md's batches as columns, with each task's history."""
+    esc = html.escape
+    columns = []
+    for status in board.STATUSES[:-1]:  # dropped tasks are shown, struck through, among the done ones
+        items = [t for t in [*cards, *tasks] if t["status"] in ((status, "dropped") if status == "done" else (status,))]
+        shown = list(reversed(items))[:30] if status == "done" else items
+        body = "".join(task_card(t) for t in shown) or '<p class="muted">لا شيء</p>'
+        columns.append(f'<section class="col {status}"><h2>{board.LABELS[status]} '
+                       f'<span class="muted">({len(items)})</span></h2>{body}</section>')
+    return "".join([
+        '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width,initial-scale=1">',
+        '<meta http-equiv="refresh" content="15">',
+        f"<title>{esc(title)} — لوحة المهام</title><style>{HTML_STYLE}{TASKS_STYLE}</style></head><body>",
+        f'<main class="wide"><h1>{esc(title)} — لوحة المهام</h1>',
+        '<p class="muted">ما ينوي الوكيل فعله، وما يعمل عليه، وما ينتظرك، وما أنجزه بدليل. تُولَّد آليًا وتتحدث كل 15 '
+        'ثانية. لا تُغلق مرحلة وفيها مهمة مفتوحة. اضغط «المراحل» لترى مسار أي مهمة. '
+        f'<a href="{DASHBOARD.name}">لوحة التعريب</a>'
+        + (f" — آخر تغيير: {esc(generated)}" if generated else "") + "</p>",
+        f'<div class="board">{"".join(columns)}</div></main></body></html>\n',
+    ])
+
+
+TASKS_STYLE = """
+main.wide{max-width:none}.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:12px;
+overflow-x:auto;padding-bottom:8px}.col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.col h2{margin:0 0 8px;font-size:1rem}.task{border:1px solid var(--line);border-radius:10px;padding:8px 10px;
+margin-bottom:8px;background:var(--bg)}.task p{margin:2px 0}.task.dropped p:not(.muted){text-decoration:line-through}
+.col.waiting{border-color:#c0392b}.col.doing{border-color:var(--fill)}details{font-size:.85rem}
+@media (max-width:640px){.board{grid-auto-flow:row;grid-auto-columns:auto}}
+"""
+
+
 def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, state: dict, checks, title: str,
-                     problems: dict | None = None, quality: dict | None = None, lessons: int = 0) -> str:
+                     problems: dict | None = None, quality: dict | None = None, lessons: int = 0,
+                     tasks_html: str = "", probe: str = "") -> str:
     esc = html.escape
     return "".join([
         '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">',
@@ -366,7 +450,7 @@ def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, sta
         + (f"آخر تغيير في بيانات المشروع: {esc(generated)}. " if generated
            else "لم يبدأ العمل بعد: افتح هذا المجلد مشروعًا في Claude Code أو Codex وقل «عرّب اللعبة». ")
         + f'{esc(MEANING_NOTE)} <a href="{MAP_PAGE}">خريطة القالب</a> تشرح ما تفعله أنت وكيف يعمل النظام.</p>',
-        "<h2>المرحلة</h2>", phase_html(state, checks), experiences_html(state, lessons),
+        "<h2>المرحلة</h2>", phase_html(state, checks), tasks_html, probe, experiences_html(state, lessons),
         "<h2>التقدم</h2>", progress_html(groups, qa, problems),
         quality_html(quality),
         '<h2>الخطة والملاحظات</h2><div class="card plan">', markdown_html(plan_text), "</div>",
@@ -397,7 +481,8 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
         title = "مشروع التعريب"
     plan_text = plan_file.read_text(encoding="utf-8") if plan_file.is_file() else ""
     unit_files = units.unit_paths(units_dir) if Path(units_dir).exists() else []
-    data_files = [*unit_files, *(p for p in (project.state_file, plan_file, qa_file) if p.is_file())]
+    task_file = board.tasks_file(project.state_file)
+    data_files = [*unit_files, *(p for p in (project.state_file, task_file, plan_file, qa_file) if p.is_file())]
     # The time of the newest project data, not of this render, so an unchanged project gives the same page.
     changed = (datetime.fromtimestamp(max(p.stat().st_mtime for p in data_files)).strftime("%Y-%m-%d %H:%M:%S")
                if unit_files or project.state_file.is_file() else "")
@@ -408,22 +493,40 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
         covered = [u for u in all_units if u.get("batch") in {f.stem for f in finding_files}]
         quality = mqm_score([f for _, f in findings], covered) if covered else None
     lessons = len(experiences.load_lessons()) if units_dir == units.UNITS_DIR else 0
+    tasks, cards = board.load(project.state_file), board.plan_batch_cards(plan_file)
+    tasks_out = out.with_name(TASKS_PAGE.name)
+    probe_file = project.root / "work" / "probe" / "last.json"
+    probe = json.loads(probe_file.read_text(encoding="utf-8")) if probe_file.is_file() else None
     page = render_dashboard(groups, qa_cases(qa_file), changed, plan_text, state, checks, str(title), problems,
-                            quality, lessons)
+                            quality, lessons, tasks_summary_html(tasks, cards, tasks_out.name), probe_html(probe))
     out.parent.mkdir(parents=True, exist_ok=True)
+    tasks_out.write_text(render_tasks(tasks, cards, str(title), changed), encoding="utf-8", newline="\n")
     out.write_text(page, encoding="utf-8", newline="\n")
     return out
 
 
-def auto_dashboard(*paths_in_use) -> None:
-    """Refresh the dashboard after a state change, only for the real project, never for test paths."""
-    unit_root = units.UNITS_DIR.resolve()
-    defaults = {unit_root, (ROOT / "state" / "pipeline.json").resolve(), QA_MATRIX.resolve()}
-    if all(Path(p).resolve() in defaults or Path(p).resolve().is_relative_to(unit_root) for p in paths_in_use):
-        try:
+# Everything the two pages are built from. One check after every loc.py command, in the Claude Code hook
+# after every tool, and in loc.py watch: no command has to remember to refresh the pages.
+PAGE_SOURCES = ("units/**/*.jsonl", "state/pipeline.json", "state/tasks.json", "PLAN.md", "qa/LQA_MATRIX.csv",
+                "PROJECT.yaml", "glossary.yaml", "work/proofreading/*.jsonl", "work/experiences.jsonl",
+                "work/probe/last.json")
+
+
+def newest_source(root: Path = ROOT) -> float:
+    return max((p.stat().st_mtime for pattern in PAGE_SOURCES for p in root.glob(pattern) if p.is_file()),
+               default=0.0)
+
+
+def refresh_if_stale(force: bool = False) -> bool:
+    """Rebuild dashboard.html and tasks.html when any project source is newer than them (the real project only)."""
+    pages = (DASHBOARD, TASKS_PAGE)
+    try:
+        if force or not all(p.is_file() for p in pages) or newest_source() > min(p.stat().st_mtime for p in pages):
             write_dashboard()
-        except Exception as exc:  # never fail the real command because of the page
-            print(f"WARN  dashboard not refreshed: {exc}")
+            return True
+    except Exception as exc:  # never fail the real command because of the page
+        print(f"WARN  dashboard not refreshed: {exc}", file=sys.stderr)
+    return False
 
 
 # ----- commands -------------------------------------------------------------
@@ -596,7 +699,6 @@ def cmd_mark(args) -> int:
         return 1
     for unit_file in files:
         units.write(unit_file)
-    auto_dashboard(args.path)
     print(f"MARKED={changed} STATUS={args.status}")
     return 0 if changed else 1
 
@@ -716,7 +818,6 @@ def cmd_extract(args) -> int:
         return 1
     out.parent.mkdir(parents=True, exist_ok=True)
     units.write(units.UnitFile(out, extracted))
-    auto_dashboard(out)
     translated = sum(1 for u in extracted if u.get("target"))
     print(f"EXTRACTED={len(extracted)} ALREADY_TRANSLATED={translated} OUT={out}")
     return 0
@@ -768,6 +869,13 @@ def cmd_next(args) -> int:
     blocking = [(ok, m) for ok, m in checks if not ok]
     print_checks(blocking or checks)
     print(f"LOAD: {pipeline.ROUTES[phase]}")
+    order = ("doing", "waiting", "verify", "next", "later")
+    open_tasks = sorted((t for t in board.load(project.state_file) if t["status"] in board.OPEN),
+                        key=lambda t: (t["phase"] != phase, order.index(t["status"])))
+    for task in open_tasks[:LINE_LIMIT]:
+        print(f"TASK {task['id']} [{task['status']}] ({task['phase']}) {task['title']}")
+    if open_tasks:
+        print(f"TASKS_OPEN={len(open_tasks)} — resume doing/waiting first; loc.py task list")
     if not blocking and phase != pipeline.PHASES[-1]:
         print("READY: run python scripts/loc.py gate")
     return 0
@@ -793,7 +901,6 @@ def cmd_gate(args) -> int:
         print(f"GATE {phase}: {'READY' if ready else 'BLOCKED'}")
         return 0 if ready else 1
     moved, now_phase, checks = pipeline.advance(project)
-    auto_dashboard(args.state, args.units, args.qa)
     print_checks(checks)
     if moved:
         print(f"GATE {phase}: PASSED -> {now_phase}")
@@ -808,7 +915,6 @@ def cmd_reopen(args) -> int:
     except ValueError as exc:
         print(f"ERROR {exc}")
         return 2
-    auto_dashboard(args.state, args.units, args.qa)
     print(f"REOPENED {args.phase}")
     return 0
 
@@ -829,7 +935,6 @@ def cmd_pilot_ok(args) -> int:
     except ValueError as exc:
         print(f"ERROR {exc}")
         return 2
-    auto_dashboard(args.state, args.units, args.qa)
     print("PILOT_CONFIRMED")
     return 0
 
@@ -840,7 +945,6 @@ def cmd_accept(args) -> int:
     except ValueError as exc:
         print(f"ERROR {exc}")
         return 2
-    auto_dashboard(args.state, args.units, args.qa)
     print("ACCEPTANCE_RECORDED")
     return 0
 
@@ -916,7 +1020,6 @@ def cmd_update(args) -> int:
         units.write(units.UnitFile(removed, [u for u in files[0].units if u["id"] in gone]))
         print(f"REMOVED_UNITS_SAVED={removed}")
     units.write(units.UnitFile(files[0].path, merged))
-    auto_dashboard(args.path)
     return 0
 
 
@@ -1021,7 +1124,6 @@ def cmd_apply(args) -> int:
         return 1
     for unit_file in files:
         units.write(unit_file)
-    auto_dashboard(args.path)
     found, overrides = find_problems(selected)
     counts = tools.problem_counts(found, overrides)
     print(f"APPLIED={len(selected)} STATUS=translated BY={args.by}"
@@ -1103,7 +1205,6 @@ def cmd_fix(args) -> int:
             return 2
         ident = pipeline.open_fix(project, args.title, args.current, args.expected, args.unchanged, args.ids,
                                   target_snapshot(all_units, set(args.ids)))
-        auto_dashboard(args.state, args.path)
         print(f"FIX_OPENED={ident} — change the listed units with loc.py apply --fix {ident}, "
               f"have them proofread again, then loc.py fix close {ident} --verdict verified --evidence ...")
         return 0
@@ -1116,7 +1217,6 @@ def cmd_fix(args) -> int:
     if problems:
         print("NOT_CLOSED: fix the above, or close honestly as partial or failed and open a follow-up")
         return 1
-    auto_dashboard(args.state, args.path)
     print(f"FIX_CLOSED={args.id} VERDICT={args.verdict}")
     return 0
 
@@ -1132,7 +1232,6 @@ def cmd_terms(args) -> int:
                 if unit.get("id") == ident:
                     unit["term_exceptions"] = sorted(set(unit.get("term_exceptions") or []) | {term})
                     units.write(unit_file)
-                    auto_dashboard(args.path)
                     print(f"EXCEPTION_RECORDED {ident} {term}")
                     return 0
         print(f"ERROR unknown unit id {ident!r}")
@@ -1169,7 +1268,6 @@ def cmd_lesson(args) -> int:
     except ValueError as exc:
         print(f"ERROR {exc}")
         return 2
-    auto_dashboard(args.path if args.path != experiences.LESSONS_FILE else units.UNITS_DIR)
     print(f"LESSON_RECORDED={lesson['id']}")
     return 0
 
@@ -1229,10 +1327,57 @@ def cmd_experiences(args) -> int:
     lessons = experiences.load_lessons(args.lessons)
     target = experiences.pack(lessons, experience_facts(project, all_units), files, args.out, str(name), sanitizer)
     pipeline.record_experiences(project, target, experiences.sha256(target), len(lessons))
-    auto_dashboard(args.state, args.units, args.qa)
     print(f"EXPERIENCES={target}")
     print(f"LESSONS={len(lessons)} FILES={len(files)}")
     print(experiences.send_message(target.name))
+    return 0
+
+
+def cmd_task(args) -> int:
+    """The agent's task board: add what it will do, move it through the columns, defer, list."""
+    project = project_of(args)
+    current = project.state()["phase"]
+    try:
+        if args.task_command == "add":
+            status = "later" if args.later else args.status
+            ident = board.add(args.state, args.title, args.kind, args.phase or current, status, args.origin or "",
+                              note=args.note or "")
+            print(f"TASK_ADDED={ident} [{status}] ({args.phase or current})")
+        elif args.task_command == "move":
+            task = board.move(args.state, args.id, args.status, args.note or "", args.evidence or "", args.reason or "")
+            print(f"TASK_MOVED={task['id']} [{task['status']}]")
+        elif args.task_command == "defer":
+            task = board.defer(args.state, args.id, args.to_phase, args.reason, pipeline.PHASES, current)
+            print(f"TASK_DEFERRED={task['id']} -> {task['phase']}")
+        else:
+            tasks = board.load(args.state)
+            shown = tasks if args.all else [t for t in tasks if t["status"] in board.OPEN]
+            for task in shown:
+                print(f"{task['id']} [{task['status']}] ({task['phase']}, {task['kind']}) {task['title']}"
+                      + (f" — {task['reason']}" if task.get("reason") and task["status"] == "waiting" else ""))
+            left = board.open_in_phase(args.state, current)
+            print(f"TASKS={len(tasks)} OPEN={sum(t['status'] in board.OPEN for t in tasks)} "
+                  f"OPEN_IN_{current.upper()}={len(left)}")
+    except ValueError as exc:
+        print(f"ERROR {exc}")
+        return 2
+    return 0
+
+
+def cmd_watch(args) -> int:
+    """Keep dashboard.html and tasks.html current while anything works on the project (Codex too)."""
+    import time
+    print(f"WATCHING every {args.interval}s; rebuilds the pages when a project file changes. Ctrl+C stops.")
+    cycles = 0
+    try:
+        while args.cycles is None or cycles < args.cycles:
+            if refresh_if_stale():
+                print(f"REFRESHED {datetime.now().strftime('%H:%M:%S')}")
+            cycles += 1
+            if args.cycles is None or cycles < args.cycles:
+                time.sleep(args.interval)
+    except KeyboardInterrupt:
+        pass
     return 0
 
 
@@ -1245,7 +1390,9 @@ def cmd_dashboard(args) -> int:
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if argv[:1] == ["probe"]:  # its own options live in scripts/game_probe.py
-        return _load("game_probe").main(argv[1:])
+        code = _load("game_probe").main(argv[1:])
+        refresh_if_stale()
+        return code
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -1342,6 +1489,34 @@ def main(argv=None) -> int:
     p = with_project(sub.add_parser("accept", help="record the user's acceptance of the playtest build; only on their explicit words"))
     p.add_argument("--note", required=True, help="the user's words, build, and date")
     p.set_defaults(run=cmd_accept)
+    p = with_project(sub.add_parser("task", help="the agent's task board (tasks.html): add, move, defer, list; "
+                                                 "a phase's gate needs its tasks done or deferred"))
+    task_sub = p.add_subparsers(dest="task_command", required=True)
+    q = task_sub.add_parser("add", help="a piece of work worth a line: a batch step, fix, question, investigation, tool")
+    q.add_argument("title")
+    q.add_argument("--kind", choices=board.KINDS, default="other")
+    q.add_argument("--status", choices=board.OPEN, default="next")
+    q.add_argument("--later", action="store_true", help="for later in this phase (same as --status later)")
+    q.add_argument("--phase", choices=pipeline.PHASES, help="default: the current phase")
+    q.add_argument("--origin", help="what created it: the user's request, a finding, a failed gate")
+    q.add_argument("--note")
+    q = task_sub.add_parser("move", help="next, doing, waiting (--reason), verify, done (--evidence), dropped (--reason)")
+    q.add_argument("id")
+    q.add_argument("status", choices=board.STATUSES)
+    q.add_argument("--evidence", help="required for done: command output, file, verdict")
+    q.add_argument("--reason", help="required for waiting (the question) and dropped (why)")
+    q.add_argument("--note")
+    q = task_sub.add_parser("defer", help="hand an open task to a later phase, with the reason")
+    q.add_argument("id")
+    q.add_argument("--to-phase", required=True, choices=pipeline.PHASES)
+    q.add_argument("--reason", required=True)
+    q = task_sub.add_parser("list", help="open tasks (--all: with done and dropped)")
+    q.add_argument("--all", action="store_true")
+    p.set_defaults(run=cmd_task)
+    p = sub.add_parser("watch", help="rebuild dashboard.html and tasks.html whenever a project file changes")
+    p.add_argument("--interval", type=float, default=3)
+    p.add_argument("--cycles", type=int, help=argparse.SUPPRESS)
+    p.set_defaults(run=cmd_watch)
     sub.add_parser("probe", add_help=False,
                    help="engine, fonts and their Arabic, a font preview, and the game's logs, without playing (scripts/game_probe.py)")
 
@@ -1444,7 +1619,10 @@ def main(argv=None) -> int:
         getattr(sys.stdout, "reconfigure", lambda **_: None)(encoding="utf-8")
     if args.command == "mark" and not (args.ids or args.batch or args.file):
         parser.error("mark needs --ids, --batch, or --file")
-    return args.run(args)
+    code = args.run(args)
+    if args.command not in ("dashboard", "watch"):
+        refresh_if_stale(force=args.command == "next")  # next runs at every session start
+    return code
 
 
 if __name__ == "__main__":

@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-28 — Task board, and pages that refresh themselves
+
+- `tasks.html`: the agent's task board, linked from `dashboard.html`, with
+  columns later → next → doing → waiting (on the user) → verify → done and
+  each task's history. `loc.py task add|move|defer|list` (new library
+  `scripts/loc_tasks.py`, data in `state/tasks.json`). `done` needs evidence,
+  `waiting`/`dropped` a reason. A gate refuses a phase while one of its tasks
+  is open. `fix open` adds a task and `fix close` moves it. PLAN.md's batches
+  appear as read-only cards. `loc.py next` lists open tasks first.
+- The pages are rebuilt whenever a project file is newer than them, from one
+  check run after every `loc.py` command, after every Claude Code tool
+  (shell commands included), and under the new `loc.py watch`. Before,
+  each command had to remember to refresh: `no-images` and `normalize` did
+  not, and a PLAN.md edit from Codex or the shell stayed invisible.
+- A refused gate is now recorded once per shortfall and shown as an event;
+  the last `loc.py probe` (engine, fonts with Arabic, boot verdict) is shown
+  on the dashboard (`work/probe/last.json`).
+
 ## 2026-10-28 — Map renamed to `template-map.html`
 
 - `خريطة-القالب.html` is now `template-map.html`, an English file name that

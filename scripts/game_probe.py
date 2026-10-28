@@ -563,6 +563,14 @@ def main(argv: list[str] | None = None) -> int:
         report["logs"]["next"] = ("No fresh log: ask the user to start the game, or use --launch when "
                                   "allow_launch_game is true, then run probe again.")
     print(json.dumps(report, ensure_ascii=False, indent=2))
+    # A short summary for dashboard.html (loc.py rebuilds it after probe).
+    args.out.mkdir(parents=True, exist_ok=True)
+    (args.out / "last.json").write_text(json.dumps({
+        "at": time.strftime("%Y-%m-%d %H:%M"), "game": args.game.name, "engine": engine,
+        "fonts": {"total": len(report["fonts"]),
+                  "arabic": sum(f.get("verdict") == "arabic" for f in report["fonts"])},
+        "boot": (report.get("boot") or {}).get("verdict", ""),
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return 0
 
 

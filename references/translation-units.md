@@ -58,7 +58,9 @@ its options. This table is the one map of when to use each.
 | any | `next` | Session start or when unsure: phase, blockers, what to load. |
 | any | `gate` (`--check`) | When `next` says ready; never skip it to move on. |
 | any | `reopen <phase> --reason` | A game update or finding sends work back. |
-| any | `dashboard` | In Codex after editing `PLAN.md` (Claude Code hooks do it). |
+| any | `task add\|move\|defer\|list` | Task board (`tasks.html`); see `references/project-run.md`. |
+| any | `dashboard` | Rebuild both pages now. |
+| any | `watch` | Keep both pages current (Codex too). |
 | any | `progress --format chat\|md\|html` | When the user asks, or per `reporting.progress_in_chat`. |
 | extraction | `extract --adapter --game --out` | Once the adapter contract passes. |
 | extraction | `pseudo --adapter --game --out` | Before translating: install on a copy to test Arabic rendering and length. |
@@ -101,10 +103,8 @@ units `integrated` again.
 
 ## Showing progress
 
-`dashboard.html`, in the root of each game's copy, is always current: code regenerates it from units,
-`state/pipeline.json`, `qa/LQA_MATRIX.csv`, and `PLAN.md` after every change
-(Claude Code hooks, and every `loc.py` command that changes state). It refreshes
-itself in the browser every 15 seconds. Never write it by hand.
+`dashboard.html` and `tasks.html` are rebuilt whenever a project file is newer than them: after
+every `loc.py` command, every Claude Code tool, and under `loc.py watch`. Never write them by hand.
 
 In the conversation, `PROJECT.yaml` → `reporting.progress_in_chat` decides:
 `on_request` (default) prints `loc.py progress` only when the user asks;

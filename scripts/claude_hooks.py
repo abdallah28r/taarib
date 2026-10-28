@@ -139,21 +139,18 @@ def pre_tool(event: dict, root: Path = ROOT) -> str | None:
     return None
 
 
-DASHBOARD_SOURCES = ("units/", "PLAN.md", "qa/LQA_MATRIX.csv", "PROJECT.yaml")
 PLAN_MAX_LINES = 150
 
 
 def post_tool(event: dict, root: Path = ROOT) -> str | None:
-    """Check what was just written, refresh the dashboard, and return problems or None."""
+    """Check what was just written, refresh the pages if any project file changed, and return problems or None.
+
+    Runs after shell commands too, so a file written from the terminal still reaches the dashboard.
+    """
     problem = _post_tool_problem(event, root)
-    target = (event.get("tool_input") or {}).get("file_path") or ""
-    try:
-        rel = Path(os.path.relpath(os.path.abspath(target), os.path.abspath(root))).as_posix() if target else ""
-    except ValueError:
-        rel = ""
-    if rel.startswith(DASHBOARD_SOURCES) and norm(root) == norm(ROOT):
+    if norm(root) == norm(ROOT):
         try:
-            _load("loc", ROOT / "scripts" / "loc.py").write_dashboard()
+            _load("loc", ROOT / "scripts" / "loc.py").refresh_if_stale()
         except Exception:  # the page is a convenience; never block an edit on it
             pass
     return problem

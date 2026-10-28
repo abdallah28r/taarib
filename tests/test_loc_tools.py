@@ -145,11 +145,12 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(page, loc.DASHBOARD.read_text(encoding="utf-8"),
                          "regenerate the shipped page: python scripts/loc.py dashboard")
 
-    def test_auto_dashboard_ignores_test_paths(self):
-        before = loc.DASHBOARD.stat().st_mtime_ns if loc.DASHBOARD.exists() else None
-        loc.auto_dashboard(Path(tempfile.gettempdir()) / "elsewhere.jsonl")
-        after = loc.DASHBOARD.stat().st_mtime_ns if loc.DASHBOARD.exists() else None
-        self.assertEqual(before, after)
+    def test_pages_refresh_only_when_a_source_is_newer(self):
+        loc.refresh_if_stale(force=True)
+        before = loc.DASHBOARD.stat().st_mtime_ns
+        self.assertFalse(loc.refresh_if_stale(), "nothing changed, nothing rebuilt")
+        self.assertEqual(before, loc.DASHBOARD.stat().st_mtime_ns)
+        self.assertTrue(loc.TASKS_PAGE.is_file())
 
 
 if __name__ == "__main__":

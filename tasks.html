@@ -1,0 +1,26 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="15"><title>مشروع التعريب — لوحة المهام</title><style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--track:#e6e6e1;--fill:#2f6f5e;--line:#ddddd6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--card:#20201f;--ink:#ececea;--muted:#a3a39d;--track:#33332f;--fill:#5fb39a;--line:#3a3a36}}
+:root[data-theme="dark"]{--bg:#161615;--card:#20201f;--ink:#ececea;--muted:#a3a39d;--track:#33332f;--fill:#5fb39a;--line:#3a3a36}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,"Segoe UI",Tahoma,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px}h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.1rem;margin:28px 0 12px}
+.muted{color:var(--muted);font-size:.9rem}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.row{display:grid;grid-template-columns:9rem 1fr 4.5rem;gap:12px;align-items:center;padding:6px 0}
+.track{height:12px;background:var(--track);border-radius:6px;overflow:hidden}.fill{height:100%;background:var(--fill)}
+.num{text-align:left;font-variant-numeric:tabular-nums}table{width:100%;border-collapse:collapse}
+.card+.card{margin-top:12px}.phases{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:0 0 12px}
+.phases li{padding:4px 10px;border-radius:999px;border:1px solid var(--line);font-size:.9rem;color:var(--muted)}
+.phases li.done{color:var(--fill);border-color:var(--fill)}.phases li.now{background:var(--fill);color:var(--card);border-color:var(--fill)}
+.plan h2,.plan h3,.plan h4{font-size:1rem;margin:16px 0 6px}.plan p{margin:4px 0}
+.checks{list-style:none;padding:0;margin:0}.checks li{padding:4px 0}.checks li.ok{color:var(--fill)}
+bdi{unicode-bidi:isolate}.checks li.err{color:#c0392b}
+td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right}ul{padding-inline-start:20px}
+@media (max-width:480px){.row{grid-template-columns:6.5rem 1fr 3.5rem}}
+
+main.wide{max-width:none}.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:12px;
+overflow-x:auto;padding-bottom:8px}.col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.col h2{margin:0 0 8px;font-size:1rem}.task{border:1px solid var(--line);border-radius:10px;padding:8px 10px;
+margin-bottom:8px;background:var(--bg)}.task p{margin:2px 0}.task.dropped p:not(.muted){text-decoration:line-through}
+.col.waiting{border-color:#c0392b}.col.doing{border-color:var(--fill)}details{font-size:.85rem}
+@media (max-width:640px){.board{grid-auto-flow:row;grid-auto-columns:auto}}
+</style></head><body><main class="wide"><h1>مشروع التعريب — لوحة المهام</h1><p class="muted">ما ينوي الوكيل فعله، وما يعمل عليه، وما ينتظرك، وما أنجزه بدليل. تُولَّد آليًا وتتحدث كل 15 ثانية. لا تُغلق مرحلة وفيها مهمة مفتوحة. اضغط «المراحل» لترى مسار أي مهمة. <a href="dashboard.html">لوحة التعريب</a></p><div class="board"><section class="col later"><h2>لاحقًا <span class="muted">(0)</span></h2><p class="muted">لا شيء</p></section><section class="col next"><h2>التالي <span class="muted">(0)</span></h2><p class="muted">لا شيء</p></section><section class="col doing"><h2>قيد العمل <span class="muted">(0)</span></h2><p class="muted">لا شيء</p></section><section class="col waiting"><h2>بانتظارك <span class="muted">(0)</span></h2><p class="muted">لا شيء</p></section><section class="col verify"><h2>للتحقق <span class="muted">(0)</span></h2><p class="muted">لا شيء</p></section><section class="col done"><h2>منجزة <span class="muted">(0)</span></h2><p class="muted">لا شيء</p></section></div></main></body></html>

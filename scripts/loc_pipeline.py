@@ -31,6 +31,7 @@ def _load(name, path):
 
 units = _load("loc_units", ROOT / "scripts" / "loc_units.py")
 tools = _load("loc_tools", ROOT / "scripts" / "loc_tools.py")
+tasks = _load("loc_tasks", ROOT / "scripts" / "loc_tasks.py")
 
 PHASES = ("intake", "discovery", "extraction", "pilot", "localization", "integration", "playtest", "handoff", "release")
 ROUTES = {
@@ -374,7 +375,7 @@ CRITERIA = {
 def evaluate(project: Project, phase: str | None = None) -> tuple[str, list[tuple[bool, str]]]:
     state = project.state()
     phase = phase or state["phase"]
-    return phase, CRITERIA[phase](project, project.settings(), state)
+    return phase, CRITERIA[phase](project, project.settings(), state) + tasks.gate_checks(project.state_file, phase)
 
 
 def record_contract(project: Project, passed: bool) -> dict:
@@ -390,6 +391,11 @@ def advance(project: Project) -> tuple[bool, str, list[tuple[bool, str]]]:
     state = project.state()
     phase, checks = evaluate(project)
     if not all(ok for ok, _ in checks) or phase == PHASES[-1]:
+        missing = sum(1 for ok, _ in checks if not ok)
+        last = (state.get("history") or [{}])[-1]
+        if missing and (last.get("event"), last.get("phase"), last.get("missing")) != ("blocked", phase, missing):
+            state["history"].append({"event": "blocked", "phase": phase, "missing": missing, "at": now()})
+            project.save(state)  # a refused gate is shown, once per distinct shortfall
         return False, phase, checks
     following = PHASES[PHASES.index(phase) + 1]
     state["history"].append({"event": "passed", "phase": phase, "at": now()})
@@ -425,6 +431,8 @@ def open_fix(project: Project, title: str, current: str, expected: str, unchange
     fixes.append({"id": ident, "title": title, "current": current, "expected": expected, "unchanged": unchanged,
                   "ids": ids, "status": "open", "opened_at": now()})
     project.save(state)
+    tasks.add(project.state_file, f"{ident}: {title}", "fix", state["phase"], "doing", origin="loc.py fix open",
+              links={"fix": ident}, note=f"now: {current} / expected: {expected}")
     return ident
 
 
@@ -452,6 +460,12 @@ def close_fix(project: Project, ident: str, verdict: str, evidence: str, snapsho
         return problems
     fix.update(status="closed", verdict=verdict, evidence=evidence, closed_at=now())
     project.save(state)
+    task = tasks.linked(project.state_file, "fix", ident)
+    if task and task["status"] in tasks.OPEN:
+        if verdict == "verified":
+            tasks.move(project.state_file, task["id"], "done", evidence=evidence)
+        else:  # the fix is closed but the problem is not solved: the task stays open
+            tasks.move(project.state_file, task["id"], "next", note=f"fix closed {verdict}: {evidence}")
     return []
 
 

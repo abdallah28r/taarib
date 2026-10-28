@@ -102,6 +102,28 @@ user asked for a shareable package. The gates are
 the stop rule: when `next` reports a phase ready, gate it and move on instead
 of reviewing again.
 
+## The task board
+
+`tasks.html` shows your work as columns the user can follow: later → next →
+doing → waiting (on the user) → verify → done. Before starting a piece of work
+worth a line — a fix, an investigation, a question, a tool, an integration
+step — add it; when you notice work for later, add it at once with `--later`
+instead of keeping it in mind:
+
+    python scripts/loc.py task add "Wrap long menu labels" --kind fix [--later] [--phase integration]
+    python scripts/loc.py task move T-004 doing
+    python scripts/loc.py task move T-004 waiting --reason "Which name for the city: transliterated or translated?"
+    python scripts/loc.py task move T-004 done --evidence "loc.py validate: 0 errors; menu checked in build r3"
+    python scripts/loc.py task defer T-006 --to-phase playtest --reason "needs the installed build"
+
+Batches are not tasks: their `PLAN.md` checklist appears on the board by itself.
+`loc.py fix open` adds its own task, closed by `fix close --verdict verified`.
+`done` needs evidence and `waiting`/`dropped` a reason; a gate refuses to close a
+phase while one of its tasks is open, so finish, defer, or drop each one.
+`loc.py next` lists open tasks first: resume `doing` and `waiting` before new work.
+Do not add a task per command or per file; one card is one result the user
+would recognise.
+
 ## Pilot before bulk translation
 
 Do not translate the whole game before the user has seen Arabic in it. While
