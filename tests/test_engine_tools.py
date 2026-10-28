@@ -95,6 +95,29 @@ class BytePatchTests(Temp):
         with self.assertRaises(RuntimeError):
             byte_patch.apply_patch(self.dir / "p.arpatch", other)
 
+    @unittest.skipUnless(sys.platform == "win32", "only Windows refuses to replace a file another program has open")
+    def test_a_file_held_open_by_the_game(self):
+        import threading
+        import time
+        file_ops = load("file_ops")
+        original, built, target = self.dir / "a.bin", self.dir / "b.bin", self.dir / "game.bin"
+        original.write_bytes(b"HELLO WORLD" * 50)
+        built.write_bytes(b"HELLO ARABI" * 50)
+        target.write_bytes(original.read_bytes())
+        byte_patch.make_patch(original, built, self.dir / "p.arpatch")
+        held = open(target, "rb")  # the game keeps its file open
+        with self.assertRaises(file_ops.FileInUse) as caught:
+            byte_patch.apply_patch(self.dir / "p.arpatch", target)
+        held.close()
+        self.assertIn("Close the game", str(caught.exception))
+        self.assertEqual(target.read_bytes(), original.read_bytes(), "nothing was changed")
+        self.assertEqual(sorted(p.name for p in self.dir.iterdir()), ["a.bin", "b.bin", "game.bin", "p.arpatch"])
+        held = open(target, "rb")  # held only briefly, as an antivirus scan does
+        threading.Timer(0.3, held.close).start()
+        time.sleep(0.05)
+        self.assertTrue(byte_patch.apply_patch(self.dir / "p.arpatch", target).startswith("installed"))
+        self.assertEqual(target.read_bytes(), built.read_bytes())
+
     def test_guarded_edit(self):
         path = self.dir / "x.bin"
         path.write_bytes(bytes.fromhex("00112233"))

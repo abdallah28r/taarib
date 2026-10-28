@@ -9,6 +9,7 @@ import shutil
 
 from apply_patch_package import _atomic_copy, digest
 from build_patch_package import has_symlink_component
+from file_ops import remove_file
 
 
 TRANSACTION = re.compile(r"\d{8}T\d{6}Z-[0-9a-f]{32}\Z")
@@ -82,7 +83,7 @@ def main(argv=None):
         for rel, target, backup, action, current_hash in staged:
             if action == "add":
                 if current_hash is not None:
-                    target.unlink()
+                    remove_file(target)
             else:
                 _atomic_copy(backup, target)
             if current_hash is not None:

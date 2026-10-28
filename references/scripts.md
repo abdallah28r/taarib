@@ -66,6 +66,7 @@ catalog entry.
 | `loc_tools.py` | *(library)* problem codes, terms, update, TMX, estimate, pseudo. |
 | `loc_pipeline.py` | *(library)* phases and gates behind `loc.py next/gate`. |
 | `loc_tasks.py` | *(library)* the task board behind `loc.py task` and `tasks.html`. |
+| `file_ops.py` | *(library)* replace or remove a game file, retrying while Windows briefly holds it; a clear "file in use" error otherwise. |
 | `review_pages.py` | *(library)* `texts.html` and `images.html`: the game's text and images before and after. |
 | `loc_experiences.py` | *(library)* lessons and the experiences package. |
 

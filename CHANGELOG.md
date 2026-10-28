@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-28 — A game file Windows holds for a moment
+
+The test suite failed twice, once in the byte patch test and once in the package
+install test, and passed on every rerun (more than 40 runs). Both tests replace a
+file that was just written, which Windows refuses while another program (an
+antivirus scan, the indexer) still holds it. The same happens to a user whose game
+or launcher is open.
+
+- New library `scripts/file_ops.py`: `replace_file` and `remove_file` retry for
+  about two seconds, then raise `FileInUse`, which names the file and says to
+  close the game and its launcher; nothing is changed.
+- Used wherever the template swaps or removes a game file: `byte_patch.py`
+  (which now also puts the original back if the second swap fails),
+  `apply_patch_package.py`, `uninstall_patch_package.py`, `safe_replace.py`.
+- A test holds the target file open as a running game would, checks the clear
+  error and that nothing changed, then holds it briefly as an antivirus scan
+  would and checks the patch still installs.
+
 ## 2026-10-28 — Recording is enforced, not only described
 
 A review of whether the agent would really record its work found that the

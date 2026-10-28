@@ -7,8 +7,12 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 from uuid import uuid4
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from file_ops import replace_file  # noqa: E402
 
 
 def digest(path: Path) -> str:
@@ -45,7 +49,7 @@ def main(argv=None):
             with replacement.open("rb") as source: shutil.copyfileobj(source, handle)
             temp = Path(handle.name)
         if digest(temp) != record["replacement_sha256"]: raise RuntimeError("replacement staging verification failed")
-        temp.replace(target)
+        replace_file(temp, target)
     finally:
         if temp is not None and temp.exists(): temp.unlink()
     print(json.dumps(record))

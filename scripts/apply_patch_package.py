@@ -11,6 +11,7 @@ import tempfile
 from uuid import uuid4
 
 from build_patch_package import has_symlink_component
+from file_ops import remove_file, replace_file
 
 
 def digest(path: Path) -> str:
@@ -27,7 +28,7 @@ def _atomic_copy(source: Path, target: Path) -> None:
             temporary = Path(handle.name)
         if digest(temporary) != digest(source):
             raise RuntimeError(f"staging hash mismatch: {target}")
-        temporary.replace(target)
+        replace_file(temporary, target)
     finally:
         if temporary is not None and temporary.exists():
             temporary.unlink()
@@ -105,7 +106,7 @@ def main(argv=None):
     except Exception:
         for rel, target, action in reversed(installed):
             if action == "add":
-                target.unlink()
+                remove_file(target)
             else:
                 _atomic_copy(backup / rel, target)
         raise

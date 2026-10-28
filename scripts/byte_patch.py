@@ -23,10 +23,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import shutil
+import sys
 import zlib
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from file_ops import replace_file  # noqa: E402
 
 SIGNATURE = "ARPATCH1"
 
@@ -117,8 +120,17 @@ def apply_patch(patch: Path, target: Path) -> str:
         temporary.unlink()
         raise RuntimeError("result hash mismatch; original untouched")
     backup = target.with_name(target.name + ".ar_old")
-    os.replace(target, backup)  # a crash here is recoverable from .ar_old
-    os.replace(temporary, target)
+    try:
+        replace_file(target, backup)  # a crash here is recoverable from .ar_old
+    except PermissionError:
+        temporary.unlink()
+        raise
+    try:
+        replace_file(temporary, target)
+    except PermissionError:  # put the original back where it was
+        replace_file(backup, target)
+        temporary.unlink()
+        raise
     return f"installed (backup: {backup.name})"
 
 
