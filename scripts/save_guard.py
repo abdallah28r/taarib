@@ -76,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("saves", type=Path)
     parser.add_argument("snapshot", type=Path)
     args = parser.parse_args(argv)
-    sys.stdout.reconfigure(encoding="utf-8")
+    getattr(sys.stdout, "reconfigure", lambda **_: None)(encoding="utf-8")
     if args.command == "snapshot":
         print(f"SNAPSHOT files={len(snapshot(args.saves, args.snapshot)['files'])} -> {args.snapshot}")
         return 0

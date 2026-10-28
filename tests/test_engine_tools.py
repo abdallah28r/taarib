@@ -214,6 +214,76 @@ class ProbeNamesAndProfilesTests(Temp):
             catalog.write_text(before, encoding="utf-8")
 
 
+class ReviewFixTests(Temp):
+    def test_company_words_do_not_tie_logs_to_the_game(self):
+        words = probe.name_words({"folder": "Some Game", "exe": ["StarfallTale", "UnityCrashHandler64"],
+                                  "unity_company": "Visual Studio Interactive", "unity_product": "Starfall Tale"})
+        self.assertEqual(words, {"some", "starfall", "tale", "starfalltale"})
+
+    def test_unreal_logs_come_from_the_project_not_any_program(self):
+        boot = load("boot_verdict")
+        game = self.dir / "Game"
+        for folder in ("Engine/Binaries", "Proj/Binaries"):
+            (game / folder).mkdir(parents=True)
+        local = self.dir / "Local"
+        for log in ("EpicGamesLauncher/Saved/Logs/EpicGamesLauncher.log", "Proj/Saved/Logs/Proj.log"):
+            (local / log).parent.mkdir(parents=True)
+            (local / log).write_text("LogInit\n", encoding="utf-8")
+        old = os.environ.get("LOCALAPPDATA")
+        os.environ["LOCALAPPDATA"] = str(local)
+        try:
+            self.assertEqual(boot.unreal_project(game), "Proj")
+            self.assertEqual(boot.candidates("unreal", game), [local / "Proj/Saved/Logs/Proj.log"])
+        finally:
+            if old is None:
+                del os.environ["LOCALAPPDATA"]
+            else:
+                os.environ["LOCALAPPDATA"] = old
+
+    def test_crash_words(self):
+        boot = load("boot_verdict")
+        for line, crash in (("Non-fatal error in shader", False), ("Assertion failed on expression: x", False),
+                            ("Assertion failed: Index < Num", True), ("Fatal error!", True), ("FATAL: no memory", True)):
+            self.assertEqual(bool(boot.CRASH.search(line)), crash, line)
+
+    def test_characters_the_original_draws_keep_their_byte(self):
+        build, original, seed = self.dir / "b.txt", self.dir / "o.txt", self.dir / "s.json"
+        build.write_text("ﺍ…é", encoding="utf-8")
+        original.write_text("café…", encoding="utf-8")
+        font_bank.main(["assign", "--text", str(build), "--original", str(original), "--seed", str(seed)])
+        self.assertEqual(list(json.loads(seed.read_text(encoding="utf-8"))), ["ﺍ"])
+
+    def test_baseline_makes_only_new_errors_count(self):
+        game, out = self.dir / "Game", self.dir / "out"
+        game.mkdir()
+        log = game / "output.log"
+        log.write_text("Initialize engine version\nNullReferenceException at Foo\n", encoding="utf-8")
+        import contextlib, io
+        def run(*extra):
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                probe.main(["--game", str(game), "--out", str(out), *extra])
+            return json.loads(buffer.getvalue())
+        roots, probe.SEARCH_ROOTS = probe.SEARCH_ROOTS, []  # only the game folder: fast and independent of this machine
+        self.addCleanup(setattr, probe, "SEARCH_ROOTS", roots)
+        self.assertEqual(run()["boot"]["verdict"], "booted_with_errors")
+        self.assertIn("baseline_saved", run("--save-baseline")["logs"])
+        self.assertEqual(run()["boot"]["verdict"], "booted_clean")
+        log.write_text("Initialize engine version\nNullReferenceException at Foo\nIOException: font\n", encoding="utf-8")
+        self.assertEqual(run()["boot"]["verdict"], "booted_with_errors")
+
+    @unittest.skipUnless(Path("C:/Windows/Fonts/tahoma.ttf").is_file(), "needs an Arabic system font")
+    def test_preview_both_modes_fit_the_box(self):
+        font = Path("C:/Windows/Fonts/tahoma.ttf")
+        lines = ["قال {name}: لا إله إلا الله، شيء جميل في هذا اليوم الطويل جدًا"]
+        for native in (False, True):
+            report = probe.preview(font, 24, 300, lines, self.dir / f"p{native}.png", native)
+            if "error" in report:
+                continue  # Pillow without raqm
+            self.assertEqual(report["too_wide"], [])
+            self.assertTrue((self.dir / f"p{native}.png").is_file())
+
+
 class ScriptsIndexTests(unittest.TestCase):
     def test_every_script_has_a_line_in_the_index(self):
         index = (ROOT / "references" / "scripts.md").read_text(encoding="utf-8")

@@ -5,21 +5,28 @@
     python scripts/loc.py probe --game <root> --since-minutes 20 [--record]      # find logs written by a launch
     python scripts/loc.py probe --game <root> --engine <new-id> --record          # start a profile for an unknown engine
     python scripts/loc.py probe --game <root> --deep-fonts                        # also fonts inside Unity assets
+    python scripts/loc.py probe --game <root> --save-baseline                     # after a launch of the unpatched game
     python scripts/loc.py probe --game <root> --launch <exe> [--seconds 45]       # only with allow_launch_game
 
-Read-only on the game folder. It reports:
+Read-only on the game folder (it writes only under `--out`, default work/probe,
+and, with --record, into engines/ and the tool catalog). It reports:
 
-- **engine**: `detect_engine.py`'s verdict and existing mod loaders.
-- **fonts**: every TTF/OTF/TTC, BMFont `.fnt`, and font-like asset in the
-  game; for TTF/OTF whether it has Arabic letters, presentation forms, and an
-  Arabic shaping table (`GSUB` with the `arab` script); for text `.fnt` how
-  many Arabic characters it holds. A font without Arabic means a fallback,
+- **engine**: `detect_engine.py`'s verdict, its profile file, and existing mod loaders.
+- **fonts**: every loose TTF/OTF/TTC, BMFont `.fnt`, and font-like asset in
+  the game; for TTF/OTF whether it has Arabic letters, presentation forms, and
+  an Arabic shaping table (`GSUB` with the `arab` script); for text `.fnt` how
+  many Arabic characters it holds. `--deep-fonts` also reads Unity assets and
+  saves each embedded font to `<out>/fonts/` for the preview; the last entry
+  says how many asset files were read. Fonts inside other engines' archives
+  need that engine's tools. A font without Arabic means a fallback,
   extension, or replacement (references/arabic-rendering.md).
-- **preview** (`--preview`): draws sample lines the way a left-to-right
-  engine would (shaped, wrapped by `--width`, reversed per line) with the
-  game's own font into `work/probe/preview.png`, and lists lines wider than the
-  box and characters the font lacks. Lines come from `--text` or translated
-  units. This replaces neither the pilot nor the user's eyes.
+- **preview** (`--preview --font <file>`): draws lines in the game's font at
+  the box width into `<out>/preview.png` and lists lines wider than the box
+  and characters the font lacks. Default: as a `needs_preshape` engine shows
+  them (shaped, wrapped, reversed per line, drawn left to right); `--native`:
+  as an engine that shapes Arabic itself (logical text through HarfBuzz).
+  Lines come from `--text`, else translated units (pilot first), else samples.
+  This replaces neither the pilot nor the user's eyes.
 - **logs**: first the exact paths from the game's own names (Unity's
   `app.info` company/product, Unreal's project folder), the paths written in
   the engine profile's `## Logs`, and boot_verdict.py's engine patterns; if
@@ -28,10 +35,13 @@ Read-only on the game folder. It reports:
   Games) for log files written in the last `--since-minutes`. `--record`
   writes a discovered path into `engines/<engine>.md` under `## Logs`, as a
   candidate, so the next game on the engine finds it directly. Each log gets
-  boot_verdict's judgement (crash, new errors, missing Arabic glyphs).
-- **launch** (`--launch <exe>`): starts the game, waits `--seconds`, closes
-  it, and reads its logs; refused unless PROJECT.yaml
-  `workflow.allow_launch_game` is true.
+  boot_verdict's judgement (crash, new errors, missing Arabic glyphs). Most
+  games log some errors on every start: run once with `--save-baseline` after
+  a launch of the unpatched game, and later runs count only new errors.
+- **launch** (`--launch <exe>`): starts the game, waits `--seconds`, force-
+  closes it, and reads its logs; refused unless PROJECT.yaml
+  `workflow.allow_launch_game` is true. Snapshot the saves first
+  (`save_guard.py`): a forced close can interrupt a save.
 """
 from __future__ import annotations
 
@@ -50,7 +60,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FONT_EXT = {".ttf", ".otf", ".ttc", ".fnt", ".laf", ".nut", ".font", ".spritefont"}
 FONT_NAME = re.compile(r"font|sdf|glyph", re.I)
-LOG_NAME = re.compile(r"(?:\.log$|log.*\.txt$|^(?:player|output|errors?|traceback|emulog|crash).*\.txt$)", re.I)
+LOG_NAME = re.compile(r"(?:\.log$|^(?:log|player|output|errors?|traceback|emulog|crash|smapi)[^/\\]*\.txt$)", re.I)
+# Words too common to tie a log to one game (company words such as "studio" match unrelated programs).
+STOP_WORDS = {"game", "games", "launcher", "setup", "unitycrashhandler", "unins", "redist", "vcredist", "dxsetup",
+              "studio", "studios", "interactive", "entertainment", "software", "edition", "definitive",
+              "remastered", "windows", "shipping", "binaries", "content"}
 SEARCH_ROOTS = ["%USERPROFILE%/AppData/LocalLow", "%APPDATA%", "%LOCALAPPDATA%",
                 "%USERPROFILE%/Documents", "%USERPROFILE%/Saved Games"]
 SAMPLE = ["اضغط F لفتح الباب", "المستوى ٢٥ — RTX 4080", "حصلت على 50% من الذهب (رائع!)",
@@ -96,19 +110,28 @@ def font_report(path: Path, data: bytes | None = None) -> dict:
     return info
 
 
-def unity_fonts(game: Path, max_files: int = 60, max_mb: int = 400) -> list[dict]:
-    """Fonts inside Unity assets and bundles (needs UnityPy): Font assets get the TTF check,
-    TextMeshPro font assets are counted by the Arabic characters in their character table."""
+def unity_fonts(game: Path, out: Path, max_files: int = 80, max_mb: int = 1024) -> list[dict]:
+    """Fonts inside Unity assets and bundles (needs UnityPy): Font assets get the TTF check and are
+    saved to `out/fonts/` so `--preview --font` can use the game's own face; TextMeshPro font assets
+    are counted by the Arabic characters in their character table. Files most likely to hold fonts
+    are read first; the last entry says how many files were read and skipped."""
     try:
         import UnityPy
     except ImportError:
-        return [{"verdict": "UnityPy is not installed; see engines/unity.md"}]
+        return [{"path": "-", "kind": "unity", "verdict": "UnityPy is not installed (engines/unity.md); fonts inside assets not read"}]
     data = next(game.glob("*_Data"), None)
     if not data:
         return []
-    files = sorted((p for p in data.rglob("*") if p.is_file() and (p.suffix in {".assets", ".bundle", ""} and
-                    p.name not in {"app.info", "boot.config"}) and p.stat().st_size <= max_mb * 1_048_576),
-                   key=lambda p: p.stat().st_size)[:max_files]
+    candidates = [p for p in data.rglob("*") if p.is_file() and p.name not in {"app.info", "boot.config"}
+                  and p.suffix.lower() in {".assets", ".bundle", ".unity3d", ""}]
+
+    def priority(path: Path) -> tuple:
+        name = path.name.lower()
+        return (0 if "font" in name else 1 if name.startswith(("resources", "sharedassets", "data.unity3d")) else 2,
+                path.stat().st_size)
+    candidates.sort(key=priority)
+    too_big = [p for p in candidates if p.stat().st_size > max_mb * 1_048_576]
+    files = [p for p in candidates if p not in too_big][:max_files]
     found = []
     for path in files:
         try:
@@ -124,6 +147,11 @@ def unity_fonts(game: Path, max_files: int = 60, max_mb: int = 400) -> list[dict
                     info = {"path": f"{path.name}:{getattr(font, 'm_Name', '?')}", "kind": "unity-font"}
                     if raw:
                         info.update({k: v for k, v in font_report(path, raw).items() if k not in {"path", "kind"}})
+                        safe = re.sub(r"[^\w.-]+", "_", str(getattr(font, "m_Name", "font")))
+                        saved = out / "fonts" / f"{safe}.{'otf' if raw[:4] == b'OTTO' else 'ttf'}"
+                        saved.parent.mkdir(parents=True, exist_ok=True)
+                        saved.write_bytes(raw)
+                        info["extracted"] = str(saved)
                     else:
                         info["verdict"] = "no embedded font data (built-in or OS font)"
                     found.append(info)
@@ -138,6 +166,8 @@ def unity_fonts(game: Path, max_files: int = 60, max_mb: int = 400) -> list[dict
                                       "verdict": "arabic" if arabic >= 36 else "partial-arabic" if arabic else "no-arabic"})
             except Exception:
                 continue
+    found.append({"path": "-", "kind": "unity-coverage", "verdict": f"read {len(files)} of {len(candidates)} asset files; "
+                  f"skipped {len(candidates) - len(files)} ({len(too_big)} over {max_mb} MB)"})
     return found
 
 
@@ -154,27 +184,60 @@ def find_fonts(game: Path, limit: int = 200) -> list[dict]:
     return found
 
 
-def preview(font: Path, size: float, width: float, lines: list[str], out: Path) -> dict:
-    from PIL import Image, ImageDraw, ImageFont
+def unit_lines(limit: int = 60) -> list[str]:
+    """Translated targets from units/ (pilot batch first), for a preview of the real text."""
+    rows = []
+    for path in sorted((ROOT / "units").rglob("*.jsonl")):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                unit = json.loads(line)
+            except ValueError:
+                continue
+            if unit.get("target") and unit.get("status") != "extracted":
+                rows.append((unit.get("batch") != "pilot", unit["target"]))
+    return [target for _, target in sorted(rows, key=lambda r: r[0])][:limit]
+
+
+def preview(font: Path, size: float, width: float, lines: list[str], out: Path, native: bool = False) -> dict:
+    """Draw lines in the game's font at the box width.
+
+    Default: as a left-to-right engine shows pre-shaped text (`needs_preshape`):
+    shaped, wrapped by measure, reversed per line, drawn without BiDi.
+    native=True: as an engine that shapes Arabic itself (`native`): logical text
+    drawn right to left with HarfBuzz (Pillow with raqm), so the font needs
+    Arabic letters and its shaping table, not presentation forms.
+    """
+    from PIL import Image, ImageDraw, ImageFont, features
     from fontTools.ttLib import TTFont
     shaping = _load("arabic_shaping")
-    cmap = set(TTFont(str(font), lazy=True).getBestCmap())
-    measure = shaping.font_measure(font, size)
-    pil_font = ImageFont.truetype(str(font), int(size), layout_engine=ImageFont.Layout.BASIC)  # no BiDi: draw like the engine
-    rendered = [shaping.render(line, max_width=width, measure=measure).split("\n") for line in lines]
-    rows = [row for block in rendered for row in block + [""]]
+    cmap = set(TTFont(str(font), lazy=True, fontNumber=0).getBestCmap())
+    measure = shaping.font_measure(font, size, keep_codes=True)  # the image draws {name} as written
+    if native and not features.check("raqm"):
+        return {"error": "Pillow on this machine has no raqm (HarfBuzz layout); native preview unavailable"}
+    layout = ImageFont.Layout.RAQM if native else ImageFont.Layout.BASIC  # BASIC: no BiDi, like the engine
+    pil_font = ImageFont.truetype(str(font), int(round(size)), layout_engine=layout)
+    if native:
+        rows = [row for line in lines for row in shaping.wrap(line, width, measure) + [""]]
+        too_wide = [row for row in rows if row and measure(shaping.shape(row)) > width]
+    else:
+        rows = [row for line in lines for row in shaping.render(line, max_width=width, measure=measure).split("\n") + [""]]
+        too_wide = [row for row in rows if row and measure(row) > width]
     line_height = int(size * 1.6)
     image = Image.new("RGB", (int(width) + 40, line_height * len(rows) + 20), "white")
     draw = ImageDraw.Draw(image)
     draw.rectangle([20, 0, 20 + width, image.height], outline="#c00")
     for index, row in enumerate(rows):
-        draw.text((20, 10 + index * line_height), row, font=pil_font, fill="black")
+        y = 10 + index * line_height
+        if native:  # right-aligned in the box, as an Arabic UI would be
+            draw.text((20 + width, y), row, font=pil_font, fill="black", direction="rtl", anchor="ra")
+        else:
+            draw.text((20, y), row, font=pil_font, fill="black")
     out.parent.mkdir(parents=True, exist_ok=True)
     image.save(out)
-    too_wide = [row for row in rows if row and measure(row) > width]
-    missing = sorted({c for row in rows for c in row if not c.isspace() and ord(c) not in cmap})
-    return {"png": str(out), "lines": len(lines), "too_wide": too_wide[:10],
-            "missing_glyphs": [f"U+{ord(c):04X} {c}" for c in missing][:40]}
+    drawn = {c for row in rows for c in row if not c.isspace()}
+    missing = sorted(c for c in drawn if ord(c) not in cmap and not shaping.CODE_RE.fullmatch(c))
+    return {"png": str(out), "mode": "native" if native else "needs_preshape", "lines": len(lines),
+            "too_wide": too_wide[:10], "missing_glyphs": [f"U+{ord(c):04X} {c}" for c in missing][:40]}
 
 
 def _expand(pattern: str) -> str | None:
@@ -213,25 +276,28 @@ def game_names(game: Path) -> dict:
         lines = info.read_text(encoding="utf-8", errors="ignore").splitlines()
         if len(lines) >= 2:
             names["unity_company"], names["unity_product"] = lines[0].strip(), lines[1].strip()
-    project = next((d.name for d in game.iterdir() if d.is_dir() and (d / "Binaries").is_dir()), None)
+    project = _load("boot_verdict").unreal_project(game)
     if project:
         names["unreal_project"] = project
     return names
 
 
 def name_words(names: dict) -> set[str]:
-    values = [v for v in names.values() if isinstance(v, str)] + list(names.get("exe", []))
-    return {w.lower() for v in values for w in re.findall(r"[A-Za-z]{4,}", v)} - {"game", "games", "launcher", "setup"}
+    """Words that tie a user-folder path to this game: product, project, executable, and folder names
+    (never the company alone, which other programs share)."""
+    values = [names.get(k) for k in ("folder", "unity_product", "unreal_project") if names.get(k)]
+    values += list(names.get("exe", []))
+    return {w.lower() for v in values for w in re.findall(r"[A-Za-z]{4,}", v)} - STOP_WORDS
 
 
 def exact_candidates(names: dict) -> list[Path]:
-    """Log paths derived from the game's own names (exact, unlike a search)."""
+    """Log paths derived from the game's own names (exact, unlike a search). Player-prev.log is
+    the run before, so it is never judged as this launch."""
     found = []
     if "unity_product" in names:
         base = _expand("%USERPROFILE%/AppData/LocalLow")
         if base:
-            folder = Path(base) / names["unity_company"] / names["unity_product"]
-            found += [folder / "Player.log", folder / "Player-prev.log"]
+            found.append(Path(base) / names["unity_company"] / names["unity_product"] / "Player.log")
     if "unreal_project" in names:
         base = _expand("%LOCALAPPDATA%")
         if base:
@@ -288,8 +354,8 @@ def profile_log_paths(profile: str, game: Path) -> list[Path]:
 
 def create_profile(engine: str, detection: dict, fonts: list[dict]) -> Path:
     """A minimal engines/<engine>.md for an engine the template does not know, plus its catalog entry."""
-    if not ENGINE_ID.match(engine):
-        raise ValueError(f"engine id {engine!r}: use lowercase letters, digits, and hyphens")
+    if not ENGINE_ID.match(engine) or engine == "unknown":
+        raise ValueError(f"engine id {engine!r}: name the engine with lowercase letters, digits, and hyphens")
     profile = ROOT / "engines" / f"{engine}.md"
     if profile.exists():
         return profile
@@ -345,14 +411,15 @@ Record the game, build, and every source used.
     return profile
 
 
-def record_log(engine: str, pattern: str) -> bool:
+def record_log(engine: str, pattern: str, game_name: str = "") -> bool:
     profile = ROOT / "engines" / f"{profile_name(engine)}.md"
     if not profile.is_file():
         return False
     text = profile.read_text(encoding="utf-8")
     if pattern in text:
         return False
-    line = f"- Discovered by `loc.py probe` on {date.today().isoformat()} (candidate): `{pattern}`\n"
+    seen = f" on {game_name}" if game_name else ""
+    line = f"- Discovered by `loc.py probe`{seen}, {date.today().isoformat()} (candidate): `{pattern}`\n"
     if "\n## Logs\n" in text:
         head, tail = text.split("\n## Logs\n", 1)
         body, sep, rest = tail.partition("\n## ")
@@ -375,6 +442,9 @@ def launch(exe: Path, seconds: float) -> dict:
     try:
         process.wait(timeout=seconds)
         state = f"exited by itself with code {process.returncode}"
+        if time.time() - started < 15:
+            state += ("; it may have handed over to a launcher (Steam, Epic) and the game may still be "
+                      "running: ask the user to close it")
     except subprocess.TimeoutExpired:
         if os.name == "nt":
             subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True)
@@ -390,10 +460,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--game", type=Path, required=True)
     parser.add_argument("--engine", help="engine id; default: detect_engine.py's verdict")
     parser.add_argument("--preview", action="store_true")
+    parser.add_argument("--native", action="store_true",
+                        help="preview as an engine that shapes Arabic itself (logical text, HarfBuzz) instead of pre-shaped")
     parser.add_argument("--font", type=Path, help="TTF/OTF for --preview (the game's own font when possible)")
     parser.add_argument("--size", type=float, default=24)
     parser.add_argument("--width", type=float, default=600, help="text box width in pixels")
-    parser.add_argument("--text", type=Path, help="UTF-8 file, one logical Arabic line per line")
+    parser.add_argument("--text", type=Path, help="UTF-8 file, one logical Arabic line per line "
+                        "(default: translated units, pilot first; else built-in samples)")
+    parser.add_argument("--save-baseline", action="store_true",
+                        help="store this launch's log as the clean baseline (run on the unpatched game); later runs "
+                             "ignore errors the baseline already had")
     parser.add_argument("--since-minutes", type=float, default=30, help="logs older than this are not from this launch")
     parser.add_argument("--record", action="store_true",
                         help="write discovered log paths into engines/<engine>.md; with --engine <new-id> for an "
@@ -403,7 +479,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seconds", type=float, default=45)
     parser.add_argument("--out", type=Path, default=ROOT / "work" / "probe")
     args = parser.parse_args(argv)
-    sys.stdout.reconfigure(encoding="utf-8")
+    getattr(sys.stdout, "reconfigure", lambda **_: None)(encoding="utf-8")
     if not args.game.is_dir():
         print(f"ERROR not a folder: {args.game}")
         return 2
@@ -415,7 +491,7 @@ def main(argv: list[str] | None = None) -> int:
     report: dict = {"engine": engine, "profile": f"engines/{profile}.md", "confidence": detection["confidence"],
                     "loaders": sorted(detection["existing_loaders"]), "names": names, "fonts": find_fonts(args.game)}
     if args.deep_fonts:
-        report["fonts"] += unity_fonts(args.game)
+        report["fonts"] += unity_fonts(args.game, args.out)
     if engine != "unknown" and not (ROOT / "engines" / f"{profile}.md").is_file():
         if args.record:
             try:
@@ -441,30 +517,45 @@ def main(argv: list[str] | None = None) -> int:
         if not args.font:
             print("ERROR --preview needs --font (a TTF/OTF; take the game's own from the fonts list)")
             return 2
-        lines = SAMPLE
         if args.text:
-            lines = [line for line in args.text.read_text(encoding="utf-8").splitlines() if line.strip()]
-        report["preview"] = preview(args.font, args.size, args.width, lines[:60], args.out / "preview.png")
+            lines, origin = [l for l in args.text.read_text(encoding="utf-8").splitlines() if l.strip()], str(args.text)
+        else:
+            lines, origin = unit_lines(), "translated units"
+            if not lines:
+                lines, origin = SAMPLE, "built-in samples (no translated units yet)"
+        report["preview"] = preview(args.font, args.size, args.width, lines[:60], args.out / "preview.png", args.native)
+        report["preview"]["text_from"] = origin
 
     boot = _load("boot_verdict")
     known = exact_candidates(names) + profile_log_paths(profile, args.game)
-    known += boot.candidates(profile, args.game) if profile in boot.LOG_PATTERNS else []
+    words = name_words(names)
+    game_root = args.game.resolve()
+    # Engine patterns with a wildcard outside the game folder must still name this game.
+    known += [p for p in (boot.candidates(profile, args.game) if profile in boot.LOG_PATTERNS else [])
+              if belongs(p, game_root, words)]
     fresh_known = list(dict.fromkeys(p for p in known if p.stat().st_mtime >= since))
     other: list[Path] = []
     if fresh_known:
         logs, source = fresh_known, "known paths (game names, engine profile)"
     else:
         recent = discover_logs(args.game, since)
-        words = name_words(names)
-        logs, source = [p for p in recent if belongs(p, args.game.resolve(), words)], "discovered"
+        logs, source = [p for p in recent if belongs(p, game_root, words)], "discovered"
         other = [p for p in recent if p not in logs]
     report["logs"] = {"source": source, "files": [str(p) for p in logs[:10]],
                       "other_recent_logs_ignored": len(other)}  # other programs' logs: count only, never listed
+    baseline = args.out / "baseline.log"
     if logs:
-        report["boot"] = boot.judge(logs[:5], args.since_minutes + 1)
+        if args.save_baseline:
+            args.out.mkdir(parents=True, exist_ok=True)
+            text = "".join(p.read_text(encoding="utf-8", errors="replace") for p in logs[:5])
+            baseline.write_text(text, encoding="utf-8")
+            report["logs"]["baseline_saved"] = str(baseline)
+        use = baseline if baseline.is_file() and not args.save_baseline else None
+        report["boot"] = boot.judge(logs[:5], args.since_minutes + 1, use)
+        report["boot"]["baseline"] = str(use) if use else "none: errors the game always logs count as new"
         if source == "discovered" and args.record and (ROOT / "engines" / f"{profile}.md").is_file():
             report["logs"]["recorded"] = [g for g in dict.fromkeys(generalize(p, args.game) for p in logs[:3])
-                                          if record_log(engine, g)]
+                                          if record_log(engine, g, args.game.name)]
     else:
         report["logs"]["next"] = ("No fresh log: ask the user to start the game, or use --launch when "
                                   "allow_launch_game is true, then run probe again.")

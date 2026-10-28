@@ -196,7 +196,7 @@ def main(argv=None) -> int:
     parser.add_argument("--option", action="append", default=[], help="adapter option key=value")
     args = parser.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
+        getattr(sys.stdout, "reconfigure", lambda **_: None)(encoding="utf-8")
     result = run_contract(args.adapter, args.game, parse_options(args.option))
     for name, ok, detail in result.checks:
         print(f"{'PASS' if ok else 'FAIL'} {name}{': ' + detail if detail else ''}")

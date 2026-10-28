@@ -78,14 +78,15 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--text", type=Path, nargs="+", required=True)
     d.add_argument("--top", type=int, default=40)
     args = parser.parse_args(argv)
-    sys.stdout.reconfigure(encoding="utf-8")
+    getattr(sys.stdout, "reconfigure", lambda **_: None)(encoding="utf-8")
 
     if args.command == "assign":
         seed = json.loads(args.seed.read_text(encoding="utf-8")) if args.seed.is_file() else {}
-        needed = sorted({ch for ch in _read(args.text) if ord(ch) > 0x7F and not ch.isspace()})
-        used = set()
-        for path in args.original:
-            used |= {b for b in path.read_text(encoding="utf-8").encode(args.original_encoding, "ignore") if b > 0x7F}
+        original = _read(args.original) if args.original else ""
+        used = {b for b in original.encode(args.original_encoding, "ignore") if b > 0x7F}
+        # A character the original text already draws (é, …, ™) keeps its own byte: no new slot.
+        native = {ch for ch in original if ord(ch) > 0x7F}
+        needed = sorted({ch for ch in _read(args.text) if ord(ch) > 0x7F and not ch.isspace()} - native)
         forbidden = tuple(int(x, 16) for x in args.forbid.split(",") if x)
         kept = {ch: int(b, 16) for ch, b in seed.items()}
         new = [ch for ch in needed if ch not in kept]

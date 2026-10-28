@@ -19,6 +19,30 @@
   or adapter in a project when it finds a bug or a better way, recording the
   change as a lesson. A test fails when a script is missing from the index.
 - Map: probe abilities, unknown engines, scripts index.
+- Review fixes (each reproduced first):
+  - `boot_verdict`: the Unreal pattern matched any program's log under
+    `%LOCALAPPDATA%` (the Epic launcher's included); it now uses the game's
+    project folder. "Non-fatal error" and Unity's "Assertion failed on
+    expression" no longer count as crashes.
+  - probe: Unity's `Player-prev.log` (the run before) is never judged as this
+    launch; company names ("Studio") no longer tie other programs' logs to the
+    game; Unreal's `Engine/` folder is not taken for the project; engine-pattern
+    matches outside the game folder must name the game; `--engine unknown` is
+    refused.
+  - probe preview: reads translated units (pilot first) as the docstring said;
+    `--native` previews engines that shape Arabic themselves; measuring and
+    drawing now agree on placeholders (a `{name}` line overflowed the box while
+    reported as fitting); `.ttc` fonts work; `--deep-fonts` saves embedded fonts
+    for the preview, reads likely font files first, includes `.unity3d`, and
+    reports how many asset files it read or skipped.
+  - probe `--save-baseline`: later runs count only errors the unpatched game
+    did not log; `--launch` warns when the executable handed over to a launcher.
+  - Adapters: `line_unit: chars` no longer counts tags as characters; a
+    relative `font` resolves from the project folder; missing `font`/`font_size`
+    is a clear error.
+  - `font_bank assign` no longer gives new slots to characters the original
+    text already draws (é, …).
+  - Scripts no longer crash when their output is captured in memory.
 
 ## 2026-10-28 — Everything usable from the reviewed sources: nine engines, 31 tools, probe
 

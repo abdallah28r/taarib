@@ -225,7 +225,7 @@ def main(argv=None) -> int:
     args = argv if argv is not None else sys.argv[1:]
     mode = args[0] if args else ""
     if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
+        getattr(sys.stdout, "reconfigure", lambda **_: None)(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
     if mode == "session-start":
         try:

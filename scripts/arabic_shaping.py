@@ -238,14 +238,14 @@ def wrap(text: str, max_width: float, measure: Callable[[str], float], *, balanc
     return out
 
 
-def font_measure(font_path, size: float) -> Callable[[str], float]:
+def font_measure(font_path, size: float, keep_codes: bool = False) -> Callable[[str], float]:
     """Pixel width of shaped text in a TTF/OTF at `size` px, from its advance widths (needs fontTools).
 
     No kerning: leave a small margin in max_width. A character the font lacks
     is measured as the font's .notdef glyph, the box the player would see.
     """
     from fontTools.ttLib import TTFont
-    font = TTFont(str(font_path), lazy=True)
+    font = TTFont(str(font_path), lazy=True, fontNumber=0)  # fontNumber: the first face of a .ttc
     cmap, metrics = font.getBestCmap(), font["hmtx"].metrics
     scale = size / font["head"].unitsPerEm
     notdef = metrics.get(".notdef", (font["head"].unitsPerEm // 2, 0))[0]
@@ -253,7 +253,7 @@ def font_measure(font_path, size: float) -> Callable[[str], float]:
 
     def measure(text: str) -> float:
         total = 0
-        for char in CODE_RE.sub("", text):
+        for char in (text if keep_codes else CODE_RE.sub("", text)):  # keep_codes: measure them as drawn
             if char not in advance:
                 glyph = cmap.get(ord(char))
                 advance[char] = metrics[glyph][0] if glyph in metrics else notdef

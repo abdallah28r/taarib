@@ -95,11 +95,15 @@ class Adapter:
         measure = None
         if width:
             if options.get("line_unit", "chars") == "px":
+                if not options.get("font") or not options.get("font_size"):
+                    raise ValueError("adapter_options line_unit px needs font (path) and font_size")
                 if not hasattr(self, "_font_measure"):
-                    self._font_measure = shaping.font_measure(options["font"], float(options["font_size"]))
+                    font = Path(options["font"])
+                    font = font if font.is_absolute() else ROOT / font  # relative to the project folder
+                    self._font_measure = shaping.font_measure(font, float(options["font_size"]))
                 measure = self._font_measure
-            else:
-                measure = len
+            else:  # tags and placeholders are not drawn as written; leave room in line_width for values like {name}
+                measure = lambda text: len(shaping.CODE_RE.sub("", text))  # noqa: E731
         extra = {k: options[k] for k in ("strip_harakat", "lam_alef", "marks_one_later") if k in options}
         return shaping.render(target, max_width=width or None, measure=measure,
                               line_sep=options.get("line_sep", "\n"), **extra)

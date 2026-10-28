@@ -120,8 +120,10 @@ folder and take `python scripts/save_guard.py snapshot <saves> backups/saves-<da
 restore it only on the user's words. Before installing at all, run
 `python scripts/loc.py probe --game <game_root>`: it lists the game's fonts and
 whether they hold Arabic, and with `--preview --font <font>` draws pilot lines
-in the game's font at the box width, so missing letters and overflow are fixed
-before anyone opens the game. Once the user says the game is open (or you
+in the game's font at the box width (`--native` when the engine shapes Arabic
+itself), so missing letters and overflow are fixed before anyone opens the
+game. If the user has launched the unpatched game recently, `probe
+--save-baseline` keeps that log so later checks count only new errors. Once the user says the game is open (or you
 launched it with `workflow.allow_launch_game`), run
 `python scripts/boot_verdict.py --engine <engine> --game <game_root>` (or
 `--log <file>`) first: a crash, new errors, or Arabic letters missing from the

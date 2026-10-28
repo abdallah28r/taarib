@@ -1441,7 +1441,7 @@ def main(argv=None) -> int:
 
     args = parser.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
+        getattr(sys.stdout, "reconfigure", lambda **_: None)(encoding="utf-8")
     if args.command == "mark" and not (args.ids or args.batch or args.file):
         parser.error("mark needs --ids, --batch, or --file")
     return args.run(args)

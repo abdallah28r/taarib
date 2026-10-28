@@ -34,31 +34,45 @@ from pathlib import Path
 LOG_PATTERNS = {
     "unity": ["%USERPROFILE%/AppData/LocalLow/*/{data}/Player.log", "{game}/BepInEx/LogOutput.log"],
     "rimworld": ["%USERPROFILE%/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Player.log"],
-    "unreal": ["%LOCALAPPDATA%/*/Saved/Logs/*.log", "{game}/*/Saved/Logs/*.log",
-               "{game}/*/Binaries/Win64/UE4SS.log", "{game}/*/Binaries/Win64/ue4ss/UE4SS.log"],
+    # {project} is the folder beside Engine/ that holds Binaries/; never "*", which would
+    # also match the Epic launcher's and other Unreal programs' logs.
+    "unreal": ["%LOCALAPPDATA%/{project}/Saved/Logs/*.log", "{game}/{project}/Saved/Logs/*.log",
+               "{game}/{project}/Binaries/Win64/UE4SS.log", "{game}/{project}/Binaries/Win64/ue4ss/UE4SS.log"],
     "renpy": ["{game}/log.txt", "{game}/traceback.txt", "{game}/errors.txt"],
     "godot": ["%APPDATA%/Godot/app_userdata/*/logs/godot.log", "%APPDATA%/*/logs/godot.log"],
     "stardew-valley": ["%APPDATA%/StardewValley/ErrorLogs/SMAPI-latest.txt"],
 }
 BOOT = re.compile(r"Initialize engine version|Mono path|LogInit|Engine Version|Early init|Godot Engine v"
                   r"|SMAPI \d|Launching mods|Loading game|RimWorld \d|Unity Engine|Platform assembly", re.I)
-CRASH = re.compile(r"Crash!!!|Unhandled exception|Fatal error|=== Critical error|Assertion failed"
-                   r"|Segmentation fault|Access violation|has crashed|FATAL", re.I)
+# "non-fatal" is not a crash; Unity's "Assertion failed on expression" is a warning, Unreal's
+# "Assertion failed:" stops the game.
+CRASH = re.compile(r"Crash!!!|Unhandled exception|(?<!non-)(?<!non )\bFatal error|=== Critical error"
+                   r"|Assertion failed:|Segmentation fault|Access violation|has crashed|(?-i:\bFATAL\b)", re.I)
 ERROR = re.compile(r"\b\w*(?:Exception|Error)\b|\[(?:\d\d:\d\d:\d\d )?ERROR|^ERROR:|SCRIPT ERROR", re.I)
 ARABIC = r"(?:06[0-9A-F]{2}|07[5-7][0-9A-F]|08[A-F][0-9A-F]|F[B-D][0-9A-F]{2}|FE[7-9A-F][0-9A-F])"
 MISSING_GLYPH = re.compile(rf"(?:Unicode value \\u{ARABIC}\b.*not found|(?:missing|no) glyph.*\b(?:U\+|\\u){ARABIC}\b)", re.I)
 NOISE = re.compile(r"\d+|0x[0-9a-f]+|\b[0-9a-f]{8,}\b", re.I)  # numbers and addresses differ between runs
 
 
+def unreal_project(game: Path | None) -> str | None:
+    """The Unreal project folder: the subfolder with Binaries/ that is not the shared Engine/."""
+    if not game or not game.is_dir():
+        return None
+    return next((d.name for d in sorted(game.iterdir()) if d.is_dir() and d.name.lower() != "engine"
+                 and (d / "Binaries").is_dir()), None)
+
+
 def candidates(engine: str, game: Path | None) -> list[Path]:
     name = game.name if game else "*"
     data = next((p.name[:-5] for p in game.glob("*_Data")), name) if game and game.is_dir() else name
+    project = unreal_project(game)
     found = []
     for pattern in LOG_PATTERNS.get(engine, []):
-        if "{game}" in pattern and not game:
+        if ("{game}" in pattern and not game) or ("{project}" in pattern and not project):
             continue
         pattern = os.path.expandvars(pattern.replace("{game}", glob.escape(str(game or "")))
-                                     .replace("{data}", glob.escape(data)).replace("{name}", glob.escape(name)))
+                                     .replace("{data}", glob.escape(data)).replace("{name}", glob.escape(name))
+                                     .replace("{project}", glob.escape(project or "")))
         if "%" in pattern:  # variable not set on this system
             continue
         found += [Path(p) for p in glob.glob(pattern)]
@@ -129,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("give --log, or --engine (with --game where the engine logs inside the game folder)")
     logs = [p for p in args.log if p.is_file()] + (candidates(args.engine, args.game) if args.engine else [])
     report = judge(list(dict.fromkeys(logs)), args.max_age_minutes, args.baseline)
-    sys.stdout.reconfigure(encoding="utf-8")
+    getattr(sys.stdout, "reconfigure", lambda **_: None)(encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return EXIT.get(report["verdict"], 2)
 

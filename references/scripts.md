@@ -36,7 +36,7 @@ catalog entry.
 | --- | --- |
 | `detect_engine.py` | First look at a game: engine and existing mod loaders. Unknown engine: add markers to `config/engine-markers.json`. |
 | `detect_protection.py` | Before any change: anti-cheat, DRM, and online markers stop the route. |
-| `game_probe.py` (`loc.py probe`) | Fonts and their Arabic (`--deep-fonts` inside Unity assets), a preview in the game's font, logs after a launch; `--engine <id> --record` starts a profile for an unknown engine. |
+| `game_probe.py` (`loc.py probe`) | Fonts and their Arabic (`--deep-fonts` inside Unity assets, saved for the preview), a preview in the game's font (`--native` for engines that shape Arabic), logs after a launch (`--save-baseline` on the unpatched game first); `--engine <id> --record` starts a profile for an unknown engine. |
 | `tool_doctor.py` | After the engine is known: that engine's catalog tools and which are installed. |
 | `check_tool_provenance.py` | After choosing or installing a tool: validates `tools/selected-tools.json`. |
 | `check_knowledge.py` | After editing or creating an engine profile: its sections and evidence state. |
