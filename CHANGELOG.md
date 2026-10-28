@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-10-28 — Probe for unknown engines, engine markers as data, scripts index
+
+- `loc.py probe`: maps detected ids to their profile (`rpg-maker-mv` →
+  `rpg-maker.md`; recording used to fail silently); reads log paths written in
+  the profile's `## Logs`; derives exact log paths from the game's own names
+  (Unity `app.info` company/product, Unreal project folder, executable names);
+  `--engine <new-id> --record` creates a minimal profile that passes
+  `check_knowledge.py` and adds the engine to the catalog map;
+  `--deep-fonts` reads fonts inside Unity assets (Font assets through
+  fontTools, TextMeshPro font assets by their character table; UnityPy).
+  Tried read-only on an installed Unity game: 17 embedded fonts, one with
+  Arabic, in about 9 seconds.
+- Engine markers moved from `detect_engine.py` to `config/engine-markers.json`
+  so an agent adds an unknown engine without touching code.
+- `references/scripts.md`: one line per script; AGENTS.md: run `--help` before
+  a script's first use, and the agent may change any template script, config,
+  or adapter in a project when it finds a bug or a better way, recording the
+  change as a lesson. A test fails when a script is missing from the index.
+- Map: probe abilities, unknown engines, scripts index.
+
 ## 2026-10-28 — Everything usable from the reviewed sources: nine engines, 31 tools, probe
 
 - Policy: decrypting a game's own archives and injecting code are allowed only

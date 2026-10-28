@@ -3,6 +3,8 @@
     python scripts/loc.py probe --game <game_root>                              # engine + fonts + known logs
     python scripts/loc.py probe --game <root> --preview --font <ttf> --size 24 --width 600 [--text file]
     python scripts/loc.py probe --game <root> --since-minutes 20 [--record]      # find logs written by a launch
+    python scripts/loc.py probe --game <root> --engine <new-id> --record          # start a profile for an unknown engine
+    python scripts/loc.py probe --game <root> --deep-fonts                        # also fonts inside Unity assets
     python scripts/loc.py probe --game <root> --launch <exe> [--seconds 45]       # only with allow_launch_game
 
 Read-only on the game folder. It reports:
@@ -18,8 +20,10 @@ Read-only on the game folder. It reports:
   game's own font into `work/probe/preview.png`, and lists lines wider than the
   box and characters the font lacks. Lines come from `--text` or translated
   units. This replaces neither the pilot nor the user's eyes.
-- **logs**: first the engine's known log paths (boot_verdict.py and the
-  engine profile); if none is known or none is fresh, it searches the game
+- **logs**: first the exact paths from the game's own names (Unity's
+  `app.info` company/product, Unreal's project folder), the paths written in
+  the engine profile's `## Logs`, and boot_verdict.py's engine patterns; if
+  none is fresh, it searches the game
   folder and the usual user folders (LocalLow, AppData, Documents, Saved
   Games) for log files written in the last `--since-minutes`. `--record`
   writes a discovered path into `engines/<engine>.md` under `## Logs`, as a
@@ -32,6 +36,7 @@ Read-only on the game folder. It reports:
 from __future__ import annotations
 
 import argparse
+import glob
 import importlib.util
 import json
 import os
@@ -61,13 +66,15 @@ def _load(name: str):
     return sys.modules[name]
 
 
-def font_report(path: Path) -> dict:
+def font_report(path: Path, data: bytes | None = None) -> dict:
+    """Arabic support of one font file, or of font bytes taken out of an asset (`data`)."""
     info: dict = {"path": str(path), "kind": path.suffix.lower().lstrip(".") or "asset"}
-    suffix = path.suffix.lower()
+    suffix = ".ttf" if data else path.suffix.lower()
     try:
         if suffix in {".ttf", ".otf", ".ttc"}:
+            import io
             from fontTools.ttLib import TTFont
-            font = TTFont(str(path), lazy=True, fontNumber=0)
+            font = TTFont(io.BytesIO(data) if data else str(path), lazy=True, fontNumber=0)
             cmap = set(font.getBestCmap())
             letters = sum(0x0621 <= c <= 0x064A for c in cmap)
             forms = sum(0xFE70 <= c <= 0xFEFF for c in cmap)
@@ -87,6 +94,51 @@ def font_report(path: Path) -> dict:
     except Exception as error:  # a damaged or unusual font is a finding, not a crash
         info["verdict"] = f"unreadable: {type(error).__name__}"
     return info
+
+
+def unity_fonts(game: Path, max_files: int = 60, max_mb: int = 400) -> list[dict]:
+    """Fonts inside Unity assets and bundles (needs UnityPy): Font assets get the TTF check,
+    TextMeshPro font assets are counted by the Arabic characters in their character table."""
+    try:
+        import UnityPy
+    except ImportError:
+        return [{"verdict": "UnityPy is not installed; see engines/unity.md"}]
+    data = next(game.glob("*_Data"), None)
+    if not data:
+        return []
+    files = sorted((p for p in data.rglob("*") if p.is_file() and (p.suffix in {".assets", ".bundle", ""} and
+                    p.name not in {"app.info", "boot.config"}) and p.stat().st_size <= max_mb * 1_048_576),
+                   key=lambda p: p.stat().st_size)[:max_files]
+    found = []
+    for path in files:
+        try:
+            env = UnityPy.load(str(path))
+        except Exception:
+            continue
+        for obj in env.objects:
+            kind = obj.type.name
+            try:
+                if kind == "Font":
+                    font = obj.read()
+                    raw = bytes(getattr(font, "m_FontData", b"") or b"")
+                    info = {"path": f"{path.name}:{getattr(font, 'm_Name', '?')}", "kind": "unity-font"}
+                    if raw:
+                        info.update({k: v for k, v in font_report(path, raw).items() if k not in {"path", "kind"}})
+                    else:
+                        info["verdict"] = "no embedded font data (built-in or OS font)"
+                    found.append(info)
+                elif kind == "MonoBehaviour":
+                    tree = obj.read_typetree()
+                    table = tree.get("m_CharacterTable") if isinstance(tree, dict) else None
+                    if table is not None:
+                        codes = [c.get("m_Unicode", 0) for c in table]
+                        arabic = sum(0x0600 <= c <= 0x06FF or 0xFB50 <= c <= 0xFEFF for c in codes)
+                        found.append({"path": f"{path.name}:{tree.get('m_Name', '?')}", "kind": "tmp-font-asset",
+                                      "chars": len(codes), "arabic_chars": arabic,
+                                      "verdict": "arabic" if arabic >= 36 else "partial-arabic" if arabic else "no-arabic"})
+            except Exception:
+                continue
+    return found
 
 
 def find_fonts(game: Path, limit: int = 200) -> list[dict]:
@@ -152,11 +204,46 @@ def discover_logs(game: Path, since: float, depth: int = 4) -> list[Path]:
     return sorted(set(found), key=lambda p: p.stat().st_mtime, reverse=True)
 
 
-def belongs(path: Path, game: Path) -> bool:
-    """In the game folder, or a user-folder path naming the game (a word of 4+ letters from its folder name)."""
+def game_names(game: Path) -> dict:
+    """Names a game uses for its user folders: Unity's company/product (`<Name>_Data/app.info`),
+    Unreal's project folder (the one holding `Binaries`), executable names, and the folder name."""
+    names = {"folder": game.name, "exe": sorted(p.stem for p in game.glob("*.exe"))}
+    info = next(game.glob("*_Data/app.info"), None)
+    if info:
+        lines = info.read_text(encoding="utf-8", errors="ignore").splitlines()
+        if len(lines) >= 2:
+            names["unity_company"], names["unity_product"] = lines[0].strip(), lines[1].strip()
+    project = next((d.name for d in game.iterdir() if d.is_dir() and (d / "Binaries").is_dir()), None)
+    if project:
+        names["unreal_project"] = project
+    return names
+
+
+def name_words(names: dict) -> set[str]:
+    values = [v for v in names.values() if isinstance(v, str)] + list(names.get("exe", []))
+    return {w.lower() for v in values for w in re.findall(r"[A-Za-z]{4,}", v)} - {"game", "games", "launcher", "setup"}
+
+
+def exact_candidates(names: dict) -> list[Path]:
+    """Log paths derived from the game's own names (exact, unlike a search)."""
+    found = []
+    if "unity_product" in names:
+        base = _expand("%USERPROFILE%/AppData/LocalLow")
+        if base:
+            folder = Path(base) / names["unity_company"] / names["unity_product"]
+            found += [folder / "Player.log", folder / "Player-prev.log"]
+    if "unreal_project" in names:
+        base = _expand("%LOCALAPPDATA%")
+        if base:
+            found += sorted((Path(base) / names["unreal_project"] / "Saved" / "Logs").glob("*.log"))
+    return [p for p in found if p.is_file()]
+
+
+def belongs(path: Path, game: Path, words: set[str] | None = None) -> bool:
+    """In the game folder, or a user-folder path naming the game (Unity/Unreal names, exe, folder)."""
     if game in path.parents:
         return True
-    words = [w.lower() for w in re.findall(r"[A-Za-z]{4,}", game.name)]
+    words = words if words is not None else name_words(game_names(game))
     return any(w in str(path).lower() for w in words)
 
 
@@ -173,8 +260,93 @@ def generalize(path: Path, game: Path) -> str:
     return text
 
 
-def record_log(engine: str, pattern: str) -> bool:
+ENGINE_ID = re.compile(r"^[a-z0-9][a-z0-9-]{1,40}$")
+PATH_IN_TICKS = re.compile(r"`([^`]*(?:/|\\)[^`]*\.(?:log|txt))`", re.I)
+
+
+def profile_name(engine: str) -> str:
+    """detect_engine ids such as rpg-maker-mv map to their profile file (config/engine-profile-aliases.json)."""
+    aliases = json.loads((ROOT / "config" / "engine-profile-aliases.json").read_text(encoding="utf-8"))
+    return aliases.get(engine, engine)
+
+
+def profile_log_paths(profile: str, game: Path) -> list[Path]:
+    """Log paths written in engines/<profile>.md under `## Logs` (by hand or by --record)."""
+    path = ROOT / "engines" / f"{profile}.md"
+    if not path.is_file() or "\n## Logs\n" not in path.read_text(encoding="utf-8"):
+        return []
+    section = path.read_text(encoding="utf-8").split("\n## Logs\n", 1)[1].split("\n## ", 1)[0]
+    found = []
+    for pattern in PATH_IN_TICKS.findall(section):
+        if "<" in pattern:  # a placeholder such as <package> cannot be expanded
+            continue
+        expanded = _expand(pattern.replace("{game}", glob.escape(str(game))))
+        if expanded:
+            found += [Path(p) for p in glob.glob(expanded)]
+    return [p for p in found if p.is_file()]
+
+
+def create_profile(engine: str, detection: dict, fonts: list[dict]) -> Path:
+    """A minimal engines/<engine>.md for an engine the template does not know, plus its catalog entry."""
+    if not ENGINE_ID.match(engine):
+        raise ValueError(f"engine id {engine!r}: use lowercase letters, digits, and hyphens")
     profile = ROOT / "engines" / f"{engine}.md"
+    if profile.exists():
+        return profile
+    scores = ", ".join(f"{k} {v}" for k, v in list(detection["scores"].items())[:3]) or "none"
+    font_kinds = ", ".join(sorted({f["kind"] for f in fonts})) or "none found as loose files"
+    profile.write_text(f"""# {engine} profile
+
+Evidence state: `candidate`; created by `loc.py probe` on {date.today().isoformat()} for an engine the
+template did not know. Replace every line below with evidence from this game.
+
+## Identification
+
+- detect_engine.py scores at creation: {scores}.
+- Add this engine's file and folder markers to `config/engine-markers.json`
+  (an extension such as `.pak`, or a file name), then confirm with
+  `python scripts/detect_engine.py <game_root>`.
+
+## Localization locations
+
+Unknown yet: record where the text, fonts ({font_kinds}), and images live.
+
+## Workflow
+
+Discovery is read-only; extract a small sample, prove a no-change round trip,
+then decide the adapter and whether the renderer shows Arabic (native or
+needs_preshape) in the pilot.
+
+## Tools
+
+Catalog tools: none yet. Details: `python scripts/tool_doctor.py --engine {engine}`. Install rules: step 4 of
+`game-localization-engineering`. Add tools to `tools/open-source-tools.json`
+with this engine's profile and name them here.
+
+## Logs
+
+## Limitations
+
+Nothing is verified for this engine.
+
+## Sources
+
+Record the game, build, and every source used.
+""", encoding="utf-8")
+    catalog = ROOT / "tools" / "open-source-tools.json"
+    text = catalog.read_text(encoding="utf-8")
+    data = json.loads(text)
+    if engine not in data.get("engines", {}):
+        start = text.index('"engines": {')
+        end = text.index("\n  }", start)
+        text = text[:end] + f',\n    "{engine}": []' + text[end:]
+        json.loads(text)
+        catalog.write_text(text, encoding="utf-8")
+    return profile
+
+
+def record_log(engine: str, pattern: str) -> bool:
+    profile = ROOT / "engines" / f"{profile_name(engine)}.md"
     if not profile.is_file():
         return False
     text = profile.read_text(encoding="utf-8")
@@ -223,7 +395,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--width", type=float, default=600, help="text box width in pixels")
     parser.add_argument("--text", type=Path, help="UTF-8 file, one logical Arabic line per line")
     parser.add_argument("--since-minutes", type=float, default=30, help="logs older than this are not from this launch")
-    parser.add_argument("--record", action="store_true", help="write discovered log paths into engines/<engine>.md")
+    parser.add_argument("--record", action="store_true",
+                        help="write discovered log paths into engines/<engine>.md; with --engine <new-id> for an "
+                             "unknown engine, create that profile first")
+    parser.add_argument("--deep-fonts", action="store_true", help="also read fonts inside Unity assets (UnityPy; slower)")
     parser.add_argument("--launch", type=Path, help="game executable to start and close (needs allow_launch_game)")
     parser.add_argument("--seconds", type=float, default=45)
     parser.add_argument("--out", type=Path, default=ROOT / "work" / "probe")
@@ -235,8 +410,24 @@ def main(argv: list[str] | None = None) -> int:
 
     detection = _load("detect_engine").detect(args.game)
     engine = args.engine or detection["engine"]
-    report: dict = {"engine": engine, "confidence": detection["confidence"],
-                    "loaders": sorted(detection["existing_loaders"]), "fonts": find_fonts(args.game)}
+    profile = profile_name(engine)
+    names = game_names(args.game)
+    report: dict = {"engine": engine, "profile": f"engines/{profile}.md", "confidence": detection["confidence"],
+                    "loaders": sorted(detection["existing_loaders"]), "names": names, "fonts": find_fonts(args.game)}
+    if args.deep_fonts:
+        report["fonts"] += unity_fonts(args.game)
+    if engine != "unknown" and not (ROOT / "engines" / f"{profile}.md").is_file():
+        if args.record:
+            try:
+                report["profile_created"] = str(create_profile(engine, detection, report["fonts"]).relative_to(ROOT))
+            except ValueError as error:
+                print(f"ERROR {error}")
+                return 2
+        else:
+            report["profile_missing"] = f"engines/{profile}.md does not exist; rerun with --record to create it"
+    elif engine == "unknown":
+        report["next_engine"] = ("Engine not recognized: inspect the files, add markers to config/engine-markers.json, "
+                                 "or rerun with --engine <new-id> --record to start a profile")
 
     since = time.time() - args.since_minutes * 60
     if args.launch:
@@ -256,21 +447,22 @@ def main(argv: list[str] | None = None) -> int:
         report["preview"] = preview(args.font, args.size, args.width, lines[:60], args.out / "preview.png")
 
     boot = _load("boot_verdict")
-    key = "stardew-valley" if engine == "stardew-valley" else engine
-    known = boot.candidates(key, args.game) if key in boot.LOG_PATTERNS else []
-    fresh_known = [p for p in known if p.stat().st_mtime >= since]
+    known = exact_candidates(names) + profile_log_paths(profile, args.game)
+    known += boot.candidates(profile, args.game) if profile in boot.LOG_PATTERNS else []
+    fresh_known = list(dict.fromkeys(p for p in known if p.stat().st_mtime >= since))
     other: list[Path] = []
     if fresh_known:
-        logs, source = fresh_known, "engine profile"
+        logs, source = fresh_known, "known paths (game names, engine profile)"
     else:
         recent = discover_logs(args.game, since)
-        logs, source = [p for p in recent if belongs(p, args.game.resolve())], "discovered"
+        words = name_words(names)
+        logs, source = [p for p in recent if belongs(p, args.game.resolve(), words)], "discovered"
         other = [p for p in recent if p not in logs]
     report["logs"] = {"source": source, "files": [str(p) for p in logs[:10]],
                       "other_recent_logs_ignored": len(other)}  # other programs' logs: count only, never listed
     if logs:
         report["boot"] = boot.judge(logs[:5], args.since_minutes + 1)
-        if source == "discovered" and args.record and engine != "unknown":
+        if source == "discovered" and args.record and (ROOT / "engines" / f"{profile}.md").is_file():
             report["logs"]["recorded"] = [g for g in dict.fromkeys(generalize(p, args.game) for p in logs[:3])
                                           if record_log(engine, g)]
     else:

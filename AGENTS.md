@@ -118,6 +118,11 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
   or the two planned user checks: the pilot (Arabic shown in the game before
   bulk translation) and the final playtest/acceptance.
 
+## Template scripts
+
+`references/scripts.md` lists every script, when to use it, and how to record a
+change you make to one (allowed for a bug or a better way); run `--help` first.
+
 ## Scripts you write
 
 You may write scripts whenever they help; no approval is needed. Write one when

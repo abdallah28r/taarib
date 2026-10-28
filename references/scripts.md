@@ -1,0 +1,99 @@
+# Scripts index
+
+One line per script: when to use it. Before the first use of a script in a
+session, run `python scripts/<name>.py --help` (or read its docstring): the
+options and examples live there. Modules marked *(library)* are used by other
+scripts; you rarely run them directly. A test fails if a script under
+`scripts/` has no line here.
+
+**Changing them.** You may change any template script, config, or adapter in
+this project when you find a bug or a better way, as you judge best. Run
+`verify_template.py` afterwards and record the change at once with
+`loc.py lesson add --type template-bug|workflow --what ... --evidence ...
+--suggest ... --file scripts/<name>.py`, so the template's developer receives
+it. Add a line here for any new script.
+
+**An engine the detector does not know.** Inspect its files yourself; add its
+file and folder markers to `config/engine-markers.json` (no code change), or
+write a detector script when names are not enough; then
+`loc.py probe --game <root> --engine <new-id> --record` starts its profile and
+catalog entry.
+
+## Every phase
+
+| Script | When |
+| --- | --- |
+| `loc.py` | Units, phases, gates, briefs, progress, fixes, lessons; every subcommand is in `translation-units.md` → Commands. |
+| `context_plan.py` | Before a task: prints the few files the route needs. |
+| `verify_template.py` | After changing any template file (script, reference, skill, config). |
+| `check_yaml.py` | After editing a YAML file (hooks do it in Claude Code). |
+| `sync_runtime.py` | After editing `.agents/skills/` or `.agents/roles/`. |
+| `claude_hooks.py` | *(library)* Claude Code hooks; never run by hand. |
+
+## Discovery
+
+| Script | When |
+| --- | --- |
+| `detect_engine.py` | First look at a game: engine and existing mod loaders. Unknown engine: add markers to `config/engine-markers.json`. |
+| `detect_protection.py` | Before any change: anti-cheat, DRM, and online markers stop the route. |
+| `game_probe.py` (`loc.py probe`) | Fonts and their Arabic (`--deep-fonts` inside Unity assets), a preview in the game's font, logs after a launch; `--engine <id> --record` starts a profile for an unknown engine. |
+| `tool_doctor.py` | After the engine is known: that engine's catalog tools and which are installed. |
+| `check_tool_provenance.py` | After choosing or installing a tool: validates `tools/selected-tools.json`. |
+| `check_knowledge.py` | After editing or creating an engine profile: its sections and evidence state. |
+| `capture_filter.py` | Filtering strings captured from screens, logs, or memory into candidates with reasons. |
+
+## Extraction and adapters
+
+| Script | When |
+| --- | --- |
+| `adapter_contract.py` | Before bulk translation: proves an adapter extracts, rebuilds, and reads back on a copy. |
+| `check_project_scripts.py` | After writing a game script in `work/tools/`: validates its registry entry. |
+
+## Translation and proofreading
+
+| Script | When |
+| --- | --- |
+| `make_subagent_brief.py` | A brief for a research or image subagent (text batches use `loc.py brief`). |
+| `delegate.py` | Run a written brief in the other runtime when the project uses Codex and Claude Code together. |
+| `loc_brief.py` | *(library)* builds `loc.py brief`. |
+| `loc_units.py` | *(library)* the translation-unit record and its validation. |
+| `loc_tools.py` | *(library)* problem codes, terms, update, TMX, estimate, pseudo. |
+| `loc_pipeline.py` | *(library)* phases and gates behind `loc.py next/gate`. |
+| `loc_experiences.py` | *(library)* lessons and the experiences package. |
+
+## QA
+
+| Script | When |
+| --- | --- |
+| `loc_qa.py` | CSV/TSV/JSON/YAML translation tables: tokens, line breaks, Latin leaks. |
+| `format_qa.py` | PO, XLIFF, and ICU message files. |
+| `check_font.py` | A TTF/OTF against the characters the text needs; `--shape` HarfBuzz smoke test. |
+| `font_bank.py` | One-byte engines: Arabic glyph slots with a stable seed; `coverage` of a font against the build; `dte` pairs. |
+| `check_font_records.py` | After selecting or installing a font: its usage and install records. |
+| `check_image_regions.py` | Image region manifests and candidates (outside pixels and transparency kind unchanged). |
+| `image_candidate.py` | A generative image candidate through Codex, then `composite` into the text region. |
+| `boot_verdict.py` | After a launch: crash, new errors, or missing Arabic glyphs from the game's log. |
+
+## Build, install, and release
+
+| Script | When |
+| --- | --- |
+| `arabic_shaping.py` | *(library)* shaping, line wrapping, visual order, `unrender`; used by adapters' `render()`. |
+| `safe_backup.py` | Before changing any file inside the game folder. |
+| `safe_replace.py` | Replace one game file with backup and atomic swap. |
+| `save_guard.py` | Snapshot the player's save folder before the first launch of a patched build. |
+| `build_patch_package.py` | A hash-checked package of added and replaced files. |
+| `apply_patch_package.py` | Install that package on the user's identified copy, with rollback state. |
+| `uninstall_patch_package.py` | Remove an installed package after verifying its hashes. |
+| `byte_patch.py` | Archives or disc images too large to ship whole: byte-range patch, hash-checked apply; guarded byte edits. |
+| `generate_sbom.py` | Release: a file-level SBOM of the actual release archive. |
+
+## Template maintenance (`scripts/maintainer/`)
+
+| Script | When |
+| --- | --- |
+| `maintainer/import_experiences.py` | In the master template: bring users' experiences zips in and decide each lesson. |
+| `maintainer/build_release.py` | A public template ZIP (not a game patch). |
+| `maintainer/check_agent_policy.py` | *(run by verify_template)* subagent policy and tool surfaces. |
+| `maintainer/check_context_routes.py` | *(run by verify_template)* context routes and their coverage. |
+| `maintainer/license_guard.py` | *(run by verify_template)* research-source and release licensing metadata. |

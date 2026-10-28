@@ -9,52 +9,10 @@ from collections import defaultdict
 from pathlib import Path
 
 
-MARKERS = {
-    "unity": {
-        "unityplayer.dll": 5,
-        "globalgamemanagers": 4,
-        "resources.assets": 3,
-        "gameassembly.dll": 2,
-        "global-metadata.dat": 2,
-    },
-    "unreal": {
-        ".pak": 2,
-        ".utoc": 4,
-        ".ucas": 4,
-        ".uasset": 2,
-        ".locres": 3,
-        "binaries/win64": 2,
-    },
-    "renpy": {"renpy": 4, ".rpy": 3, ".rpyc": 2, ".rpa": 2},
-    "rpg-maker-mz": {"rmmz_core.js": 8, "js/plugins.js": 2, "data/system.json": 2},
-    "rpg-maker-mv": {"rpg_core.js": 8, "js/plugins.js": 2, "data/system.json": 2},
-    "godot": {"project.godot": 8, ".pck": 3, ".tscn": 2, ".tres": 2},
-    "source": {"gameinfo.txt": 6, ".vpk": 3},
-    "gamemaker": {"data.win": 8, ".yyz": 4},
-    "paradox-clausewitz": {"launcher-settings.json": 4, "fonts.font": 3, "_l_english.yml": 4},
-    "bannerlord": {"submodule.xml": 6, "language_data.xml": 4, "bannerlordconfig.txt": 3},
-    # Weights beat the generic markers these games also carry (Unity for RimWorld, .NET for Stardew).
-    "age-of-empires-ii": {"aoe2de_s.exe": 10, "key-value-strings-utf8.txt": 6, "aok hd.exe": 10, "resources/_common": 2},
-    "stardew-valley": {"stardew valley.dll": 12, "stardew valley.exe": 12, "content/fonts": 2, "stardewmoddingapi.exe": 3},
-    "monogame-xna": {"monogame.framework.dll": 8, "fna.dll": 8, ".xnb": 3, "runtimeconfig.json": 1},
-    "scumm-scummvm": {"speech.info": 6, "uitext.info": 6, "monkey1.000": 8, "monkey2.000": 8, "comi.la0": 8,
-                      "language.tab": 4, ".nut": 2},
-    "grime-emi": {"grimfandango.exe": 8, "monkey4.exe": 8, ".m4b": 4, ".lab": 3, "script.tab": 4},
-    "telltale": {".ttarch": 8, ".ttarch2": 8, ".langdb": 4, ".d3dtx": 2},
-    "dinky": {"ggpack": 8, "text_en.tsv": 3},
-    "android-apk": {".apk": 8, "androidmanifest.xml": 6, "classes.dex": 4},
-    "ps1": {".cue": 4, "system.cnf": 2},
-    "ps2": {".iso": 4, "system.cnf": 2},
-    "rimworld": {"rimworldwin64_data": 10, "data/core/languages": 4, "data/core/defs": 2},
-}
-
-LOADERS = {
-    "bepinex": ("bepinex", "winhttp.dll", "doorstop_config.ini"),
-    "ue4ss": ("ue4ss", "ue4ss.dll", "ue4ss-settings.ini"),
-    "melonloader": ("melonloader", "version.dll"),
-    "reipatcher": ("reipatcher",),
-    "smapi": ("stardewmoddingapi.exe", "smapi-internal"),
-}
+MARKERS_FILE = Path(__file__).resolve().parents[1] / "config" / "engine-markers.json"
+_CONFIG = json.loads(MARKERS_FILE.read_text(encoding="utf-8"))
+MARKERS: dict[str, dict[str, int]] = _CONFIG["engines"]  # edit config/engine-markers.json, not this file
+LOADERS: dict[str, tuple[str, ...]] = {name: tuple(markers) for name, markers in _CONFIG["loaders"].items()}
 
 
 def inventory(root: Path, max_files: int = 250_000) -> list[str]:

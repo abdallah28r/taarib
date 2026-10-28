@@ -154,6 +154,85 @@ class ProbeTests(Temp):
         self.assertEqual(code, 2)
 
 
+class ProbeNamesAndProfilesTests(Temp):
+    def test_unity_names_give_the_exact_log_path(self):
+        game = self.dir / "Some Game"
+        (game / "SomeGame_Data").mkdir(parents=True)
+        (game / "SomeGame_Data" / "app.info").write_text("Acme Studio\nStarfall Tale\n", encoding="utf-8")
+        log = self.dir / "AppData" / "LocalLow" / "Acme Studio" / "Starfall Tale" / "Player.log"
+        log.parent.mkdir(parents=True)
+        log.write_text("Initialize engine version\n", encoding="utf-8")
+        old = os.environ.get("USERPROFILE")
+        os.environ["USERPROFILE"] = str(self.dir)
+        try:
+            names = probe.game_names(game)
+            self.assertEqual((names["unity_company"], names["unity_product"]), ("Acme Studio", "Starfall Tale"))
+            self.assertIn(log, probe.exact_candidates(names))
+            self.assertTrue(probe.belongs(log, game, probe.name_words(names)))  # folder name alone would miss it
+        finally:
+            if old is None:
+                del os.environ["USERPROFILE"]
+            else:
+                os.environ["USERPROFILE"] = old
+
+    def test_aliases_and_paths_recorded_in_a_profile(self):
+        self.assertEqual(probe.profile_name("rpg-maker-mv"), "rpg-maker")
+        self.assertEqual(probe.profile_name("source"), "source-engine")
+        profile = ROOT / "engines" / "telltale.md"
+        before = profile.read_text(encoding="utf-8")
+        (self.dir / "logs").mkdir()
+        (self.dir / "logs" / "game.log").write_text("x", encoding="utf-8")
+        try:
+            probe.record_log("telltale", "{game}/logs/game.log")
+            self.assertEqual(probe.profile_log_paths("telltale", self.dir), [self.dir / "logs" / "game.log"])
+        finally:
+            profile.write_text(before, encoding="utf-8")
+
+    def test_new_engine_profile_passes_the_structure_check_and_joins_the_catalog(self):
+        engine = "zz-test-engine"
+        profile = ROOT / "engines" / f"{engine}.md"
+        catalog = ROOT / "tools" / "open-source-tools.json"
+        before = catalog.read_text(encoding="utf-8")
+        try:
+            probe.create_profile(engine, {"scores": {"unity": 3}}, [])
+            self.assertTrue(profile.is_file())
+            self.assertEqual(json.loads(catalog.read_text(encoding="utf-8"))["engines"][engine], [])
+            knowledge = load("check_knowledge")
+            import contextlib, io
+            folder = self.dir / "engines"
+            folder.mkdir()
+            (folder / profile.name).write_text(profile.read_text(encoding="utf-8"), encoding="utf-8")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                sys.argv = ["check_knowledge", str(folder)]
+                self.assertFalse(knowledge.main())
+            self.assertTrue(probe.record_log(engine, "{game}/output.log"))
+            with self.assertRaises(ValueError):
+                probe.create_profile("Bad Name", {"scores": {}}, [])
+        finally:
+            profile.unlink(missing_ok=True)
+            catalog.write_text(before, encoding="utf-8")
+
+
+class ScriptsIndexTests(unittest.TestCase):
+    def test_every_script_has_a_line_in_the_index(self):
+        index = (ROOT / "references" / "scripts.md").read_text(encoding="utf-8")
+        scripts = [p.name for p in (ROOT / "scripts").glob("*.py")]
+        scripts += ["maintainer/" + p.name for p in (ROOT / "scripts" / "maintainer").glob("*.py")]
+        self.assertEqual([s for s in scripts if f"`{s}`" not in index], [], "add a line to references/scripts.md")
+        self.assertIn("references/scripts.md", (ROOT / "AGENTS.md").read_text(encoding="utf-8"))
+
+
+class EngineMarkersConfigTests(unittest.TestCase):
+    def test_markers_file_is_valid(self):
+        config = json.loads((ROOT / "config" / "engine-markers.json").read_text(encoding="utf-8"))
+        for engine, markers in config["engines"].items():
+            self.assertRegex(engine, r"^[a-z0-9][a-z0-9-]+$")
+            self.assertTrue(markers and all(isinstance(w, int) and w > 0 for w in markers.values()), engine)
+            self.assertTrue(all(m == m.lower() for m in markers), f"{engine}: markers are lowercase")
+        self.assertEqual(detect.MARKERS, config["engines"])
+
+
 class NewEngineDetectionTests(Temp):
     def test_each_new_engine_is_recognized(self):
         layouts = {
