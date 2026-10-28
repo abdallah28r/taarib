@@ -100,11 +100,11 @@ T = {  # every visible word, per language
         "gate": "البوابة: لا تُفتح حتى",
         # install
         "inst_title": "الشرح والتثبيت", "inst_h1": "الشرح والتثبيت",
-        "inst_lead": "من مجلد فارغ إلى أول طلب تعريب في دقائق. تحتاج نسخة أصلية من اللعبة، وGit، وPython 3، وClaude Code أو Codex.",
+        "inst_lead": "من مجلد فارغ إلى أول طلب تعريب في دقائق. تحتاج نسخة أصلية من اللعبة، و<bdi>Git</bdi>، و<bdi>Python 3</bdi>، و<bdi>Claude Code</bdi> أو <bdi>Codex</bdi>.",
         "inst_toc": [("need", "ما تحتاجه"), ("get", "تنزيل القالب"), ("rename", "مجلد لكل لعبة"), ("runtime", "افتحه في وكيلك"),
                      ("codex", "في Codex"), ("claude", "في Claude Code"), ("ask", "اطلب التعريب"), ("next", "ماذا يحدث بعدها")],
-        "need": ["نسخة أصلية من اللعبة على جهازك.", "Git وPython 3 (مع المكتبات: <code>pip install -r requirements.txt</code>).",
-                 "اشتراك في Claude Code أو Codex، أو كليهما."],
+        "need": ["نسخة أصلية من اللعبة على جهازك.", "<bdi>Git</bdi> و<bdi>Python 3</bdi>، مع المكتبات: <bdi><code>pip install -r requirements.txt</code></bdi>",
+                 "اشتراك في <bdi>Claude Code</bdi> أو <bdi>Codex</bdi>، أو كليهما."],
         "get_text": "اختر مجلدًا على جهازك لتنزيل القالب، مثل مجلد باسم <bdi>Arabic Game</bdi>. افتح الطرفية داخله وشغّل:",
         "rename_text": "سيظهر مجلد باسم <bdi>taarib</bdi>. غيّر اسمه إلى اسم اللعبة التي تريد تعريبها، مثل <bdi>Cyberpunk 2077</bdi>. "
                        "لكل لعبة نسخة مستقلة من القالب؛ واحتفظ بالأصل نظيفًا إن أردت تعريب ألعاب أخرى.",
@@ -129,6 +129,7 @@ T = {  # every visible word, per language
                   ("texts", "النصوص قبل وبعد <bdi>texts.html</bdi>", "كل جملة بترجمتها، وحالتها، ومتحدثها، ومشكلات الفحص، وملاحظات المدقق، مع بحث وتصفية."),
                   ("images", "الصور قبل وبعد <bdi>images.html</bdi>", "الأصل والمعرّبة مع شريط مقارنة، وكل نسخة جُرّبت بحكمها وسببه. الصورة التي تحرق الأحداث ضبابية حتى تضغط عليها.")],
         "local": "صفحتا النصوص والصور تبقيان على جهازك ولا تُرفعان أبدًا، لأن فيهما محتوى اللعبة.",
+        "zoom": "اضغط على الصورة لفتحها بحجمها الكامل.",
     },
     "en": {
         "dir": "ltr", "other": "ar", "other_label": "العربية", "brand_small": "تعريب",
@@ -197,6 +198,7 @@ T = {  # every visible word, per language
                   ("texts", "Text before and after <bdi>texts.html</bdi>", "Every line with its translation, status, speaker, problem codes and proofreading notes, with search and filters."),
                   ("images", "Images before and after <bdi>images.html</bdi>", "Source and localized image with a comparison slider, and every version tried with its verdict. Spoilers stay blurred until clicked.")],
         "local": "The text and image pages stay on your computer and are never uploaded, because they hold the game's content.",
+        "zoom": "Tap the image to open it full size.",
     },
 }
 
@@ -403,7 +405,8 @@ pip install -r requirements.txt</pre>
 def showcase(lang: str) -> str:
     t, prefix = T[lang], ("" if lang == "ar" else "../")
     figures = "".join(f"""<section class="full" id="{s}"><h2>{h}</h2><p class="sub">{p}</p><figure><div class="viewport">
-<img src="{prefix}assets/screens/{s}.png" alt="{esc(re.sub('<[^>]+>', '', h))}" loading="lazy"></div></figure></section>""" for s, h, p in t["shots"])
+<a href="{prefix}assets/screens/{s}.png"><img src="{prefix}assets/screens/{s}.png" alt="{esc(re.sub('<[^>]+>', '', h))}" loading="lazy"></a></div>
+<figcaption>{t['zoom']}</figcaption></figure></section>""" for s, h, p in t["shots"])
     body = f"""<div class="wrap" style="padding:40px 20px 24px"><h1>{t['show_h1']}</h1><p class="sub">{t['show_lead']}</p>
 <div class="callout">{t['local']}</div>{figures}</div>"""
     return layout(lang, "showcase", t["show_title"], body, t["show_lead"])
