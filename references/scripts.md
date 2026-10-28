@@ -13,6 +13,12 @@ this project when you find a bug or a better way, as you judge best. Run
 --suggest ... --file scripts/<name>.py`, so the template's developer receives
 it. Add a line here for any new script.
 
+**One fix, every copy.** A bug found in one place is rarely only there. Before
+calling it fixed, search `scripts/`, `adapters/`, `work/tools/`, and `config/`
+for the same idea: the same regex, assumption, path pattern, encoding, or
+per-engine branch. Fix every copy or confirm in the lesson why it is safe, and
+add a test that fails on the old behaviour so the mistake cannot return.
+
 **An engine the detector does not know.** Inspect its files yourself; add its
 file and folder markers to `config/engine-markers.json` (no code change), or
 write a detector script when names are not enough; then

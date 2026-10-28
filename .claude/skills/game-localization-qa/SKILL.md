@@ -41,6 +41,11 @@ live in those references and are not repeated here.
   lane instead of reopening a phase: `loc.py fix open` with what happens now,
   what should happen, and what must not change, then `apply --fix`, proofread,
   `fix close` with a verdict. Reopen a phase only for systemic problems.
+- Never assume a defect lives only where it was seen. Before `fix close`, look
+  for its siblings: `loc.py search` for the same term, wording, or problem code;
+  other screens, boxes, and fonts of the same kind; other files of the same
+  format. Fix every hit in the same lane (`--ids`), or note why each is safe,
+  and add a QA rule or test when one would catch it next time.
 - Record each distinct defect once in `qa/LQA_MATRIX.csv` with screen/key,
   environment, observed/expected result, severity, evidence, and retest.
 

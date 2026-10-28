@@ -191,9 +191,9 @@ action in `PLAN.md`. Do not repeat the same finding across records.
   includes only proofread units by default.
 - Translation artifacts: `loc_qa.py` or `format_qa.py` as appropriate.
 - Template changes: `python scripts/verify_template.py`.
-- Release-only checks, SBOM, manifest, and public ZIP: run the release route,
-  not after ordinary translation batches.
-- `build_patch_package.py`, `apply_patch_package.py`, and
-  `uninstall_patch_package.py` are developer helpers. Passing their synthetic
-  tests does not make a game patch a user-ready portable installer; follow the
-  separate recipient and runtime gates in `references/release.md`.
+- After any fix, assume the mistake repeats: find every place built the same way
+  (code, term, file, engine, screen), fix or check each, and guard against it.
+- Release-only checks (SBOM, manifest, public ZIP): the release route only.
+- `build_patch_package.py`, `apply_patch_package.py`, `uninstall_patch_package.py`
+  are developer helpers; passing their synthetic tests does not make a patch a
+  user-ready installer (see the recipient and runtime gates in `references/release.md`).
