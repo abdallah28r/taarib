@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-10-28 — Everything usable from the reviewed sources: nine engines, 31 tools, probe
+
+- Policy: decrypting a game's own archives and injecting code are allowed only
+  per game after a warning, with the user confirming ownership and that they
+  checked the game's license and their country's law, using external tools
+  only, and distributing nothing decrypted; never for online or anti-cheat
+  games (`extraction-integration.md` → "Protected archives and runtime code").
+  PS4 package building stays rejected.
+- Nine engine profiles adapted from the Arabic Game Localization Playbook
+  (CC BY 4.0): MonoGame/XNA, SCUMM/ScummVM, GrimE, Telltale, Dinky,
+  proprietary PC ports, Android APK, PS1, PS2; Playbook lessons added to the
+  Unity, GameMaker, and RPG Maker profiles. `detect_engine.py` recognizes
+  them (SYSTEM.CNF decides PS1 vs PS2).
+- Catalog: 31 tools (now 93), each named in its engine profile or reference.
+- `loc.py probe` (`scripts/game_probe.py`): the game's fonts and whether they
+  hold Arabic, a preview of rendered lines in the game's own font at the box
+  width (overflow, missing glyphs), and the game's logs, from the engine
+  profile or discovered after a launch and recorded with `--record`; launches
+  the game itself only when `allow_launch_game` is true.
+- `arabic_shaping`: diacritics no longer detach from their letter when a line
+  is reversed (bug); `unrender()` restores logical text from shipped Arabic;
+  `marks_one_later` for engines that draw marks one letter early.
+- New scripts: `font_bank.py` (one-byte glyph banks with a stable seed,
+  coverage, DTE pairs; MIT code adapted), `byte_patch.py` (guarded byte edits
+  and hash-checked range patches; MIT code adapted), `save_guard.py` (player
+  save snapshots). Image check: a candidate must keep the source's
+  transparency kind.
+- References: more rendering lessons (fonts, images, testing, building),
+  install failure reasons, large-archive patches; template map updated
+  (and its trouble table's station numbers corrected).
+
 ## 2026-10-28 — Boot verdict from game logs; AoE II, Stardew Valley, RimWorld profiles
 
 - New `scripts/boot_verdict.py` (read-only): after the user opens the patched

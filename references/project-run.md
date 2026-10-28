@@ -115,7 +115,13 @@ Translate and proofread it as any batch, build it, back up and install it on
 the user's copy, and mark the units `integrated`. Then ask the user, in one
 short message, to open the game and check: letters joined, right to left,
 numbers and Latin names in place, nothing cut off, the font readable; ask for a
-screenshot of any problem. Once the user says the game is open (or you
+screenshot of any problem. Before that first launch, find the game's save
+folder and take `python scripts/save_guard.py snapshot <saves> backups/saves-<date>`;
+restore it only on the user's words. Before installing at all, run
+`python scripts/loc.py probe --game <game_root>`: it lists the game's fonts and
+whether they hold Arabic, and with `--preview --font <font>` draws pilot lines
+in the game's font at the box width, so missing letters and overflow are fixed
+before anyone opens the game. Once the user says the game is open (or you
 launched it with `workflow.allow_launch_game`), run
 `python scripts/boot_verdict.py --engine <engine> --game <game_root>` (or
 `--log <file>`) first: a crash, new errors, or Arabic letters missing from the

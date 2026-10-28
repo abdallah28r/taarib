@@ -22,6 +22,7 @@
     python scripts/loc.py accept --note "user accepted build r3 on 2026-11-02"
     python scripts/loc.py progress --format chat|md|html [--out PATH]
     python scripts/loc.py dashboard             # dashboard.html (also refreshed automatically)
+    python scripts/loc.py probe --game <game_root> [--preview --font <ttf>] [--record] [--launch <exe>]
 
 Progress is computed only from unit statuses and qa/LQA_MATRIX.csv, never from
 an agent's estimate.
@@ -1242,6 +1243,9 @@ def cmd_dashboard(args) -> int:
 
 
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["probe"]:  # its own options live in scripts/game_probe.py
+        return _load("game_probe").main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -1338,6 +1342,9 @@ def main(argv=None) -> int:
     p = with_project(sub.add_parser("accept", help="record the user's acceptance of the playtest build; only on their explicit words"))
     p.add_argument("--note", required=True, help="the user's words, build, and date")
     p.set_defaults(run=cmd_accept)
+    sub.add_parser("probe", add_help=False,
+                   help="engine, fonts and their Arabic, a font preview, and the game's logs, without playing (scripts/game_probe.py)")
+
     p = with_project(sub.add_parser("no-images", help="with images in scope, record that the game has no baked text images, and why"))
     p.add_argument("--reason", required=True, help="what was searched (folders, archives, formats)")
     p.set_defaults(run=cmd_no_images)

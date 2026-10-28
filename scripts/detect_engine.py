@@ -35,7 +35,16 @@ MARKERS = {
     "bannerlord": {"submodule.xml": 6, "language_data.xml": 4, "bannerlordconfig.txt": 3},
     # Weights beat the generic markers these games also carry (Unity for RimWorld, .NET for Stardew).
     "age-of-empires-ii": {"aoe2de_s.exe": 10, "key-value-strings-utf8.txt": 6, "aok hd.exe": 10, "resources/_common": 2},
-    "stardew-valley": {"stardew valley.dll": 10, "stardew valley.exe": 10, "content/fonts": 2, "stardewmoddingapi.exe": 3},
+    "stardew-valley": {"stardew valley.dll": 12, "stardew valley.exe": 12, "content/fonts": 2, "stardewmoddingapi.exe": 3},
+    "monogame-xna": {"monogame.framework.dll": 8, "fna.dll": 8, ".xnb": 3, "runtimeconfig.json": 1},
+    "scumm-scummvm": {"speech.info": 6, "uitext.info": 6, "monkey1.000": 8, "monkey2.000": 8, "comi.la0": 8,
+                      "language.tab": 4, ".nut": 2},
+    "grime-emi": {"grimfandango.exe": 8, "monkey4.exe": 8, ".m4b": 4, ".lab": 3, "script.tab": 4},
+    "telltale": {".ttarch": 8, ".ttarch2": 8, ".langdb": 4, ".d3dtx": 2},
+    "dinky": {"ggpack": 8, "text_en.tsv": 3},
+    "android-apk": {".apk": 8, "androidmanifest.xml": 6, "classes.dex": 4},
+    "ps1": {".cue": 4, "system.cnf": 2},
+    "ps2": {".iso": 4, "system.cnf": 2},
     "rimworld": {"rimworldwin64_data": 10, "data/core/languages": 4, "data/core/defs": 2},
 }
 
@@ -81,6 +90,11 @@ def detect(root: Path) -> dict:
                 scores[engine] += weight
                 evidence[engine].extend(hits[:3])
 
+    # SYSTEM.CNF says which PlayStation: BOOT2 = PS2, BOOT = PS1.
+    cnf = next((root / p for p in paths if Path(p).name == "system.cnf"), None)
+    if cnf and cnf.is_file():
+        text = cnf.read_bytes()[:512].upper()
+        scores["ps2" if b"BOOT2" in text else "ps1"] += 6
     ranked = sorted(scores, key=lambda name: (-scores[name], name))
     winner = ranked[0] if ranked and scores[ranked[0]] >= 4 else "unknown"
     confidence = "unknown"

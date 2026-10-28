@@ -50,6 +50,17 @@ def _region_mask(region: dict, box: list[int], size: tuple[int, int], base: Path
     return tight_mask
 
 
+def _alpha_class(image: Image.Image) -> str:
+    """opaque, binary (only 0 and 255), or gradient: a candidate must keep the source's kind."""
+    if "A" not in image.getbands():
+        return "opaque"
+    alpha = image.getchannel("A")
+    if alpha.getextrema() == (255, 255):
+        return "opaque"
+    values = {value for _, value in alpha.getcolors(256)}
+    return "binary" if values <= {0, 255} else "gradient"
+
+
 def validate(manifest_path: Path) -> list[str]:
     errors: list[str] = []
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -142,6 +153,9 @@ def validate(manifest_path: Path) -> list[str]:
         if candidate_image.size != source_image.size or candidate_image.mode != source_image.mode:
             errors.append(f"{label}: candidate dimensions or mode differ")
             continue
+        if _alpha_class(source_image) != _alpha_class(candidate_image):
+            errors.append(f"{label}: transparency changed ({_alpha_class(source_image)} -> "
+                          f"{_alpha_class(candidate_image)}); keep the source's alpha kind")
         diff = ImageChops.difference(source_image, candidate_image)
         bands = diff.split()
         changed = bands[0]

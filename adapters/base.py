@@ -100,7 +100,7 @@ class Adapter:
                 measure = self._font_measure
             else:
                 measure = len
-        extra = {k: options[k] for k in ("strip_harakat", "lam_alef") if k in options}
+        extra = {k: options[k] for k in ("strip_harakat", "lam_alef", "marks_one_later") if k in options}
         return shaping.render(target, max_width=width or None, measure=measure,
                               line_sep=options.get("line_sep", "\n"), **extra)
 

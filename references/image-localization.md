@@ -154,5 +154,8 @@ compression. They never approve a visually poor image by themselves.
 - PaddleOCR/Tesseract: detection only, when local OCR is authorized.
 - SAM2-class segmentation: refines surfaces; not a text detector.
 - OpenAI image editing: section 4; raw output is untrusted.
+- texture2ddecoder decodes BC/DXT/ETC/ASTC textures for review and etcpak
+  re-encodes DXT/ETC without resizing; python-zstandard opens zstd-compressed
+  emulator states and archives.
 - DirectXTex/texconv: reproduce DDS formats; never add block compression the
   source lacks.

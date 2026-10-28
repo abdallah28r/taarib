@@ -54,7 +54,10 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
   (`safe_backup.py`, `safe_replace.py`, or a patch package). Each backup's
   manifest is the record; do not copy backup paths into `PLAN.md`.
 - Prefer native localization and removable patch mechanisms. Do not bypass DRM,
-  anti-cheat, encryption, signatures, or access controls.
+  anti-cheat, signatures, or access controls. Decrypting a game's own archives
+  and injecting code each need explicit per-game approval under
+  `references/extraction-integration.md` → "Protected archives and runtime
+  code"; never for online or anti-cheat games, never as a default.
 - Preserve IDs, keys, placeholders, markup, escapes, plural/select branches,
   meaningful line breaks, native structure, and required encoding.
 - Logical Unicode Arabic is canonical. Never reverse characters or pre-shape

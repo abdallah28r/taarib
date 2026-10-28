@@ -1,7 +1,7 @@
 # مكتبة معرفة محركات الألعاب
 
 تشمل نقاط البداية الحالية Unity وUnreal وGodot وRen'Py وRPG Maker وGameMaker وSource
-وParadox Clausewitz/Jomini وBannerlord وDanganronpa وAge of Empires II وStardew Valley وRimWorld. ملف المحرك فرضية بداية وليس دليلا على
+وParadox Clausewitz/Jomini وBannerlord وDanganronpa وAge of Empires II وStardew Valley وRimWorld وMonoGame/XNA وSCUMM/ScummVM وGrimE وTelltale وDinky ومحركات PC الخاصة وAndroid APK وPS1 وPS2 (بالمحاكي). حزم PS4 خارج النطاق. ملف المحرك فرضية بداية وليس دليلا على
 لعبة بعينها؛ لا ترفع معلومة إلى `verified-project` إلا بعد round-trip أو اختبار
 داخل الإصدار المحدد.
 

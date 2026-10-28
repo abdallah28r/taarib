@@ -62,7 +62,9 @@ vendoring it. The classification is not a legal conclusion and must be checked
 against the exact component, build, and distribution model.
 
 `rejected` applies when provenance is unclear, access controls would need to be
-bypassed, a license conflicts with the intended product, or the source includes
+bypassed (decrypting a game's own archives is not this case only when every
+term of "Protected archives and runtime code" in
+`references/extraction-integration.md` is met), a license conflicts with the intended product, or the source includes
 secrets, user data, copyrighted game assets, or non-redistributable components.
 
 For an existing community game mod, classify the **exact mod release and each

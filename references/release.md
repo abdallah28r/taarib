@@ -75,3 +75,24 @@ For a **public template archive only**, use `build_release.py` and
 `.releaseinclude`; they are not a game-patch builder. Review the resulting ZIP
 before publishing. An allowlist is not a content/license audit. Follow
 `RELEASE_COMPLIANCE.md` and `THIRD_PARTY_NOTICES.md`.
+
+## Large archives and disc images
+
+When a changed file is too large to ship whole (an archive, a disc image),
+`scripts/byte_patch.py make` stores only the changed byte ranges with the
+original and result SHA-256; `apply` refuses any other version, writes a
+temporary copy, verifies the result, and keeps `<name>.ar_old` for restore.
+Back up with `safe_backup.py` first as for any game file.
+
+## Installation failures
+
+Name the cause to the user in one sentence instead of a stack trace:
+
+| Cause | What to tell the user |
+| --- | --- |
+| A file is open in another program (the game is running) | Close the game and try again |
+| Security software locked or removed a file | Allow the folder in the security software, or restore the file, then retry |
+| Not enough disk space | Free the stated space |
+| Files from two game versions | Verify the game files in the store, then reinstall the patch |
+| The folder needs administrator rights (Program Files) | Move the game to a user folder or run the installer as administrator, by the user's choice |
+| Unknown file hash | This patch is for another game version; nothing was changed |

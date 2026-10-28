@@ -59,7 +59,12 @@ Okapi for filter-based extraction checks and pseudo-localization of formats
 false positives on the game's names and tone.
 
 Do not launch the game or upload logs/screenshots without current authority.
-After each launch of a patched build (pilot, playtest, after a fix), read the
-game's own log with `scripts/boot_verdict.py`: it reports a crash, errors that a
+Before any launch, `loc.py probe --preview` draws rendered lines in the game's
+own font at the box width and lists overflowing lines and missing glyphs;
+`scripts/font_bank.py coverage` checks a font against the whole build. After
+each launch of a patched build (pilot, playtest, after a fix), `loc.py probe`
+finds the game's log (from the engine profile, or by searching files written
+since the launch and recording the path with `--record`) and reads it with
+`scripts/boot_verdict.py`: it reports a crash, errors that a
 clean boot (`--baseline`) did not have, or Arabic letters the font lacks. It is
 read-only and never replaces looking at the screen.

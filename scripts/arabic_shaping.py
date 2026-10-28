@@ -55,12 +55,14 @@ FORMS, LAM_ALEF = _forms()
 CODE_RE = re.compile(r"\{[^}]*\}|\[[^\]]*\]|<[^>]*>|%\w+|\\.", re.S)
 LTR = r"A-Za-z0-9À-ɏ"
 ARABIC_DIGITS = r"٠-٩۰-۹"
+MARKS = r"ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۤۧۨ-ۭ"
 # A currency or percent sign touching a Western number joins it (UBA rule W5): "50%", "$5", "20°".
 UNIT_SIGNS = r"%#$°‰₠-⃏¢-¥"
 ATOM_RE = re.compile(
     CODE_RE.pattern
     + rf"|[{UNIT_SIGNS}]*[{LTR}](?:[{LTR} .,:'/_+-]*[{LTR}])?[{UNIT_SIGNS}]*"  # a left-to-right run
     + rf"|[{ARABIC_DIGITS}](?:[{ARABIC_DIGITS}٫٬.,:/]*[{ARABIC_DIGITS}])?"  # Arabic-Indic number
+    + rf"|.[{MARKS}]+"  # a letter keeps its diacritics after it when the line is reversed
     + r"|.", re.S)
 TAG_RE = re.compile(r"([<\[{])(/?)([A-Za-z][\w-]*)")
 CLOSE_OF = {"<": ">", "[": "]", "{": "}"}
@@ -260,12 +262,52 @@ def font_measure(font_path, size: float) -> Callable[[str], float]:
     return measure
 
 
+MARK_RE = re.compile(f"[{MARKS}]")
+
+
+def shift_marks(visual: str) -> str:
+    """Move each diacritic one character later, for engines that draw marks one position early.
+
+    A mark with no following character lands on an added space.
+    """
+    chars = list(visual)
+    i = 0
+    while i < len(chars):
+        if not MARK_RE.fullmatch(chars[i]):
+            i += 1
+            continue
+        j = i
+        while j < len(chars) and MARK_RE.fullmatch(chars[j]):
+            j += 1
+        if j == len(chars):
+            chars.append(" ")
+        chars[i:j + 1] = [chars[j]] + chars[i:j]
+        i = j + 1
+    return "".join(chars)
+
+
+def unrender(visual: str) -> str:
+    """Logical Unicode Arabic from text that was shaped and reversed for display (line by line).
+
+    For importing Arabic already shipped in a game or an older fan translation;
+    check the result by eye, because an isolated form cannot tell whether its
+    word was split on purpose.
+    """
+    def base(char: str) -> str:
+        return unicodedata.normalize("NFKC", char) if "ﭐ" <= char <= "﻿" else char
+    return "\n".join("".join(base(c) for c in reorder(line)) for line in visual.split("\n"))
+
+
 def render(text: str, *, max_width: float | None = None, measure: Callable[[str], float] | None = None,
-           line_sep: str = "\n", **shape_options) -> str:
-    """Shape, then order each line for display; wrap first when a width and a measure are given."""
+           line_sep: str = "\n", marks_one_later: bool = False, **shape_options) -> str:
+    """Shape, then order each line for display; wrap first when a width and a measure are given.
+
+    marks_one_later=True suits engines that draw a diacritic one letter early.
+    """
     if max_width is not None and measure is not None:
         lines = wrap(text, max_width, measure, **shape_options)
     else:
         lines = text.split("\n")
     codes = shape_options.get("transparent")
-    return line_sep.join(reorder(shape(line, **shape_options), codes) for line in lines)
+    out = [reorder(shape(line, **shape_options), codes) for line in lines]
+    return line_sep.join(shift_marks(line) if marks_one_later else line for line in out)

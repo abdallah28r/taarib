@@ -31,6 +31,18 @@ atlas. `check_font.py` proves cmap coverage only, and `check_font.py --shape`
 is a HarfBuzz smoke test only. Neither proves the game uses that renderer path.
 GNU FriBidi gives a reference BiDi order to compare a renderer against;
 msdf-atlas-gen builds SDF atlases when the engine renders text from them.
+For tests only, python-bidi (`get_display(s, base_dir='R')`) and
+python-arabic-reshaper (ligatures off) are independent references to compare
+`arabic_shaping` against; record each intended difference. For text drawn into
+images, uharfbuzz with freetype-py shapes and rasterizes at high quality;
+shape Arabic and Latin runs separately because HarfBuzz takes one direction
+per call. Engines with one-byte character codes need a glyph bank:
+`scripts/font_bank.py`.
+
+To import Arabic already in a game or an older fan translation, which is
+stored shaped and reversed, `arabic_shaping.unrender()` gives back logical
+text; check it by eye. Some engines draw a diacritic one letter early:
+`adapter_options` `marks_one_later: true`.
 When an existing font is unsuitable or an external face may clearly fit the
 game better, follow `references/font-sourcing.md` to search, compare, obtain,
 record, and—only if required—install the selected font for this Windows user.

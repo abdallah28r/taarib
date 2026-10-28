@@ -103,6 +103,33 @@ isolation, not proven installed in the game):
 | RTLTMPro | commit ba92e02 | shaping subset compiled into an isolated display bridge |
 | fontTools | 4.60.1 | font coverage checks, variable-font instancing |
 
+## Lessons from ENA: Dream BBQ (Arabic Game Localization Playbook, CC BY 4.0, adapted)
+
+- Yarn Spinner dialogue: `Yarn.Unity.Localization` checks its runtime string
+  table first, so `AddLocalizedString` fills it without touching the dialogue
+  bundle; strings stored in Yarn variables need separate extraction.
+- UI text through one Harmony postfix on `TMP_Text.ParseInputText` (every
+  path that sets text passes there), looked up in layers: exact, case-
+  insensitive (games call `ToUpper()`), patterns for composed strings, title
+  plus rest, then line by line; a dump mode logs every English string that
+  passed untranslated.
+- TextMeshPro: store `reverse(bidi(shape(logical)))` with
+  `isRightToLeftText = true`; TMP draws the buffer reversed, so words stay in
+  reading order for wrapping and the typewriter. Set the flag in both
+  directions (components are reused) and restore the original state when a
+  component's text is not Arabic again.
+- Fonts at run time: `TMP_FontAsset.CreateFontAsset(ttf)` registered as a
+  fallback for every game font, with the game font's scale, ascent, descent,
+  and line height copied in proportion; one font asset per TTF.
+  `getFontFeatures = false` for pre-shaped text.
+- Per-component layout: Left/Justified become Right (read the live value),
+  autosize capped at the original size, line spacing compensated from the
+  Arabic font's measured ink.
+- BepInEx 5: the plugin object may get only `Awake`; create a dedicated
+  `GameObject` with `DontDestroyOnLoad` for `Update` and coroutines.
+- Achievements (from Steam) and dialogue history stored in old saves stay
+  English.
+
 ## Limitations
 
 Serialized assets, Addressables, IL2CPP, and runtime hooks vary by version;

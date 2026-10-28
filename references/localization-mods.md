@@ -56,7 +56,8 @@ popularity. Do not add a mod that changes gameplay, saves, networking, or
 achievements unless the localization truly requires it and the user approves
 the specific consequence. Runtime loaders, hooks, DLL injection, or an
 anti-cheat/online-sensitive route require explicit per-game approval after a
-protection check; never bypass DRM, signatures, access controls, or anti-cheat.
+protection check (`extraction-integration.md` → "Protected archives and runtime
+code"); never bypass DRM, signatures, access controls, or anti-cheat.
 If licensing or compatibility cannot be established, keep the mod research-only
 and continue with a safe independent/native route when possible.
 

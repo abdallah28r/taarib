@@ -29,7 +29,8 @@ wraps needs its width in `workflow.adapter_options`: `line_width` (or
 `boxes: {name: width}` and `self.render(target, box=name)`), `line_unit`
 (`chars` for a fixed-pitch box, `px` with the game's `font` and `font_size`),
 and the engine's `line_sep`; `strip_harakat: true` or `lam_alef: false` when
-the font lacks those glyphs. Take widths from the game, not a guess, and leave
+the font lacks those glyphs; `marks_one_later: true` when the engine draws a
+diacritic one letter early. Take widths from the game, not a guess, and leave
 a margin for kerning. Always pass targets through `self.render()` in
 `rebuild`. `unsupported` (or the default `unknown`) fails the contract and the
 discovery gate. Units keep logical Arabic whatever the engine needs.

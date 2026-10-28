@@ -40,6 +40,50 @@ The project names say where each lesson was learned.
 | Right alignment fails or moves text off screen | Alignment changed for every window | Change alignment per window type; keep centred text centred |
 | Text appears from the end while typing out | The engine reveals visual text left to right | Reveal from the right if the engine allows it; otherwise speed it up and record the limit |
 
+## More fonts and drawing
+
+| Symptom | Cause | Rule |
+|---|---|---|
+| A dark line between joined letters | The glyph outline runs to the join | Remove the outline on join rows |
+| A gap at every join only on real hardware | The hardware drops a pixel column | Extend joins by one pixel; test on the target renderer |
+| Overlaps in menus, a gap after «ر» | The UI renderer ignores negative offsets | No negative offsets for Arabic glyphs |
+| Spaces between letters | A positive per-character advance from the English font | Advance by the Arabic glyph width (negative step for right-to-left writers) |
+| Boxes only on some screens | Not every font the code uses got Arabic | Take the font list from the code, not from the folder |
+| Wrong forms («مغلة») with a system font | The font draws presentation forms badly | Draw from glyphs built for the game |
+| Letters jump to the line end (TextMeshPro) | The font's GSUB ran over pre-shaped text | Disable font features; strip GSUB/GPOS from the patched copy |
+| `abort()` on one letter | No default character in the font | Set `?` as the default character |
+| Joins cut, letters look thin | Arabic glyphs lack the outline and shadow layers | Copy the Latin glyphs' layer values |
+| Tails of ص ض cut off | Vertical clip below the baseline | Raise the baseline |
+| A final alef disappears | White glyph over a white frame | Count advance against ink |
+| Odd marks under «إ» | Text pointers written into font data | Exclude the font region from pointer scans |
+
+## Images
+
+| Symptom | Cause | Rule |
+|---|---|---|
+| Crash at a chapter start | A neighbouring data block was erased; the pixel check did not read it | Check every adjacent block separately |
+| "Identical" images that differ | `getbbox()` ignores a zero-alpha difference | Compare with `getextrema()` |
+| Arabic narration cut off | The game shows only the part of the image where the English was | Draw inside the original text box |
+| Old images after a rebuild | Textures uploaded at boot or kept in a save state | Test from a fresh boot |
+| Mirrored letters on a 3D object | The UV mirrors the texture | Draw the letters mirrored on purpose |
+| Black screen after the title | "Unused" assets were deleted | Never delete state or asset packs |
+
+## Testing and building
+
+| Symptom | Cause | Rule |
+|---|---|---|
+| The player's saves vanished | No snapshot before testing | `scripts/save_guard.py snapshot` before the first launch |
+| The backup was not real | A sandbox redirected AppData | Refuse sandboxed paths |
+| A PowerShell script fails on Arabic | UTF-8 without BOM in PowerShell 5.1 | Save `.ps1` as UTF-8 with BOM |
+| A game ignores synthetic input | — | Put test strings in the start menu or use the attract demo |
+| A hidden D3D window exits with code 1 | — | Show the window during start-up |
+| A crash after repacking | A total-size field was not updated | Update every size field |
+| `strlen` access violation | An empty record pointer was 0 | Point at a NUL byte |
+| A step silently failed (`\|\| true`) | An error was swallowed | Search the output for the failure text; check the binary changed |
+| Partial Deflate reads | `Read` returns less than asked | Read in a loop |
+| A file its own writer cannot read (Ruby Marshal) | Python writers break shared objects | Write and verify with real Ruby |
+| An APK will not install over the last one | A different signing key | Keep one key; its password in an environment variable, never a file |
+
 ## Method
 
 | Lesson | Rule |

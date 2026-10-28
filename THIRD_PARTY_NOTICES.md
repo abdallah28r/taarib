@@ -34,10 +34,52 @@ permission.
   shortened, translated to English. No code was copied; `scripts/arabic_shaping.py`
   is our own implementation of the same rules.
 
+- The engine profiles `engines/monogame-xna.md`, `scumm-scummvm.md`,
+  `grime-emi.md`, `telltale.md`, `dinky.md`, `proprietary-pc.md`,
+  `android-apk.md`, `ps1.md`, `ps2.md`, and the "Lessons from …" sections of
+  `unity.md`, `gamemaker.md`, and `rpg-maker.md` are adapted from the same
+  playbook's `engines/` guides (CC BY 4.0). Changed: selected, shortened,
+  translated to English, and tied to this template's policy and tools.
+- `scripts/font_bank.py` (`assign_bank`, `coverage`) and
+  `scripts/byte_patch.py` (`patch_bytes`, `diff_ranges`, `make_patch`,
+  `apply_patch`) are adapted from the playbook's `code/font_tools.py` and
+  `code/patch_tools.py` under the MIT License:
+
+  ```text
+  MIT License
+
+  Copyright (c) 2026 MXIAUDIO and contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+  ```
+
+  `scripts/save_guard.py` and the transparency check in
+  `scripts/check_image_regions.py` are our own code written from the
+  playbook's ideas.
+
 ## Acknowledgments
 
 Ideas only, no material copied: the Arabic text tools of asgore-undertale
 (https://github.com/asgore-undertale — Asgore Studio, RenovArabi, ATCEE) for
 fitting text to a box and handling diacritics, and Arabic / Persian Text
 Shaper by Ai Haka (https://github.com/KKING-ar/Arabic-Reshaper, MIT) for
-keeping rich-text tags valid when a line is reversed.
+keeping rich-text tags valid when a line is reversed, restoring logical text
+from shaped output, and drawing diacritics one letter later; the Miqbas and
+FLTAH research package (ideas from observed behaviour only: per-game line
+width, install failure reasons, boot verdict from logs).

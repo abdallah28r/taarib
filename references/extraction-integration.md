@@ -79,6 +79,36 @@ helps review timing. whisper.cpp transcription is local speech recognition:
 only with the user's explicit authorization for this task, and its text is
 evidence to check, never a source to trust.
 
+## Protected archives and runtime code
+
+Some games keep their text in encrypted archives (RPG Maker `.rgssad`/
+`.rgss3a` and encrypted MV/MZ images, XOR- or Blowfish-scrambled packs), and
+some can show Arabic only through code added at run time (Harmony, BepInEx,
+Mono.Cecil, `DOTNET_STARTUP_HOOKS`, a proxy DLL, a byte patch). Both are
+allowed only on these terms, in this order:
+
+1. **Not for online or anti-cheat games**: run `detect_protection.py`; any
+   anti-cheat, DRM, or online-service marker stops the route.
+2. **Warn, then ask once per game** in one message, naming the archive or the
+   code change, and get the user's explicit words confirming that they own a
+   legitimate copy and have checked the game's license (EULA) and the law of
+   their country. Their approval is their decision, not a legal guarantee:
+   circumvention laws (such as DMCA §1201) can forbid decrypting even an owned
+   copy, and a publisher's permission or a license that allows modding is what
+   makes it lawful. Record the approval and the user's words in `PLAN.md`
+   decisions.
+3. **External tool only**: a pinned upstream tool under `.tools/`, run on a
+   copy; never copy decryption code or keys into this template or a project
+   repository, and never publish keys.
+4. **Nothing decrypted is distributed**: the release carries only our
+   translation, fonts we may ship, and reversible patches checked against the
+   original hashes; never decrypted game assets or a re-encrypted full archive
+   built from them.
+
+Prefer an unencrypted language folder, a native mod API, or a runtime layer
+over decryption whenever one exists. PS4 package building and signing stay
+rejected.
+
 Stop the affected operation for protection bypass, missing keys, unverified
 lossy formats, or an untestable rebuild. Do not invent versions, keys, offsets,
 or mappings.
