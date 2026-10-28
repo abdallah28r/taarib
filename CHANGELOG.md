@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-10-28 — Arabic display fixes, measured wrapping, rendering lessons
+
+From the review of six Arabic localization repositories and the Miqbas/FLTAH
+research pack (report outside the template, `../research/`).
+
+- `arabic_shaping.render` fixes three display bugs found by testing it:
+  Arabic-Indic numbers came out reversed (`٢٥` → `٥٢`), `50%` became `%50`,
+  and tag pairs reversed into `</b>…<b>`. Ordering now follows the Unicode
+  Bidi Algorithm for a right-to-left line (`+25` stays `25+` as native
+  renderers show it).
+- Wrapping before reversing, which the docs required but no code did:
+  `wrap()` measures shaped text (`len` for fixed-pitch boxes, `font_measure`
+  for the game's TTF/OTF) and balances lines. Adapters set it with
+  `adapter_options` (`line_width` or `boxes`, `line_unit`, `font`,
+  `font_size`, `line_sep`). `shape()` gains `strip_harakat`, `lam_alef`, and
+  `transparent` engine codes; `glyphs_used()` lists what the font must hold.
+- QA: new `reversed_text` warning; `loc_qa` and `format_qa` count a line as
+  Arabic only by its letters; `capture_filter` drops FPS/CPU/GHz overlays.
+- New `references/rendering-lessons.md` (symptom → cause → rule, adapted under
+  CC BY 4.0 from the Arabic Game Localization Playbook), optional in the
+  `qa-rendering` route. Line-break and "values the code compares" rules in
+  `extraction-integration.md`; pilot lines cover the rendering cases; RPG
+  Maker MV vs MZ; optional `religious_terms` in `glossary.yaml`; no silent
+  model or provider switch. Attribution and acknowledgments in
+  `THIRD_PARTY_NOTICES.md`.
+
 ## 2026-10-28 — Audit: every tool named where the agent reads, fewer scripts
 
 - Tool catalog: dropped Weblate, OmegaT, and Kuriimu2 (team/GUI or console

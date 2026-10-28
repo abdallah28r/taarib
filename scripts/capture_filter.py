@@ -12,6 +12,8 @@ from pathlib import Path
 LETTER_RE = re.compile(r"[^\W\d_]", re.UNICODE)
 PATH_RE = re.compile(r"(?:^[A-Za-z]:[\\/]|[/\\].+[/\\]|\.(?:png|jpg|ogg|wav|dll|exe|json|asset)$)", re.I)
 IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.:/-]*$")
+# Performance overlays and hardware readouts seen in screenshots, never game text.
+COUNTER_RE = re.compile(r"^(?:FPS|CPU|GPU|RAM|VRAM|MS|TEMP)\b.*\d|\d\s*(?:FPS|MHz|GHz|MB|GB|°C|°F)(?!\w)", re.I)
 
 
 def classify(text: str) -> tuple[bool, str]:
@@ -24,6 +26,8 @@ def classify(text: str) -> tuple[bool, str]:
         return False, "mostly-numeric"
     if len(letters) < 2:
         return False, "too-few-letters"
+    if COUNTER_RE.search(value) and len(value.split()) <= 4:
+        return False, "performance-counter"
     if PATH_RE.search(value) and not re.search(r"\s", value):
         return False, "path-or-filename"
     if IDENTIFIER_RE.fullmatch(value) and (

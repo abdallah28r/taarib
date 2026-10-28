@@ -75,7 +75,9 @@ Before a bulk translation, run
 billing, and is recomputed on demand, so do not record it. If the available
 quota is insufficient for two estimated batches or repeated rate-limit/quota
 errors persist after bounded retries, finish or checkpoint the current batch,
-record resumable state, and stop.
+record resumable state, and stop. On a per-minute rate limit, wait the
+announced time and continue. Never switch to another model or provider
+without the user's word.
 
 ## Delegation contract
 

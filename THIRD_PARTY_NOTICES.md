@@ -22,3 +22,22 @@ For every shipped external component record:
 Do not redistribute copyrighted game assets, extracted game text, proprietary
 fonts/models, private research files, or material covered only by expired
 permission.
+
+## Material adapted into the template
+
+- `references/rendering-lessons.md` and the rules in
+  `references/extraction-integration.md` (line breaks; values the code
+  compares) are adapted from «دليل تعريب الألعاب الاحترافي» — MXIAUDIO and
+  contributors — https://github.com/Xxdm234/Arabic-Game-Localization-Playbook
+  (commit 2475fb6, read 2026-10-28), licensed CC BY 4.0
+  (https://creativecommons.org/licenses/by/4.0/). Changed: selected,
+  shortened, translated to English. No code was copied; `scripts/arabic_shaping.py`
+  is our own implementation of the same rules.
+
+## Acknowledgments
+
+Ideas only, no material copied: the Arabic text tools of asgore-undertale
+(https://github.com/asgore-undertale — Asgore Studio, RenovArabi, ATCEE) for
+fitting text to a box and handling diacritics, and Arabic / Persian Text
+Shaper by Ai Haka (https://github.com/KKING-ar/Arabic-Reshaper, MIT) for
+keeping rich-text tags valid when a line is reversed.

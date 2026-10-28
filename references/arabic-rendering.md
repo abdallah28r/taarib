@@ -15,7 +15,11 @@ HP: 100
 Never reverse characters. Pre-shape or generate visual order only after the
 exact renderer is proven unable to handle logical Arabic. Keep transformed text
 as generated output, never canonical translation memory. For a non-BiDi
-renderer, wrap using actual font advances first, then shape/reorder each line.
+renderer, wrap using actual font advances first, then shape/reorder each line
+(`arabic_shaping.render` with the adapter's width options; see
+`adapters/README.md`). When the game shows a symptom (reversed lines, split
+numbers, broken tags, boxes, cut text), look it up in
+`references/rendering-lessons.md` before inventing a fix.
 
 Do not mirror the entire UI. Evaluate containers individually. Do not mirror
 logos, portraits, maps, gameplay art, controller/weapon icons, or directional

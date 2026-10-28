@@ -46,6 +46,9 @@ class DiscoveryToolTests(unittest.TestCase):
         self.assertEqual(capture_filter.classify("ui_btn_ok"), (False, "probable-identifier"))
         self.assertEqual(capture_filter.classify("2560 x 1440"), (False, "mostly-numeric"))
         self.assertEqual(capture_filter.classify("Open the door"), (True, "candidate"))
+        for overlay in ("FPS: 60", "CPU 45%", "GPU 72°C", "1.2 GHz"):
+            self.assertEqual(capture_filter.classify(overlay), (False, "performance-counter"))
+        self.assertEqual(capture_filter.classify("Save 5 GB of data now please"), (True, "candidate"))
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from loc_qa import tokens  # noqa: E402
 
-ARABIC = re.compile(r"[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]")
+ARABIC = re.compile(r"[\u0621-\u063a\u0641-\u064a\u066e-\u06d3\u06d5\u06fa-\u06fc\u0750-\u077f\u08a0-\u08ff]")  # letters only
 ICU_KIND = re.compile(r"\{\s*[A-Za-z_][\w.]*\s*,\s*(plural|selectordinal|select)\s*,")
 SELECTOR = re.compile(r"(=?[\w.-]+)\s*\{")
 INLINE = {"ph", "pc", "sc", "ec", "mrk", "g", "x", "bx", "ex", "bpt", "ept", "it"}

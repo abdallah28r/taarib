@@ -38,6 +38,18 @@ this; changed units show as `needs_rewrite` with their old Arabic in
 
 ## Integration
 
+Before writing a build, check two things that break games silently:
+
+- **The line break the engine really uses**, per drawing path: some engines
+  wrap only on their own code (SCUMM `FF01`), a separate script line (RPG
+  Maker event command 401, whose line count must match the source unless the
+  format says otherwise), or a special character; a literal `\n` may be drawn
+  as text. Prove it in the pilot before setting `line_sep`.
+- **Values the code compares are not text.** An internal name, state, key,
+  room, sprite, or password the game's code checks (`name = "ralsei"`) must
+  stay as it is even if it looks like dialogue; translating one has broken the
+  end of a chapter. Find the consumer before translating such a value.
+
 Prefer an existing Arabic locale, then a new `ar` locale, then a removable
 override as a documented last resort. Never change gameplay values. Rebuild only
 modified assets, preserving paths, IDs, hierarchy, and required compression.

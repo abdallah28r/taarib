@@ -23,8 +23,14 @@ Set `rtl` from discovery evidence: `native` when the engine shapes and orders
 Arabic itself (write logical text), or `needs_preshape` when it renders left to
 right only; then `render()` shapes each line with forms derived from Unicode
 and reverses it for display, keeping Latin runs, numbers, and code spans
-intact. Wrap lines before rendering, because reversing a wrapped paragraph puts
-its lines in the wrong order. Always pass targets through `self.render()` in
+intact (Western and Arabic-Indic numbers, paired tags such as `<b>…</b>`).
+Reversing a whole paragraph puts its lines in the wrong order, so a box that
+wraps needs its width in `workflow.adapter_options`: `line_width` (or
+`boxes: {name: width}` and `self.render(target, box=name)`), `line_unit`
+(`chars` for a fixed-pitch box, `px` with the game's `font` and `font_size`),
+and the engine's `line_sep`; `strip_harakat: true` or `lam_alef: false` when
+the font lacks those glyphs. Take widths from the game, not a guess, and leave
+a margin for kerning. Always pass targets through `self.render()` in
 `rebuild`. `unsupported` (or the default `unknown`) fails the contract and the
 discovery gate. Units keep logical Arabic whatever the engine needs.
 

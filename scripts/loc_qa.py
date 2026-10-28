@@ -9,7 +9,7 @@ PROFILE_RES={
  "paradox":re.compile(r"\[[^\[\]\r\n]*\]|\$[^$\r\n]*\$|@[A-Za-z0-9_:.]+!|#[A-Za-z][A-Za-z0-9_;]*|#!"),
  "renpy":re.compile(r"\[[^\]\r\n]+\]"),
 }
-ARABIC_RE=re.compile(r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]")
+ARABIC_RE=re.compile(r"[\u0621-\u063A\u0641-\u064A\u066E-\u06D3\u06D5\u06FA-\u06FC\u0750-\u077F\u08A0-\u08FF]")  # letters only: \u061F \u060C or digits do not make a line Arabic
 LATIN_WORD_RE=re.compile(r"[A-Za-z][A-Za-z'-]{2,}")
 MOJIBAKE=("ï»¿","Ø§","Ù„","ï¿½","�")
 def _braces(s):

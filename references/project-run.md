@@ -115,7 +115,9 @@ Translate and proofread it as any batch, build it, back up and install it on
 the user's copy, and mark the units `integrated`. Then ask the user, in one
 short message, to open the game and check: letters joined, right to left,
 numbers and Latin names in place, nothing cut off, the font readable; ask for a
-screenshot of any problem. This is a planned stop. Fix any rendering problem
+screenshot of any problem. Choose the pilot lines so that between them they
+cover: a short line, lines that wrap to two and three lines, a number, a
+percentage, brackets, a Latin word, and a placeholder or variable name. This is a planned stop. Fix any rendering problem
 in the display layer (font, shaping, direction, wrap width), never by
 reversing or reshaping the stored Arabic, reinstall, and ask again. Record
 `loc.py pilot-ok --note "<their words>"` only on the user's words. The pilot's

@@ -19,7 +19,7 @@ game:
 workflow:
   engine_profile: ""
   adapter: ""  # e.g. adapters/renpy.py; proven by scripts/adapter_contract.py before bulk translation
-  adapter_options: {}
+  adapter_options: {}  # needs_preshape wrap: line_width or boxes, line_unit chars|px, font + font_size for px (adapters/README.md)
   runtime: "ask"  # codex | claude-code | both
   runtime_root: ""  # only when both: claude-code | codex is the main agent; the other runs delegated work (scripts/delegate.py)
   subscription: "ask"  # the user's plan in their words, e.g. "Claude Pro 20$"; only used to suggest the numbers below

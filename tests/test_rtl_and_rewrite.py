@@ -23,6 +23,13 @@ def load_script(name):
     return module
 
 
+def load_script_from(path):
+    spec = importlib.util.spec_from_file_location(f"loaded_{path.stem}", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 shaping = load_script("arabic_shaping")
 contract = load_script("adapter_contract")
 loc = load_script("loc")
@@ -64,6 +71,55 @@ class ShapingTests(unittest.TestCase):
         self.assertIn("Start", first)
         self.assertEqual(second, shaping.shape("سطر")[::-1])
         self.assertFalse(any("ء" <= ch <= "ي" for ch in rendered))
+
+    def test_numbers_stay_whole_and_signs_follow_the_bidi_algorithm(self):
+        self.assertIn("٢٥", shaping.render("المستوى ٢٥ الآن"))
+        self.assertIn("50%", shaping.render("حصلت على 50% من الذهب"))
+        self.assertIn("3:26", shaping.render("الوقت 3:26"))
+        self.assertIn("MEMORY CARD 1", shaping.render("بطاقة MEMORY CARD 1 جاهزة"))
+        self.assertTrue(shaping.render("+25 هجوم").endswith("25+"))  # as a renderer that supports Arabic shows it
+
+    def test_paired_tags_stay_opening_before_closing(self):
+        rendered = shaping.render("اضغط <color=red>زر البدء</color> الآن")
+        self.assertLess(rendered.index("<color=red>"), rendered.index("</color>"))
+        self.assertEqual(rendered[rendered.index(">") + 1:rendered.index("</")], shaping.shape("زر البدء")[::-1])
+        nested = shaping.render("<b>تحذير <i>مهم</i></b>")
+        self.assertTrue(nested.startswith("<b><i>") and nested.endswith("</b>"))
+        self.assertIn("[key]", shaping.render("بعد [b]قليل[/b] [key]"))
+
+    def test_shape_options(self):
+        pause = __import__("re").compile(r"\^\d")
+        self.assertEqual(codepoints(shaping.shape("اسم^5ك", transparent=pause))[-1], "0xfeda")  # kaf stays joined
+        self.assertIn("^5", shaping.render("اسم^5ك", transparent=pause))
+        self.assertEqual(codepoints(shaping.shape("بِسْمِ", strip_harakat=True)), ["0xfe91", "0xfeb4", "0xfee2"])
+        self.assertEqual(len(shaping.shape("لا", lam_alef=False)), 2)
+        self.assertEqual(shaping.glyphs_used(["ﻻ {name}"]), {"ﻻ"})
+
+    def test_wrap_measures_shaped_text_keeps_reading_order_and_balances(self):
+        text = " ".join(f"كلمة{i}" for i in range(1, 31))
+        lines = shaping.wrap(text, 40, len)
+        self.assertGreater(len(lines), 1)
+        self.assertTrue(all(len(shaping.shape(line)) <= 40 for line in lines))
+        self.assertTrue(lines[0].startswith("كلمة1 ") and lines[-1].endswith("كلمة30"))
+        self.assertEqual(" ".join(lines), text)
+        self.assertGreater(len(lines[-1].split()), 1)  # no lone last word
+        self.assertEqual(shaping.wrap("قصير\nثانٍ", 40, len), ["قصير", "ثانٍ"])
+        self.assertEqual(shaping.wrap("قال {player name} مرحبا", 6, len)[1], "{player name}")  # codes never split
+
+    def test_adapter_render_wraps_with_its_options(self):
+        base = load_script_from(ROOT / "adapters" / "base.py")
+
+        class Boxed(base.Adapter):
+            rtl = "needs_preshape"
+        adapter = Boxed(Path("."), {"line_width": 8, "boxes": {"choice": 40}, "line_sep": "|"})
+        self.assertEqual(adapter.render("سطر أول طويل جدا هنا").count("|"), 2)
+        self.assertNotIn("|", adapter.render("سطر أول طويل جدا هنا", box="choice"))
+        self.assertNotIn("|", Boxed(Path("."), {}).render("سطر أول طويل جدا هنا"))
+
+    def test_render_wraps_before_reversing(self):
+        rendered = shaping.render("سطر أول طويل جدا هنا", max_width=8, measure=len, line_sep="|")
+        first = rendered.split("|")[0]
+        self.assertEqual(first, shaping.reorder(shaping.shape("سطر أول")))
 
 
 class RtlContractTests(unittest.TestCase):

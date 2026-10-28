@@ -45,7 +45,7 @@
     "qa-rendering": {
       "skill": ".agents/skills/game-localization-qa/SKILL.md",
       "required": ["references/qa-strategy.md", "references/arabic-rendering.md"],
-      "optional": ["references/font-sourcing.md", "engines/<engine>.md"]
+      "optional": ["references/font-sourcing.md", "references/rendering-lessons.md", "engines/<engine>.md"]
     },
     "images": {
       "skill": ".agents/skills/game-image-localization/SKILL.md",

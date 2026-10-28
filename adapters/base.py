@@ -79,9 +79,30 @@ class Adapter:
         """
         raise NotImplementedError
 
-    def render(self, target: str) -> str:
-        """The text written into game files for a logical Arabic target (call this in rebuild)."""
-        return _load_shaping().render(target) if self.rtl == "needs_preshape" else target
+    def render(self, target: str, box: str | None = None) -> str:
+        """The text written into game files for a logical Arabic target (call this in rebuild).
+
+        For needs_preshape, these ``adapter_options`` (PROJECT.yaml) make it wrap
+        before reversing: ``line_width`` (or ``boxes: {name: width}`` with
+        ``box=`` naming the text box), ``line_unit`` ``chars`` or ``px``, and for
+        ``px`` the game's ``font`` file and ``font_size``. ``line_sep`` is the
+        engine's line break, ``strip_harakat``/``lam_alef`` match the font.
+        """
+        if self.rtl != "needs_preshape":
+            return target
+        shaping, options = _load_shaping(), self.options
+        width = (options.get("boxes") or {}).get(box, options.get("line_width")) if box else options.get("line_width")
+        measure = None
+        if width:
+            if options.get("line_unit", "chars") == "px":
+                if not hasattr(self, "_font_measure"):
+                    self._font_measure = shaping.font_measure(options["font"], float(options["font_size"]))
+                measure = self._font_measure
+            else:
+                measure = len
+        extra = {k: options[k] for k in ("strip_harakat", "lam_alef") if k in options}
+        return shaping.render(target, max_width=width or None, measure=measure,
+                              line_sep=options.get("line_sep", "\n"), **extra)
 
     def read_back(self, root: Path) -> dict[str, str]:
         """The text the game would show for each unit id in the tree at ``root``."""

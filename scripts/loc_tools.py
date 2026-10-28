@@ -221,6 +221,7 @@ PROBLEM_CODES = {
     "whitespace": ("warning", "leading/trailing spaces differ, double spaces, or a space before punctuation"),
     "doubled_word": ("warning", "the same word twice in a row where the source repeats nothing"),
     "invisible_chars": ("warning", "zero-width, soft-hyphen, or control characters"),
+    "reversed_text": ("warning", "Arabic stored in reverse: words start with ة or ى (visual text pasted into a unit)"),
     "needs_rewrite": ("warning", "a game update changed the source; rewrite it starting from previous_target"),
 }
 LATIN_WORD_RE = re.compile(r"[A-Za-z][A-Za-z'-]{2,}")
@@ -233,6 +234,7 @@ EASTERN_DIGIT_RE = re.compile(r"[\u0660-\u0669\u06F0-\u06F9]")
 NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)*")
 ARABIC_LETTER_RE = re.compile(r"[\u0621-\u064A]")
 INVISIBLE_RE = re.compile(r"[\u200B-\u200D\u2060\uFEFF\u00AD\u0000-\u0008\u000B\u000C\u000E-\u001F]")
+REVERSED_START_RE = re.compile(r"(?<![ء-ي])[ةى][ء-ي]")  # no Arabic word starts with ة or ى
 DOUBLED_RE = re.compile(r"(?<!\w)(\w{2,})\s+\1(?!\w)", re.IGNORECASE)
 CLOSERS = "\"'»”’)]"
 
@@ -275,6 +277,8 @@ def arabic_checks(source: str, target: str, digits: str = "western") -> list[str
         codes.append("doubled_word")
     if INVISIBLE_RE.search(target):
         codes.append("invisible_chars")
+    if len(REVERSED_START_RE.findall(target)) >= 2:
+        codes.append("reversed_text")
     return codes
 
 

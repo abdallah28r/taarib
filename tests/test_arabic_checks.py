@@ -43,6 +43,10 @@ class ArabicCheckTests(unittest.TestCase):
         self.assertNotIn("number_mismatch", codes("Costs 1,500 gold", "يكلف 1500 ذهبة"))
         self.assertNotIn("number_mismatch", codes("Costs 1500 gold", "يكلف ١٥٠٠ ذهبة"))
 
+    def test_reversed_text(self):
+        self.assertIn("reversed_text", codes("The table is on the book", "باتكلا ىلع ةلواطلا"))
+        self.assertNotIn("reversed_text", codes("The table is on the book", "الطاولة على الكتاب في المدرسة"))
+
     def test_endings(self):
         self.assertIn("end_punctuation", codes("Ready?", "جاهز."))
         self.assertNotIn("end_punctuation", codes("Ready?", "جاهز؟"))

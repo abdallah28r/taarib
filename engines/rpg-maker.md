@@ -11,6 +11,14 @@ already present): `python scripts/tool_doctor.py --engine rpg-maker`. Install ru
 
 - RPG Maker MV/MZ: `data/*.json` and `js/plugins.js` are plain JSON and
   JavaScript; an adapter edits them directly, no tool needed.
+- MV and MZ draw Arabic differently (`candidate`, confirm in the pilot):
+  MZ (`js/rmmz_core.js`) has right-to-left message text and the browser shapes
+  Arabic, so write logical text and fix only the menu/list alignment; MV
+  (`www/js/rpg_core.js`) draws message text one character at a time, so
+  letters never join unless a plugin draws each Arabic run in one call (the
+  typewriter effect then shows run by run). A plugin made for MZ does not work
+  on MV. Injected event commands keep the original indent level, or the wrong
+  branch runs.
 - RPG Maker XP/VX/VX Ace: Ruby Marshal data (`.rxdata`, `.rvdata`,
   `.rvdata2`), often inside an encrypted archive; choose a tool only after
   license review, and never decrypt protected archives.

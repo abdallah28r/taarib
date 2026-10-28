@@ -18,6 +18,10 @@ class LocalizationQATests(unittest.TestCase):
         for token in ("{player}", "%1$d", "<b>", "</b>", r"\n", "[sprite=1]"):
             self.assertEqual(found[token], 1)
 
+    def test_arabic_means_letters(self):
+        self.assertIsNone(loc_qa.ARABIC_RE.search("Ready?؟ ٣، ok"))
+        self.assertIsNotNone(loc_qa.ARABIC_RE.search("جاهز"))
+
     def test_engine_profile_tokens(self):
         rpg = loc_qa.tokens(r"\C[4]Name \I[12]", "rpgmaker")
         self.assertEqual(rpg[r"\C[4]"], 1)
