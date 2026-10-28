@@ -1,4 +1,11 @@
-"""Inspect which cataloged open-source localization tools are available."""
+"""Show the cataloged open-source tools for an engine or profile, and which are already available.
+
+    python scripts/tool_doctor.py --engine <engine-id>     # after engine identification (ids as in engines/)
+    python scripts/tool_doctor.py --profile <profile>      # general profiles: core, qa, fonts, media, ocr, patching
+
+Each line gives the status, id, license, source URL, and the catalog note, so
+the agent does not need to read the whole catalog.
+"""
 
 from __future__ import annotations
 
@@ -69,7 +76,7 @@ def inspect(tool: dict, package_map: dict | None = None) -> dict:
         found_modules.append({"module": name, "distributions": details})
     has_checks = bool(tool.get("commands") or tool.get("modules") or tool.get("paths"))
     status = "installed" if found_commands or found_modules else ("missing" if has_checks else "catalog-only")
-    return {"id": tool["id"], "name": tool["name"], "profiles": tool["profiles"],
+    return {"id": tool["id"], "name": tool["name"], "profiles": tool["profiles"], "license": tool.get("license", ""),
             "tier": tool["tier"], "status": status, "commands": found_commands,
             "modules": found_modules, "url": tool["url"], "note": tool["note"]}
 
@@ -78,10 +85,19 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
     parser.add_argument("--profile", action="append", default=[])
+    parser.add_argument("--engine", help="engine id from engines/<id>.md; selects its catalog profiles")
     parser.add_argument("--json", type=Path, dest="json_path")
     args = parser.parse_args(argv)
     catalog = load_catalog(args.catalog)
     profiles = set(args.profile)
+    if args.engine:
+        engines = catalog.get("engines", {})
+        if args.engine not in engines:
+            parser.error(f"unknown engine {args.engine}; known: {', '.join(sorted(engines))}")
+        if not engines[args.engine]:
+            print(f"ENGINE {args.engine}: no engine-specific tools; see engines/{args.engine}.md")
+            return 0
+        profiles |= set(engines[args.engine])
     known = set(catalog["profiles"])
     unknown = profiles - known - {"all"}
     if unknown:
@@ -96,7 +112,8 @@ def main(argv=None) -> int:
     report = {"python": sys.version.split()[0], "profiles": sorted(profiles) or ["all"],
               "summary": summary, "tools": results}
     for item in results:
-        print(f"{item['status'].upper():12} {item['id']:24} {item['name']}")
+        print(f"{item['status'].upper():12} {item['id']:24} {item['license']} | {item['url']}")
+        print(f"{'':12} {item['note']}")
     print(json.dumps(summary, ensure_ascii=False))
     if args.json_path:
         args.json_path.parent.mkdir(parents=True, exist_ok=True)

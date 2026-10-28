@@ -29,6 +29,12 @@ static QA report is not a substitute for that acceptance.
 7. Record engine/build, language code, counts, fonts, RTL method, modified files,
    patch method, known issues, and removal instructions in `reports/FINAL.md`.
 
+When a changed file is large and must not ship whole (a game archive or a
+texture you may not redistribute), ship a binary delta tied to the original's
+checksum: xdelta3 for single files, HDiffPatch for files or folders. 7-Zip
+packs the final archive. Each delta tool's apply step must reject a
+mismatched original.
+
 The developer patch helpers support `add` and `replace` without bundling
 untouched originals. For a synthetic or authorized game copy:
 

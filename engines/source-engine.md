@@ -5,7 +5,14 @@ for any particular Source or Source 2 game.
 ## Identification
 Confirm VPK/PAK assets, localization files, and engine version before extraction.
 ## Tools
-VPKEdit, Valve Resource Format tools, Source 2 Viewer, Crowbar where applicable.
+Catalog tools: `vpkedit`, `valve-resource-format`. Details (license, source, note, whether
+already present): `python scripts/tool_doctor.py --engine source-engine`. Install rules: step 4 of
+`game-localization-engineering`.
+
+VPKEdit opens and repacks VPK archives. ValveResourceFormat (Source 2
+Viewer) inspects and exports Source 2 resources; check write support first.
+Localization text often lives in loose `resource/*_<language>.txt` files that
+need no archive tool.
 ## Workflow
 Extract one package, preserve paths and encoding, edit localization, repack only after a reversible test.
 ## Limitations

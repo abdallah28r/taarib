@@ -19,6 +19,10 @@ prove that all text is stored in a standard translation table.
 
 ## Tools
 
+Catalog tools: `godotpckexplorer`. Details (license, source, note, whether
+already present): `python scripts/tool_doctor.py --engine godot`. Install rules: step 4 of
+`game-localization-engineering`.
+
 Prefer the project's import/export workflow. Use Godot's own translation
 importer where source files exist; use a PCK explorer only for lawful copies and
 only after a no-change extract/repack proof. Preserve resource paths, keys,

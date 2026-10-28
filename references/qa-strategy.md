@@ -52,4 +52,10 @@ formats, texture encoding, mips, and rendering when relevant. A synthetic
 unit-test pass or manifest field claiming `visual_reviewed` never proves an
 in-game visual pass.
 
+Format tools when the game's text is in a standard format: Translate Toolkit
+(`pofilter`, `pocount`, `po2tmx`) and gettext `msgfmt --check` for PO/XLIFF,
+Okapi for filter-based extraction checks and pseudo-localization of formats
+`loc.py pseudo` does not cover. LanguageTool only after measuring its Arabic
+false positives on the game's names and tone.
+
 Do not launch the game or upload logs/screenshots without current authority.

@@ -32,6 +32,9 @@ from a properly licensed font and this project's corpus.
 
 ## Tools
 
+Catalog tools: none specific to this engine; general tools are in the
+references (QA, fonts, media, patching).
+
 Use XML-aware editors and a reversible module build; confirm the exact game
 version before adopting community tools.
 

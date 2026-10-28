@@ -55,11 +55,17 @@ Before mutation, back up with hashes. After installation, verify output hashes,
 uninstall behavior, native parsing, and the no-change baseline. Game launch and
 runtime testing require current authority. For a new game's end-to-end run,
 follow `references/project-run.md`: checked, reversible installation on the
-**user's identified copy** follows QA when the intake approved it, without
-approval at every intermediate step. Respect a `no` answer or an ambiguous
+**user's identified copy** follows QA (a standing default), without approval
+at every intermediate step. Respect a `no` answer or an ambiguous
 target. Give the user a
 playtest window after installation and use their findings to refine the build
 before preparing the shareable game package.
+
+Subtitles and media: FFmpeg extracts and converts subtitle and audio streams,
+pysubs2 reads and writes subtitle files deterministically, and Subtitle Edit
+helps review timing. whisper.cpp transcription is local speech recognition:
+only with the user's explicit authorization for this task, and its text is
+evidence to check, never a source to trust.
 
 Stop the affected operation for protection bypass, missing keys, unverified
 lossy formats, or an untestable rebuild. Do not invent versions, keys, offsets,

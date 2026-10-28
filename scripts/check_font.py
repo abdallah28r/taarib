@@ -1,10 +1,39 @@
-"""Check that a TTF/OTF font maps characters required by Arabic localization text."""
+"""Check that a TTF/OTF font maps the characters Arabic text needs, and optionally shape a sample.
+
+    python scripts/check_font.py <font> [--text-file <utf-8 text>] [--text "..."]   # cmap coverage (fontTools)
+    python scripts/check_font.py <font> --shape [--text "..."]                       # HarfBuzz smoke test (uharfbuzz)
+
+Neither proves the game uses this font or this renderer path.
+"""
 
 from __future__ import annotations
 
 import argparse
+import json
 import unicodedata
 from pathlib import Path
+
+
+SHAPE_SAMPLE = "العربية لا لغة رائعة 123 HP"
+
+
+def shape(font_path: Path, text: str) -> int:
+    try:
+        import uharfbuzz as hb
+    except ImportError:
+        print("ERROR uharfbuzz is required: python -m pip install uharfbuzz")
+        return 2
+    font = hb.Font(hb.Face(font_path.read_bytes()))
+    buf = hb.Buffer()
+    buf.add_str(text)
+    buf.guess_segment_properties()
+    hb.shape(font, buf)
+    glyphs = [info.codepoint for info in buf.glyph_infos]
+    missing = sum(1 for glyph in glyphs if glyph == 0)
+    print(json.dumps({"font": str(font_path), "direction": buf.direction, "script": buf.script,
+                      "characters": len(text), "glyphs": len(glyphs), "missing_glyphs": missing},
+                     ensure_ascii=False))
+    return 1 if missing else 0
 
 
 def main(argv=None) -> int:
@@ -12,7 +41,10 @@ def main(argv=None) -> int:
     parser.add_argument("font", type=Path)
     parser.add_argument("--text-file", type=Path, help="UTF-8 localized text or export")
     parser.add_argument("--text", default="")
+    parser.add_argument("--shape", action="store_true", help="shape the text with HarfBuzz and count .notdef glyphs")
     args = parser.parse_args(argv)
+    if args.shape:
+        return shape(args.font, args.text or SHAPE_SAMPLE)
 
     try:
         from fontTools.ttLib import TTFont

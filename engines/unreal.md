@@ -36,6 +36,10 @@ game installation.
 
 ## Tools
 
+Catalog tools: `fmodel`, `repak`, `retoc`, `uassetgui`, `uassetlocalize`, `unreallocres`, `ue4ss`. Details (license, source, note, whether
+already present): `python scripts/tool_doctor.py --engine unreal`. Install rules: step 4 of
+`game-localization-engineering`.
+
 - FModel: discovery/export.
 - repak: compatible `.pak` list/extract/build workflows.
 - retoc: compatible IoStore workflows.

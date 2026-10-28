@@ -23,8 +23,10 @@ symbols whose meaning would change.
 
 Font priority: shipped Arabic coverage, shipped fallback, added licensed
 fallback, then replacement. Inspect every used weight, fallback, icon font, and
-atlas. `check_font.py` proves cmap coverage only; `check_font_shaping.py` is a
-HarfBuzz smoke test only. Neither proves the game uses that renderer path.
+atlas. `check_font.py` proves cmap coverage only, and `check_font.py --shape`
+is a HarfBuzz smoke test only. Neither proves the game uses that renderer path.
+GNU FriBidi gives a reference BiDi order to compare a renderer against;
+msdf-atlas-gen builds SDF atlases when the engine renders text from them.
 When an existing font is unsuitable or an external face may clearly fit the
 game better, follow `references/font-sourcing.md` to search, compare, obtain,
 record, and—only if required—install the selected font for this Windows user.

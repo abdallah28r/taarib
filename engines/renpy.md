@@ -78,6 +78,10 @@ single-quoted strings) fail with the file and line.
 
 ## Tools
 
+Catalog tools: `unrpyc`, `rpatool`. Details (license, source, note, whether
+already present): `python scripts/tool_doctor.py --engine renpy`. Install rules: step 4 of
+`game-localization-engineering`.
+
 Use the Ren'Py SDK and native translation generator first; use `unrpyc` or
 `rpatool` only for lawful inspection and a tested copy.
 

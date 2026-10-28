@@ -5,7 +5,13 @@ game build before selecting any write route.
 ## Identification
 Look for data.win, Undertale-style archives, or GameMaker runner metadata; verify before choosing a method.
 ## Tools
-UndertaleModTool, Unx/asset viewers, ImHex and Kaitai Struct are candidates.
+Catalog tools: `imhex`, `kaitai-struct`, `undertale-mod-tool`. Details (license, source, note, whether
+already present): `python scripts/tool_doctor.py --engine gamemaker`. Install rules: step 4 of
+`game-localization-engineering`.
+
+UndertaleModTool reads and writes `data.win` strings and fonts for supported
+versions. ImHex and Kaitai Struct help map an unknown binary layout before
+any write route exists.
 ## Workflow
 Back up; extract a small sample; identify strings and fonts; patch a test build; run token and visual QA.
 ## Limitations

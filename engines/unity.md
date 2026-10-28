@@ -32,6 +32,10 @@ strings are a last resort and require a separate architecture decision.
 
 ## Tools
 
+Catalog tools: `unitypy`, `uabea`, `assetripper`, `bepinex`, `xunity-autotranslator`, `unitydoorstop`, `assetstools-net`, `cpp2il`, `rtltmpro`. Details (license, source, note, whether
+already present): `python scripts/tool_doctor.py --engine unity`. Install rules: step 4 of
+`game-localization-engineering`.
+
 - UnityPy and UABEA: supported asset/bundle inspection and edits.
 - AssetsTools.NET: MIT read/write library; pin and test the exact Unity version.
 - AssetRipper/AssetStudio: discovery and reconstruction, not automatically a

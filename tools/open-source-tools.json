@@ -18,6 +18,11 @@
     "visual-novel": "Multi-engine visual-novel archives and scripts",
     "danganronpa": "Danganronpa-specific fallback tooling"
   },
+  "engines": {
+    "unity": ["unity"], "unreal": ["unreal"], "godot": ["godot"], "renpy": ["renpy"],
+    "gamemaker": ["gamemaker", "binary"], "source-engine": ["source"], "rpg-maker": ["visual-novel"],
+    "danganronpa": ["danganronpa"], "bannerlord": [], "paradox-clausewitz": []
+  },
   "tools": [
     {"id":"python","name":"Python","profiles":["core"],"license":"PSF","url":"https://www.python.org/","commands":["python"],"tier":"core","note":"Runs the deterministic project scripts."},
     {"id":"git","name":"Git","profiles":["core"],"license":"GPL-2.0","url":"https://git-scm.com/","commands":["git"],"tier":"core","note":"Versioning for project-owned text and scripts; never commit copyrighted game assets."},
@@ -26,8 +31,6 @@
     {"id":"harfbuzz","name":"HarfBuzz","profiles":["fonts"],"license":"MIT-style","url":"https://github.com/harfbuzz/harfbuzz","commands":["hb-shape","hb-view","hb-subset"],"modules":["uharfbuzz"],"tier":"recommended","note":"Reference shaping tests; does not prove the game renderer uses HarfBuzz."},
     {"id":"fribidi","name":"GNU FriBidi","profiles":["fonts"],"license":"LGPL-2.1+","url":"https://github.com/fribidi/fribidi","commands":["fribidi"],"tier":"conditional","note":"Reference Unicode BiDi conversion and diagnostics."},
     {"id":"translate-toolkit","name":"Translate Toolkit","profiles":["qa"],"license":"GPL","url":"https://github.com/translate/translate","commands":["pofilter","pocount","po2tmx"],"modules":["translate"],"tier":"recommended","note":"PO/XLIFF/TMX conversion, counts, conflicts, terminology, and 40+ pofilter checks."},
-    {"id":"omegat","name":"OmegaT","profiles":["qa"],"license":"GPL-3.0+","url":"https://github.com/omegat-org/omegat","commands":["omegat"],"paths":["%ProgramFiles%\\OmegaT\\OmegaT.exe","%LOCALAPPDATA%\\Programs\\OmegaT\\OmegaT.exe"],"winget_id":"OmegaT.OmegaT","tier":"recommended","note":"Desktop CAT tool with TMX, glossary, fuzzy matching, and update reuse."},
-    {"id":"weblate","name":"Weblate","profiles":["qa"],"license":"GPL-3.0+","url":"https://github.com/WeblateOrg/weblate","tier":"conditional","note":"Self-hosted collaborative TMS; justified for teams, review states, or Git integration."},
     {"id":"okapi","name":"Okapi Framework","profiles":["qa"],"license":"LGPL-3.0","url":"https://okapiframework.org/","tier":"conditional","note":"Filters, extraction/merge, pseudo-localization, and format QA."},
     {"id":"languagetool","name":"LanguageTool","profiles":["qa"],"license":"LGPL-2.1+","url":"https://github.com/languagetool-org/languagetool","commands":["languagetool"],"tier":"conditional","note":"Proofreading only after measuring Arabic false positives on the game's names and tone."},
     {"id":"imagemagick","name":"ImageMagick","profiles":["media","ocr"],"license":"ImageMagick","url":"https://github.com/ImageMagick/ImageMagick","commands":["magick"],"paths":["%ProgramFiles%\\ImageMagick-*\\magick.exe"],"winget_id":"ImageMagick.ImageMagick.Q16","tier":"recommended","note":"Batch image conversion, compositing, dimensions, and visual-diff preparation."},
@@ -46,6 +49,8 @@
     {"id":"retoc","name":"retoc","profiles":["unreal"],"license":"MIT/Apache-2.0","url":"https://github.com/trumank/retoc","commands":["retoc"],"tier":"conditional","note":"IoStore .utoc/.ucas workflows; version compatibility must be proven."},
     {"id":"uassetgui","name":"UAssetGUI/UAssetAPI","profiles":["unreal"],"license":"MIT","url":"https://github.com/atenfyr/UAssetGUI","commands":["UAssetGUI"],"tier":"recommended","note":"Inspect/edit supported cooked assets with explicit engine version and mappings."},
     {"id":"uassetlocalize","name":"UassetLocalize","profiles":["unreal"],"license":"open-source; verify repository","url":"https://github.com/rm-NoobInCoding/UassetLocalize","tier":"conditional","note":"CSV/PO localization for supported .uasset/.umap/.locres; round-trip first."},
+    {"id":"unreallocres","name":"UnrealLocres","profiles":["unreal"],"license":"verify repository","url":"https://github.com/akintos/UnrealLocres","tier":"conditional","note":"Export and import .locres string tables to CSV; confirm the LocRes version for the exact engine build."},
+    {"id":"ue4ss","name":"RE-UE4SS","profiles":["unreal"],"license":"MIT","url":"https://github.com/UE4SS-RE/RE-UE4SS","tier":"conditional","note":"Runtime research and override only, after protection checks and the user's approval; never the default localization route."},
     {"id":"unitypy","name":"UnityPy","profiles":["unity"],"license":"MIT","url":"https://github.com/K0lb3/UnityPy","modules":["UnityPy"],"tier":"recommended","note":"Scriptable extraction and editing for supported Unity assets."},
     {"id":"uabea","name":"UABEA","profiles":["unity"],"license":"MIT","url":"https://github.com/nesrak1/UABEA","tier":"recommended","note":"Interactive Unity asset/bundle inspection and supported edits."},
     {"id":"assetripper","name":"AssetRipper","profiles":["unity"],"license":"GPL-3.0","url":"https://github.com/AssetRipper/AssetRipper","tier":"conditional","note":"Broad project reconstruction and analysis; often heavier than a small patch route."},
@@ -59,7 +64,6 @@
     {"id":"unrpyc","name":"unrpyc","profiles":["renpy"],"license":"BSD-3-Clause","url":"https://github.com/CensoredUsername/unrpyc","commands":["unrpyc"],"tier":"recommended","note":"Decompile .rpyc for inspection when lawful and needed."},
     {"id":"rpatool","name":"rpatool","profiles":["renpy"],"license":"MIT","url":"https://github.com/Shizmob/rpatool","commands":["rpatool"],"tier":"recommended","note":"List/extract/create Ren'Py RPA archives."},
     {"id":"vntranslationtools","name":"VNTranslationTools","profiles":["visual-novel"],"license":"GPL-3.0","url":"https://github.com/arcusmaximus/VNTranslationTools","tier":"recommended","note":"Excel-based extract/reinsert workflow for supported VN engines."},
-    {"id":"kuriimu2","name":"Kuriimu2","profiles":["visual-novel"],"license":"GPL-3.0","url":"https://github.com/FanTranslatorsInternational/Kuriimu2","tier":"conditional","note":"Plugin-based archive/image/text tooling; verify format plugin round trips."},
     {"id":"garbro","name":"GARbro","profiles":["visual-novel"],"license":"MIT","url":"https://github.com/morkt/GARbro","tier":"conditional","note":"Broad VN archive discovery/extraction; often read-oriented."},
     {"id":"drat","name":"Danganronpa Another Tool","profiles":["danganronpa"],"license":"open-source; verify repository","url":"https://github.com/Liquid-S/Danganronpa-Another-Tool","tier":"conditional","note":"Fallback/comparison only when a proven game-specific pipeline is not stronger."},
     {"id":"danganronpa-tools","name":"vn-tools Danganronpa Tools","profiles":["danganronpa"],"license":"verify repository","url":"https://github.com/vn-tools/danganronpa-tools","tier":"conditional","note":"Archived reference tools: wad_archiver, pak_archiver, and lin_compiler. Pin and prove a no-change round trip on copies."},
@@ -69,6 +73,7 @@
     {"id":"imhex","name":"ImHex","profiles":["core","binary"],"license":"GPL-2.0","url":"https://github.com/WerWolv/ImHex","tier":"conditional","note":"Hex editor and pattern language for format discovery; use read-only copies."},
     {"id":"kaitai-struct","name":"Kaitai Struct","profiles":["core","binary"],"license":"GPL-3.0/compiler; runtimes vary","url":"https://kaitai.io/","tier":"conditional","note":"Declarative binary format descriptions and generated parsers."},
     {"id":"vpkedit","name":"VPKEdit","profiles":["source"],"license":"MIT","url":"https://github.com/craftablescience/VPKEdit","tier":"conditional","note":"Source VPK inspection and editing candidate; test version-specific round trips."},
+    {"id":"valve-resource-format","name":"ValveResourceFormat / Source 2 Viewer","profiles":["source"],"license":"MIT","url":"https://github.com/ValveResourceFormat/ValveResourceFormat","tier":"conditional","note":"Source 2 resource and VPK inspection and export; verify write support before relying on it."},
     {"id":"undertale-mod-tool","name":"UndertaleModTool","profiles":["gamemaker"],"license":"GPL-3.0","url":"https://github.com/UnderminersTeam/UndertaleModTool","tier":"conditional","note":"GameMaker data.win inspection candidate; never assume every GameMaker build is compatible."},
     {"id":"msdf-atlas-gen","name":"msdf-atlas-gen","profiles":["fonts"],"license":"MIT","url":"https://github.com/Chlumsky/msdf-atlas-gen","tier":"conditional","note":"Multi-channel signed-distance-field atlas generation for Arabic-capable fonts."},
     {"id":"subtitle-edit","name":"Subtitle Edit","profiles":["media"],"license":"GPL-3.0","url":"https://github.com/SubtitleEdit/subtitleedit","tier":"conditional","note":"Subtitle timing, format conversion and visual review."},

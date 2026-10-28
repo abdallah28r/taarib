@@ -10,7 +10,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_POLICY = ROOT / "config" / "agent-policy.json"
 CATALOG = ROOT / "tools" / "open-source-tools.json"
-SETUP = ROOT / "scripts" / "setup_tools.ps1"
 FORBIDDEN_ACTIVE_IDS = {"ollama", "argos-translate", "libretranslate", "localai", "llama.cpp"}
 REQUIRED_RUNTIMES = ("codex", "claude-code")
 TIERS = ("light", "standard", "deep")
@@ -80,19 +79,6 @@ def validate(root: Path = ROOT, policy_path: Path | None = None) -> list[str]:
         active = sorted(ids.intersection(FORBIDDEN_ACTIVE_IDS))
         if active:
             errors.append("prohibited local AI tools remain active in catalog: " + ", ".join(active))
-
-    try:
-        setup_text = (root / "scripts" / "setup_tools.ps1").read_text(encoding="utf-8").lower()
-    except OSError as exc:
-        errors.append(f"cannot load setup script: {exc}")
-    else:
-        if "local-mt" in setup_text or "argostranslate" in setup_text or "libretranslate" in setup_text:
-            errors.append("setup script still exposes local machine translation")
-        if "@('ocr','all')" in setup_text or '@("ocr","all")' in setup_text:
-            errors.append("the all profile must not download local OCR model data")
-        all_lines = [line for line in setup_text.splitlines() if "'all'" in line and "{ @(" in line]
-        if any("tesseract" in line or "'ocr'" in line for line in all_lines):
-            errors.append("the all profile must not install or activate local OCR models")
 
     if (root / "requirements" / "local-mt.txt").exists():
         errors.append("active requirements/local-mt.txt must be removed")

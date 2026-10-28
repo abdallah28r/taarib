@@ -36,6 +36,9 @@ rules rather than generalizing.
 
 ## Tools
 
+Catalog tools: none specific to this engine; general tools are in the
+references (QA, fonts, media, patching).
+
 Use a removable mod, a YAML-aware validator, and the title's launcher/mod tools;
 do not overwrite base-game files.
 

@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-10-28 — Audit: every tool named where the agent reads, fewer scripts
+
+- Tool catalog: dropped Weblate, OmegaT, and Kuriimu2 (team/GUI or console
+  tools the agent does not use); added UnrealLocres, RE-UE4SS, and
+  ValveResourceFormat, which engine profiles already named. New `engines` map
+  from engine id to catalog profiles.
+- Every engine profile lists its catalog tool ids; general tools are named in
+  the references that use them (QA, rendering, extraction/media, release).
+  A test fails if a catalog tool is named nowhere or missing from its engine.
+- `tool_doctor.py --engine <id>` prints that engine's tools with license,
+  source, and note, so the agent never reads the whole catalog.
+- Removed `scripts/setup_tools.ps1` and the `requirements/` profile lists: it
+  installed system-wide through winget. The engineering skill now states the
+  install rules (upstream, exact version, SHA-256, under `.tools/`, no admin or
+  PATH change, recorded in `selected-tools.json`); the pinned constraints file
+  stays.
+- New `engines/danganronpa.md`; RPG Maker, Source, and GameMaker tool lists
+  corrected to what the catalog holds.
+- `check_font_shaping.py` merged into `check_font.py --shape`.
+- New tests for `safe_backup.py`, which had none.
+
 ## 2026-10-28 — Tool installation procedure and SIGNALIS Unity findings
 
 - `game-localization-engineering` step 4 now tells the agent how to get tools:

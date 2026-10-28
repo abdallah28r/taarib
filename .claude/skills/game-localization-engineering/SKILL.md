@@ -39,16 +39,22 @@ the detected engine/profile, not every option.
    preferred; follow the route's legal, compatibility, and approval gates.
    Do not survey unrelated gameplay mods or silently install a runtime hook.
 4. Tools, once the engine is known: run `python scripts/tool_doctor.py
-   --profile <profile>` (profiles in `tools/open-source-tools.json`) to see
-   what is present. For a missing tool the route needs, take one pinned
-   release from its upstream source and keep it under `.tools/` in this folder
-   (Python packages go in `.tools/venv`, which `scripts/setup_tools.ps1`
-   creates; `pip install <package>==<version>`), and add it to
-   `tools/selected-tools.json` (catalog id, version, source, license, SHA-256,
-   reason; `check_tool_provenance.py` validates it; add a catalog entry first
-   for a tool the catalog lacks). No system-wide install,
-   no admin rights. A tool that goes into the game folder (loader, plugin) is
-   part of the route and needs the user's approval for this game.
+   --engine <engine-id>`; it lists the engine's catalog tools with license,
+   source, note, and whether each is already present. Install a missing tool
+   the route needs yourself, in whatever way suits it, under these rules:
+   - the official upstream release or package only, one exact version
+     (Python packages: the version in `requirements/constraints-20260926.txt`
+     when listed there);
+   - check the SHA-256 the project publishes, or record the one you compute;
+   - inside `.tools/` in this folder (Python: a venv at `.tools/venv`); no
+     admin rights, no system-wide or winget install, no PATH change;
+   - never a local language model or machine translation; local OCR or speech
+     recognition only with the user's explicit authorization for this task;
+   - record it in `tools/selected-tools.json` (catalog id, version, source,
+     license, SHA-256, reason) and run `check_tool_provenance.py`; add a
+     catalog entry first for a tool the catalog lacks.
+   A tool that goes into the game folder (loader, plugin) is part of the route
+   and needs the user's approval for this game.
 5. Prefer loose/native localization, then a removable override or patch, and
    only then modification of original containers.
 6. Preserve native structure, keys, context, plurals, ordering, encoding, and
