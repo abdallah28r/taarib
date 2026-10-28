@@ -2,6 +2,9 @@
 
     python scripts/image_candidate.py codex --source <png> --box x0 y0 x1 y1 --text "<approved Arabic>" [--mask <png>] [--dry-run]
     python scripts/image_candidate.py composite --source <png> --raw <png> (--mask <png> | --box x0 y0 x1 y1) --out <png>
+    python scripts/image_candidate.py record --source <png> --candidate <png> --method typeset
+    python scripts/image_candidate.py verdict --source <png> --version 2 --verdict rejected --reason "..."
+    python scripts/image_candidate.py spoiler --source <png> --reason "shows who the traitor is"   # --clear to undo
 
 `codex` asks Codex's built-in image tool to edit one source image and copy the
 result to work/images/raw/. It works from either runtime: Claude Code calls it
@@ -14,6 +17,11 @@ check_image_regions.py and a visual review decide.
 Each source image gets at most `image_localization.max_generative_attempts`
 Codex calls (PROJECT.yaml, default 5), counted in work/images/attempts.json.
 At the cap the script refuses; keep the source or mark the region REVIEW.
+
+The same file keeps every version of each image, numbered: Codex's raw edits,
+composites, and candidates made another way (`record`). Give each one a
+verdict with its reason (`verdict`); images.html shows them all, rejected ones
+included, so the user sees what was tried.
 """
 from __future__ import annotations
 
@@ -23,6 +31,7 @@ import json
 import os
 import shutil
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,6 +67,30 @@ def sha256(path: Path) -> str:
 
 def attempts(path: Path = ATTEMPTS) -> dict:
     return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+
+
+VERDICTS = ("accepted", "rejected")
+
+
+def _shown(path: Path) -> str:
+    path = path.resolve()
+    return path.relative_to(ROOT).as_posix() if path.is_relative_to(ROOT) else str(path)
+
+
+def add_version(log: dict, source: Path, image: Path, method: str, made_from: str = "") -> int:
+    """Number a new version of this source image and return its number."""
+    entry = log.setdefault(sha256(source), {"image": source.name, "raw": []})
+    entry["source"] = _shown(source)
+    versions = entry.setdefault("versions", [])
+    versions.append({"n": len(versions) + 1, "path": _shown(image), "method": method,
+                     "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                     **({"from": made_from} if made_from else {})})
+    return len(versions)
+
+
+def save(log: dict, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def find_codex() -> str | None:
@@ -108,8 +141,9 @@ def cmd_codex(args) -> int:
     result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
     entry = log.setdefault(key, {"image": source.name, "raw": []})
     entry["raw"].append(raw.relative_to(ROOT).as_posix())
-    args.attempts.parent.mkdir(parents=True, exist_ok=True)
-    args.attempts.write_text(json.dumps(log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    if raw.is_file():
+        add_version(log, source, raw, "codex-raw")
+    save(log, args.attempts)
     if not raw.is_file():
         tail = [line for line in (result.stdout + result.stderr).splitlines() if line.strip()][-3:]
         print(f"FAILED attempt {used + 1}/{limit}: no image at {raw}")
@@ -151,8 +185,61 @@ def cmd_composite(args) -> int:
     except ValueError as exc:
         print(f"ERROR {exc}")
         return 2
-    print(f"CANDIDATE={args.out} SHA256={digest}")
-    print("NEXT: record it in the region manifest, run check_image_regions.py, then open source and candidate")
+    log = attempts(args.attempts)
+    number = add_version(log, args.source, args.out, "composite", _shown(args.raw))
+    save(log, args.attempts)
+    print(f"CANDIDATE={args.out} SHA256={digest} VERSION={number}")
+    print("NEXT: record it in the region manifest, run check_image_regions.py, open source and candidate, "
+          f"then image_candidate.py verdict --source ... --version {number} --verdict accepted|rejected --reason ...")
+    return 0
+
+
+def cmd_record(args) -> int:
+    """A candidate made without Codex (deterministic typesetting, a hand edit) joins the image's versions."""
+    if not args.source.is_file() or not args.candidate.is_file():
+        print("ERROR --source and --candidate must be existing files")
+        return 2
+    log = attempts(args.attempts)
+    number = add_version(log, args.source, args.candidate, args.method)
+    save(log, args.attempts)
+    print(f"VERSION={number} {args.candidate.name} ({args.method})")
+    return 0
+
+
+def cmd_verdict(args) -> int:
+    """Accept or reject one version, with the reason the user will read on images.html."""
+    if not args.reason.strip():
+        print("ERROR give --reason: what was wrong, or why this one is the best")
+        return 2
+    log = attempts(args.attempts)
+    versions = log.get(sha256(args.source), {}).get("versions", [])
+    version = next((v for v in versions if v["n"] == args.version), None)
+    if version is None:
+        print(f"ERROR {args.source.name} has no version {args.version} (it has {len(versions)})")
+        return 2
+    version.update(verdict=args.verdict, reason=args.reason.strip())
+    save(log, args.attempts)
+    print(f"VERDICT {args.source.name} v{args.version}: {args.verdict}")
+    return 0
+
+
+def cmd_spoiler(args) -> int:
+    """Flag an image that gives away the story, so images.html blurs it until the user clicks."""
+    if not args.source.is_file():
+        print("ERROR --source must be an existing image")
+        return 2
+    if not args.clear and not (args.reason or "").strip():
+        print("ERROR give --reason (what it reveals), or --clear")
+        return 2
+    log = attempts(args.attempts)
+    entry = log.setdefault(sha256(args.source), {"image": args.source.name, "raw": []})
+    entry["source"] = _shown(args.source)
+    if args.clear:
+        entry.pop("spoiler", None)
+    else:
+        entry["spoiler"] = args.reason.strip()
+    save(log, args.attempts)
+    print(f"SPOILER {args.source.name}: {'cleared' if args.clear else 'flagged'}")
     return 0
 
 
@@ -174,7 +261,27 @@ def main(argv=None) -> int:
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--mask", type=Path)
     p.add_argument("--box", type=int, nargs=4, metavar=("X0", "Y0", "X1", "Y1"))
+    p.add_argument("--attempts", type=Path, default=ATTEMPTS, help=argparse.SUPPRESS)
     p.set_defaults(run=cmd_composite)
+    p = sub.add_parser("record", help="add a candidate made another way (typeset, hand edit) to the image's versions")
+    p.add_argument("--source", type=Path, required=True)
+    p.add_argument("--candidate", type=Path, required=True)
+    p.add_argument("--method", required=True, help="typeset, manual, or the tool used")
+    p.add_argument("--attempts", type=Path, default=ATTEMPTS, help=argparse.SUPPRESS)
+    p.set_defaults(run=cmd_record)
+    p = sub.add_parser("verdict", help="accept or reject one version of an image, with the reason")
+    p.add_argument("--source", type=Path, required=True)
+    p.add_argument("--version", type=int, required=True)
+    p.add_argument("--verdict", required=True, choices=VERDICTS)
+    p.add_argument("--reason", required=True)
+    p.add_argument("--attempts", type=Path, default=ATTEMPTS, help=argparse.SUPPRESS)
+    p.set_defaults(run=cmd_verdict)
+    p = sub.add_parser("spoiler", help="flag an image that reveals the story; images.html blurs it until clicked")
+    p.add_argument("--source", type=Path, required=True)
+    p.add_argument("--reason", help="what it reveals (shown only after the user clicks)")
+    p.add_argument("--clear", action="store_true")
+    p.add_argument("--attempts", type=Path, default=ATTEMPTS, help=argparse.SUPPRESS)
+    p.set_defaults(run=cmd_spoiler)
     args = parser.parse_args(argv)
     return args.run(args)
 

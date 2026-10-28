@@ -57,6 +57,7 @@ units = _load("loc_units")
 adapter_base = _load("loc_adapter_base", ROOT / "adapters" / "base.py")
 pipeline = _load("loc_pipeline")
 board = pipeline.tasks
+review = _load("review_pages")
 tools = _load("loc_tools")
 brief_tools = _load("loc_brief")
 experiences = _load("loc_experiences")
@@ -242,6 +243,9 @@ PHASE_LABELS = {
 # Ships with the template (an empty project's page) and lives in every game copy beside the map.
 DASHBOARD = ROOT / "dashboard.html"
 TASKS_PAGE = ROOT / "tasks.html"
+# Hold the game's own text and art: local only, ignored by git, never released.
+TEXTS_PAGE = ROOT / "texts.html"
+IMAGES_PAGE = ROOT / "images.html"
 EVENT_LABELS = {"passed": "عبرت بوابة", "reopened": "أُعيد فتح", "blocked": "محاولة عبور لم تكتمل في"}
 MAP_PAGE = "template-map.html"
 PLAN_FILE = ROOT / "PLAN.md"
@@ -434,8 +438,8 @@ def render_tasks(tasks: list[dict], cards: list[dict], title: str, generated: st
         f'<main class="wide"><h1>{esc(title)} — لوحة المهام</h1>',
         '<p class="muted">ما ينوي الوكيل فعله، وما يعمل عليه، وما ينتظرك، وما أنجزه بدليل. تُولَّد آليًا وتتحدث كل 15 '
         'ثانية. لا تُغلق مرحلة وفيها مهمة مفتوحة. اضغط «المراحل» لترى مسار أي مهمة. '
-        f'<a href="{DASHBOARD.name}">لوحة التعريب</a>'
-        + (f" — آخر تغيير: {esc(generated)}" if generated else "") + "</p>",
+        + (f"آخر تغيير: {esc(generated)}" if generated else "") + "</p>",
+        review._nav(page_links(TASKS_PAGE.name)),
         "".join(f'<div class="card wait"><p><b>بانتظارك:</b> {esc(t["title"])}</p>'
                 f'<p class="muted">{esc(t.get("reason", ""))}</p></div>' for t in tasks if t["status"] == "waiting"),
         f'<div class="board">{"".join(columns)}</div></main></body></html>\n',
@@ -465,7 +469,7 @@ def render_dashboard(groups: dict, qa: dict, generated: str, plan_text: str, sta
         + (f"آخر تغيير في بيانات المشروع: {esc(generated)}. " if generated
            else "لم يبدأ العمل بعد: افتح هذا المجلد مشروعًا في Claude Code أو Codex وقل «عرّب اللعبة». ")
         + f'{esc(MEANING_NOTE)} <a href="{MAP_PAGE}">خريطة القالب</a> تشرح ما تفعله أنت وكيف يعمل النظام.</p>',
-        f'<nav class="pages"><a href="{TASKS_PAGE.name}">لوحة المهام</a><a href="{MAP_PAGE}">خريطة القالب</a></nav>',
+        review._nav(page_links(DASHBOARD.name)),
         tasks_html, "<h2>المرحلة</h2>", phase_html(state, checks), probe, experiences_html(state, lessons),
         "<h2>التقدم</h2>", progress_html(groups, qa, problems),
         quality_html(quality),
@@ -521,6 +525,52 @@ def write_dashboard(units_dir: Path = units.UNITS_DIR, qa_file: Path = QA_MATRIX
     return out
 
 
+def page_links(current: str) -> list[tuple[str, str]]:
+    pages = [(DASHBOARD.name, "لوحة التعريب"), (TASKS_PAGE.name, "لوحة المهام"), (TEXTS_PAGE.name, "النصوص قبل وبعد"),
+             (IMAGES_PAGE.name, "الصور قبل وبعد"), (MAP_PAGE, "خريطة القالب")]
+    return [(href, label) for href, label in pages if href != current]
+
+
+def project_title(project) -> str:
+    try:
+        title = project.settings().get("game", {}).get("name") or ""
+    except Exception:
+        return "مشروع التعريب"
+    return title if pipeline.filled(title) else "مشروع التعريب"
+
+
+def write_texts(out: Path = TEXTS_PAGE, units_dir: Path = units.UNITS_DIR, project=None) -> Path:
+    """texts.html: every unit's source and target with its status, problems, and proofreading findings."""
+    project = project or pipeline.Project(units_dir=units_dir)
+    all_units = units.all_units(units.load(units_dir, units.Report()))
+    try:
+        found, _ = find_problems(all_units)
+    except Exception:  # the page must render even with a broken glossary
+        found = {}
+    findings, _ = read_findings(sorted((project.root / "work" / "proofreading").glob("*.jsonl")))
+    rows = review.texts_data(all_units, found, [f for _, f in findings])
+    out.write_text(review.render_texts(rows, project_title(project), HTML_STYLE, page_links(out.name)),
+                   encoding="utf-8", newline="\n")
+    return out
+
+
+def write_images(out: Path = IMAGES_PAGE, units_dir: Path = units.UNITS_DIR, project=None) -> Path:
+    """images.html: each image before and after, every version tried, spoilers blurred."""
+    project = project or pipeline.Project(units_dir=units_dir)
+    all_units = units.all_units(units.load(units_dir, units.Report()))
+    try:
+        settings = project.settings()
+    except Exception:
+        settings = {}
+    game = (settings.get("game") or {}).get("install_path") or ""
+    game_root = Path(game) if pipeline.filled(game) else None
+    mode = (settings.get("reporting") or {}).get("spoilers") or "flagged"
+    items = review.collect_images(project.root, all_units, game_root)
+    out.write_text(review.render_images(items, project.root, mode, project_title(project), HTML_STYLE,
+                                        page_links(out.name), local_time), encoding="utf-8", newline="\n")
+    return out
+
+
 # Everything the two pages are built from. One check after every loc.py command, in the Claude Code hook
 # after every tool, and in loc.py watch: no command has to remember to refresh the pages.
 PAGE_SOURCES = ("units/**/*.jsonl", "state/pipeline.json", "state/tasks.json", "PLAN.md", "qa/LQA_MATRIX.csv",
@@ -528,21 +578,29 @@ PAGE_SOURCES = ("units/**/*.jsonl", "state/pipeline.json", "state/tasks.json", "
                 "work/probe/last.json")
 
 
-def newest_source(root: Path = ROOT) -> float:
-    return max((p.stat().st_mtime for pattern in PAGE_SOURCES for p in root.glob(pattern) if p.is_file()),
+TEXT_SOURCES = ("units/**/*.jsonl", "work/proofreading/*.jsonl", "glossary.yaml", "PROJECT.yaml")
+IMAGE_SOURCES = ("units/**/*.jsonl", "work/images/*.json", "PROJECT.yaml")
+
+
+def newest_source(root: Path = ROOT, patterns=PAGE_SOURCES) -> float:
+    return max((p.stat().st_mtime for pattern in patterns for p in root.glob(pattern) if p.is_file()),
                default=0.0)
 
 
 def refresh_if_stale(force: bool = False) -> bool:
-    """Rebuild dashboard.html and tasks.html when any project source is newer than them (the real project only)."""
-    pages = (DASHBOARD, TASKS_PAGE)
-    try:
-        if force or not all(p.is_file() for p in pages) or newest_source() > min(p.stat().st_mtime for p in pages):
-            write_dashboard()
-            return True
-    except Exception as exc:  # never fail the real command because of the page
-        print(f"WARN  dashboard not refreshed: {exc}", file=sys.stderr)
-    return False
+    """Rebuild each page whose sources are newer than it (the real project only); True if any was rebuilt."""
+    groups = (((DASHBOARD, TASKS_PAGE), PAGE_SOURCES, write_dashboard), ((TEXTS_PAGE,), TEXT_SOURCES, write_texts),
+              ((IMAGES_PAGE,), IMAGE_SOURCES, write_images))
+    rebuilt = False
+    for pages, sources, write in groups:
+        try:
+            if (force or not all(p.is_file() for p in pages)
+                    or newest_source(ROOT, sources) > min(p.stat().st_mtime for p in pages)):
+                write()
+                rebuilt = True
+        except Exception as exc:  # never fail the real command because of a page
+            print(f"WARN  {pages[0].name} not refreshed: {exc}", file=sys.stderr)
+    return rebuilt
 
 
 # ----- commands -------------------------------------------------------------

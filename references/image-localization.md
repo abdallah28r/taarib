@@ -97,6 +97,18 @@ mask and no output size, so a raw edit is never a candidate:
 the mask (or box); everything outside is the untouched source. Then record the
 candidate and run `check_image_regions.py`.
 
+Every candidate is a numbered version of its source image in
+`work/images/attempts.json`: `codex` and `composite` add theirs, and
+`image_candidate.py record --source <png> --candidate <png> --method typeset`
+adds one made another way. After looking at a version, give it a verdict and
+its reason with `image_candidate.py verdict --source <png> --version N
+--verdict accepted|rejected --reason "..."`. `images.html` shows the source,
+the accepted candidate with a comparison slider, and every version with its
+verdict, so the user sees what was tried. Flag an image that gives away the
+story with `image_candidate.py spoiler --source <png> --reason "..."` (or
+`"spoiler"` in its manifest entry); the page blurs it until clicked, as
+`PROJECT.yaml` → `reporting.spoilers` says (`flagged`, `all`, `none`).
+
 Each source image gets at most `image_localization.max_generative_attempts`
 Codex edits (default 5); the script counts them in `work/images/attempts.json`
 and refuses beyond the cap. Change one thing per retry (wording of the style,

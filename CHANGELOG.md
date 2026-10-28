@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-28 — Text and images before and after
+
+- `texts.html`: every text unit's source beside its Arabic, with status, batch,
+  file, speaker, problem codes and proofreading findings; search, filters,
+  and pages of 200 lines.
+- `images.html`: each image's localized version beside its source with a
+  comparison slider, the region texts, and every version tried with its
+  verdict and reason. Images that give away the story are blurred until
+  clicked; `PROJECT.yaml` → `reporting.spoilers`: `flagged` (default), `all`,
+  `none`.
+- `image_candidate.py` keeps every version of an image in
+  `work/images/attempts.json` (`codex`, `composite`, and the new `record`),
+  with `verdict` (accepted/rejected with a reason) and `spoiler` (flag with a
+  reason, or `--clear`). New library `scripts/review_pages.py`.
+- Both pages hold game content: ignored by git with `work/images/` and
+  `work/proofreading/`, kept out of releases, and linked from every page.
+  Checked in a browser with fake data on desktop and phone widths.
+
 ## 2026-10-28 — Task board, and pages that refresh themselves
 
 - `tasks.html`: the agent's task board, linked from `dashboard.html`, with

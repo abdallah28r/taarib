@@ -103,8 +103,8 @@ units `integrated` again.
 
 ## Showing progress
 
-`dashboard.html` and `tasks.html` are rebuilt whenever a project file is newer than them: after
-every `loc.py` command, every Claude Code tool, and under `loc.py watch`. Never write them by hand.
+The pages (`dashboard`, `tasks`, `texts`, `images`.html) rebuild when their sources change; never
+write them by hand.
 
 In the conversation, `PROJECT.yaml` → `reporting.progress_in_chat` decides:
 `on_request` (default) prints `loc.py progress` only when the user asks;

@@ -34,6 +34,11 @@ counted from the data, never from the agent's own summary.
   uninstaller.
 - **Localizes baked text in images** when you ask for it, region by region,
   with every candidate reviewed visually.
+- **Shows you the work**: `dashboard.html` (progress, phase, gates),
+  `tasks.html` (the agent's task board), `texts.html` (every line before and
+  after, with search) and `images.html` (each image before and after, every
+  version tried, spoilers blurred until clicked). The last two hold the game's
+  own text and art, so they stay on your computer and are never committed.
 - **Learns**: engine profiles in `engines/` keep what was found for the next game
   on that engine, and each project can send its lessons back to the template.
 

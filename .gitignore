@@ -25,3 +25,8 @@ work/probe/
 work/experiences.jsonl
 work/experiences-inbox/
 experiences-*.zip
+# The game's own text and art, shown before and after; never committed or released
+texts.html
+images.html
+work/images/
+work/proofreading/
