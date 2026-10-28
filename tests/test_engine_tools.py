@@ -246,6 +246,25 @@ class ReviewFixTests(Temp):
                             ("Assertion failed: Index < Num", True), ("Fatal error!", True), ("FATAL: no memory", True)):
             self.assertEqual(bool(boot.CRASH.search(line)), crash, line)
 
+    def test_real_renpy_log_lines(self):
+        """Lines from Slay the Princess's real log.txt (Ren'Py 8.0.3), launched directly by probe."""
+        boot = load("boot_verdict")
+        log = self.dir / "log.txt"
+        log.write_text("Early init took 0.00s\nLoading error handling took 1.41s\n"
+                       "Faled to initialize steam: Exception('Init returned false.')\n"
+                       "Interface start took 1.08s\n", encoding="utf-8")
+        report = boot.judge([log], 60, direct_launch=True)
+        self.assertEqual(report["verdict"], "booted_clean")
+        self.assertEqual(len(report["launch_notes"]), 1)
+        # Started by the user through Steam, the same Steam failure is a real error.
+        self.assertEqual(boot.judge([log], 60)["verdict"], "booted_with_errors")
+
+    KELMSCOTT = Path("C:/Program Files (x86)/Steam/steamapps/common/Slay the Princess/game/gui/fonts/KelmscottRomanNF.ttf")
+
+    @unittest.skipUnless(KELMSCOTT.is_file(), "needs Slay the Princess installed")
+    def test_real_font_with_gsub_but_no_script_list(self):
+        self.assertEqual(probe.font_report(self.KELMSCOTT)["verdict"], "no-arabic")
+
     def test_characters_the_original_draws_keep_their_byte(self):
         build, original, seed = self.dir / "b.txt", self.dir / "o.txt", self.dir / "s.json"
         build.write_text("ﺍ…é", encoding="utf-8")

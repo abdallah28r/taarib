@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-28 — Tried on a real game: automatic launch and boot verdict
+
+Tried on Slay the Princess (Ren'Py 8.0.3, already localized into Arabic):
+`loc.py probe --launch` started the game, closed it after 120 s, found its
+`log.txt` from the engine profile, and judged it; found its Arabic fonts
+(Amiri under `tl/arabic`). Saves were snapshotted first; only Ren'Py's
+`persistent` file changed. Three problems the synthetic tests had not shown:
+
+- Start-up timing lines ("Loading error handling took 1.41s") counted as
+  errors; such lines are no longer errors.
+- A game started directly by `--launch` cannot reach Steam, so its failed
+  Steam start counted as an error; with `--launch` it is listed under
+  `launch_notes` instead (started by the user through Steam, it still counts).
+- A valid font whose GSUB table has no script list was reported unreadable;
+  a font fontTools truly cannot parse now says the game may still load it.
+
 ## 2026-10-28 — Probe for unknown engines, engine markers as data, scripts index
 
 - `loc.py probe`: maps detected ids to their profile (`rpg-maker-mv` →

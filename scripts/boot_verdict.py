@@ -52,6 +52,10 @@ ERROR = re.compile(r"\b\w*(?:Exception|Error)\b|\[(?:\d\d:\d\d:\d\d )?ERROR|^ERR
 ARABIC = r"(?:06[0-9A-F]{2}|07[5-7][0-9A-F]|08[A-F][0-9A-F]|F[B-D][0-9A-F]{2}|FE[7-9A-F][0-9A-F])"
 MISSING_GLYPH = re.compile(rf"(?:Unicode value \\u{ARABIC}\b.*not found|(?:missing|no) glyph.*\b(?:U\+|\\u){ARABIC}\b)", re.I)
 NOISE = re.compile(r"\d+|0x[0-9a-f]+|\b[0-9a-f]{8,}\b", re.I)  # numbers and addresses differ between runs
+# Lines that name an error without being one: start-up timings ("Loading error handling took 1.41s").
+NOT_ERROR = re.compile(r"\btook\s+[\d.]+\s*s\b|\bno errors?\b|\b0 errors?\b", re.I)
+# Started outside the store client (loc.py probe --launch): its Steam/Epic API fails to start. Reported, not judged.
+DIRECT_LAUNCH = re.compile(r"(?:fa(?:i)?led|failure|unable)\W+(?:\w+\W+){0,3}(?:steam|epic|eos)\b|SteamAPI_Init\W*fail|\[S_API FAIL\]", re.I)
 
 
 def unreal_project(game: Path | None) -> str | None:
@@ -83,7 +87,10 @@ def _read(path: Path) -> list[str]:
     return path.read_text(encoding="utf-8", errors="replace").splitlines()
 
 
-def judge(logs: list[Path], max_age_minutes: float, baseline: Path | None = None, now: float | None = None) -> dict:
+def judge(logs: list[Path], max_age_minutes: float, baseline: Path | None = None, now: float | None = None,
+          direct_launch: bool = False) -> dict:
+    """direct_launch: the executable was started without the store client, so a failed Steam/Epic
+    start is expected and listed under launch_notes instead of counting as an error."""
     now = now or time.time()
     known = {NOISE.sub("#", line.strip()) for line in _read(baseline)} if baseline else set()
     report = {"verdict": "", "logs": [], "evidence": []}
@@ -101,8 +108,12 @@ def judge(logs: list[Path], max_age_minutes: float, baseline: Path | None = None
         lines = [line for path in fresh for line in _read(path)]
         crash = [line for line in lines if CRASH.search(line)]
         glyphs = [line for line in lines if MISSING_GLYPH.search(line)]
+        launch_notes = [line for line in lines if direct_launch and DIRECT_LAUNCH.search(line)]
         errors = [line for line in lines if ERROR.search(line) and not CRASH.search(line)
+                  and not NOT_ERROR.search(line) and line not in launch_notes
                   and NOISE.sub("#", line.strip()) not in known]
+        if launch_notes:
+            report["launch_notes"] = [line.strip()[:200] for line in dict.fromkeys(launch_notes)][:4]
         if crash or any(p.name == "traceback.txt" for p in fresh):
             report["verdict"], shown = "crashed", crash
         elif glyphs:

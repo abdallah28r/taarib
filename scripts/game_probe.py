@@ -93,8 +93,9 @@ def font_report(path: Path, data: bytes | None = None) -> dict:
             letters = sum(0x0621 <= c <= 0x064A for c in cmap)
             forms = sum(0xFE70 <= c <= 0xFEFF for c in cmap)
             scripts = set()
-            if "GSUB" in font:
-                scripts = {r.ScriptTag for r in font["GSUB"].table.ScriptList.ScriptRecord}
+            script_list = getattr(font["GSUB"].table, "ScriptList", None) if "GSUB" in font else None
+            if script_list is not None:  # some fonts carry a GSUB table without a script list
+                scripts = {r.ScriptTag for r in script_list.ScriptRecord}
             info.update(arabic_letters=letters, presentation_forms=forms, shapes_arabic="arab" in scripts,
                         verdict="arabic" if letters >= 36 else "partial-arabic" if letters else "no-arabic")
         elif suffix == ".fnt" and path.stat().st_size < 4_000_000:
@@ -106,7 +107,8 @@ def font_report(path: Path, data: bytes | None = None) -> dict:
         else:
             info["verdict"] = "inspect-with-engine-tools"
     except Exception as error:  # a damaged or unusual font is a finding, not a crash
-        info["verdict"] = f"unreadable: {type(error).__name__}"
+        info["verdict"] = (f"unreadable by fontTools ({type(error).__name__}: {str(error)[:80]}); "
+                           "the game may still load it, check with the engine's tools")
     return info
 
 
@@ -551,7 +553,7 @@ def main(argv: list[str] | None = None) -> int:
             baseline.write_text(text, encoding="utf-8")
             report["logs"]["baseline_saved"] = str(baseline)
         use = baseline if baseline.is_file() and not args.save_baseline else None
-        report["boot"] = boot.judge(logs[:5], args.since_minutes + 1, use)
+        report["boot"] = boot.judge(logs[:5], args.since_minutes + 1, use, direct_launch=bool(args.launch))
         report["boot"]["baseline"] = str(use) if use else "none: errors the game always logs count as new"
         if source == "discovered" and args.record and (ROOT / "engines" / f"{profile}.md").is_file():
             report["logs"]["recorded"] = [g for g in dict.fromkeys(generalize(p, args.game) for p in logs[:3])
