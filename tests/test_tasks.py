@@ -70,7 +70,18 @@ class TaskBoardTests(unittest.TestCase):
         self.assertEqual(task_check(), [], "deferred to discovery, it no longer blocks intake")
         with self.assertRaises(ValueError):
             board.defer(self.state, ident, "intake", "back", pipeline.PHASES, "discovery")
-        self.assertFalse(board.gate_checks(self.state, "discovery")[0][0])
+        recorded, still_open = board.gate_checks(self.state, "discovery")
+        self.assertTrue(recorded[0])
+        self.assertFalse(still_open[0], "the deferred task now blocks discovery")
+
+    def test_a_working_phase_cannot_close_with_an_empty_board(self):
+        self.assertEqual(board.gate_checks(self.state, "intake"), [], "intake is the user's answers, not agent work")
+        empty = board.gate_checks(self.state, "integration")
+        self.assertEqual(len(empty), 1)
+        self.assertFalse(empty[0][0])
+        ident = board.add(self.state, "Install build r1 on the user's copy", "integration", "integration")
+        board.move(self.state, ident, "done", evidence="apply_patch_package.py: 12 files, manifest m1.json")
+        self.assertTrue(all(ok for ok, _ in board.gate_checks(self.state, "integration")))
 
     def test_refused_gate_is_recorded_once(self):
         for _ in range(3):

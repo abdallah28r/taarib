@@ -106,8 +106,11 @@ its reason with `image_candidate.py verdict --source <png> --version N
 the accepted candidate with a comparison slider, and every version with its
 verdict, so the user sees what was tried. Flag an image that gives away the
 story with `image_candidate.py spoiler --source <png> --reason "..."` (or
-`"spoiler"` in its manifest entry); the page blurs it until clicked, as
-`PROJECT.yaml` → `reporting.spoilers` says (`flagged`, `all`, `none`).
+`"spoiler"` in its manifest entry), and record `--none` for one that does not;
+the page blurs flagged images until clicked, as `PROJECT.yaml` →
+`reporting.spoilers` says (`flagged`, `all`, `none`). The localization gate
+refuses a translated image without an accepted version and its reason, or
+without this spoiler decision.
 
 Each source image gets at most `image_localization.max_generative_attempts`
 Codex edits (default 5); the script counts them in `work/images/attempts.json`

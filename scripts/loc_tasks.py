@@ -24,6 +24,9 @@ KINDS = ("translation", "fix", "research", "question", "tool", "qa", "integratio
 KIND_LABELS = {"translation": "ترجمة", "fix": "إصلاح", "research": "بحث", "question": "سؤال", "tool": "أداة",
                "qa": "فحص", "integration": "دمج", "other": "أخرى"}
 NEEDS_REASON = ("waiting", "dropped")
+# Phases where the agent does work of its own: each must show at least one task before its gate opens,
+# so the board cannot be silently skipped.
+WORK_PHASES = ("discovery", "extraction", "pilot", "localization", "integration", "playtest")
 
 
 def now() -> str:
@@ -112,11 +115,15 @@ def open_in_phase(state_file: Path, phase: str) -> list[dict]:
 
 
 def gate_checks(state_file: Path, phase: str) -> list[tuple[bool, str]]:
-    """One gate criterion when this phase has tasks: none may still be open."""
-    if not any(t["phase"] == phase for t in load(state_file)):
-        return []
-    left = open_in_phase(state_file, phase)
-    return [(not left, f"مهام المرحلة كلها منجزة أو مؤجلة أو ملغاة بسبب (المفتوحة: {len(left)}، في لوحة المهام)")]
+    """A working phase needs its work on the board, and none of it may still be open."""
+    recorded = [t for t in load(state_file) if t["phase"] == phase]
+    checks = []
+    if phase in WORK_PHASES:
+        checks.append((bool(recorded), f"عمل هذه المرحلة مسجل في لوحة المهام (loc.py task add؛ المسجلة: {len(recorded)})"))
+    if recorded:
+        left = open_in_phase(state_file, phase)
+        checks.append((not left, f"مهام المرحلة كلها منجزة أو مؤجلة أو ملغاة بسبب (المفتوحة: {len(left)}، في لوحة المهام)"))
+    return checks
 
 
 BATCH_LINE = re.compile(r"^\s*[-*] \[( |x|X)\]\s+(.+)$")

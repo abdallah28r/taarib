@@ -118,8 +118,11 @@ instead of keeping it in mind:
 
 Batches are not tasks: their `PLAN.md` checklist appears on the board by itself.
 `loc.py fix open` adds its own task, closed by `fix close --verdict verified`.
-`done` needs evidence and `waiting`/`dropped` a reason; a gate refuses to close a
-phase while one of its tasks is open, so finish, defer, or drop each one.
+`done` needs evidence and `waiting`/`dropped` a reason. Whenever you ask the
+user something, put it in `waiting` with the question as the reason, and move
+it on when they answer. The gates of discovery, extraction, pilot,
+localization, integration and playtest need at least one task recorded in the
+phase and none left open, so finish, defer, or drop each one.
 `loc.py next` lists open tasks first: resume `doing` and `waiting` before new work.
 Do not add a task per command or per file; one card is one result the user
 would recognise.

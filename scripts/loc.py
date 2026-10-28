@@ -950,6 +950,8 @@ def cmd_next(args) -> int:
         print(f"TASK {task['id']} [{task['status']}] ({task['phase']}) {task['title']}")
     if open_tasks:
         print(f"TASKS_OPEN={len(open_tasks)} — resume doing/waiting first; loc.py task list")
+    if phase in board.WORK_PHASES and not any(t["phase"] == phase for t in board.load(project.state_file)):
+        print(f"TASKS: none recorded for {phase}; add the work you are about to do (loc.py task add) before doing it")
     if not blocking and phase != pipeline.PHASES[-1]:
         print("READY: run python scripts/loc.py gate")
     return 0

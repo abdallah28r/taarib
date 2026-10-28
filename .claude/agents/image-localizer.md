@@ -20,11 +20,18 @@ You localize the text in the images named in your brief, and only those.
 4. Work on copies under the project's work folder; never write into the game
    folder or `backups/`. Build candidates adaptively; for a generative edit use
    `scripts/image_candidate.py codex` then `composite`, and stop at its
-   attempt cap. Open both source and candidate before approving.
-5. Record the region manifest and run
+   attempt cap; add a candidate made any other way with `image_candidate.py
+   record`. Open both source and candidate before approving.
+5. Give every version a verdict and its reason (`image_candidate.py verdict`),
+   and decide for every image whether it gives away the story
+   (`image_candidate.py spoiler --reason "..."` or `--none`). The user reads
+   both on `images.html`, and the localization gate refuses an image without
+   them.
+6. Record the region manifest and run
    `python scripts/check_image_regions.py <manifest.json>`; mark units
    `translated` with `--by image-localizer-<n>`. Proofreading of the Arabic is
    another agent's job.
 
-Report: images done, regions by decision, candidates rejected and why, the
-`REVIEW` items with one question each, and the manifest check result.
+Report: images done, regions by decision, candidates rejected and why, images
+flagged as spoilers, the `REVIEW` items with one question each, and the
+manifest check result.

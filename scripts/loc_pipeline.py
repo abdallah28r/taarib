@@ -255,7 +255,23 @@ def image_review(project: Project, all_units: list[dict]) -> list[tuple[bool, st
     missing = sorted(wanted - listed)
     detail = "، ".join(filter(None, [f"صور بلا سجل: {len(missing)} ({', '.join(missing[:3])})" if missing else "",
                                      f"أخطاء: {len(errors)}، أولها {errors[0]}" if errors else ""])) or "سليم"
-    return [(not missing and not errors, f"كل صورة مترجمة مسجلة في work/images/*.json وفحص مناطقها ناجح ({detail})")]
+    log_file = project.root / "work" / "images" / "attempts.json"
+    try:
+        log = json.loads(log_file.read_text(encoding="utf-8")) if log_file.is_file() else {}
+    except ValueError:
+        log = {}
+    by_name = {Path(str(e.get("image", ""))).name: e for e in log.values() if isinstance(e, dict)}
+    unjudged = sorted(n for n in wanted if not any(v.get("verdict") == "accepted" and v.get("reason")
+                                                  for v in (by_name.get(n) or {}).get("versions", [])))
+    undecided = sorted(n for n in wanted if not ((by_name.get(n) or {}).get("spoiler")
+                                                 or (by_name.get(n) or {}).get("spoiler_none")))
+    return [
+        (not missing and not errors, f"كل صورة مترجمة مسجلة في work/images/*.json وفحص مناطقها ناجح ({detail})"),
+        (not unjudged, "لكل صورة مترجمة نسخة مقبولة بسببها (image_candidate.py record/verdict؛ "
+                       f"الناقصة: {len(unjudged)}{' — ' + ', '.join(unjudged[:3]) if unjudged else ''})"),
+        (not undecided, "حُسم لكل صورة مترجمة هل تحرق الأحداث (image_candidate.py spoiler --reason أو --none؛ "
+                        f"الناقصة: {len(undecided)}{' — ' + ', '.join(undecided[:3]) if undecided else ''})"),
+    ]
 
 
 PILOT_BATCH = "pilot"

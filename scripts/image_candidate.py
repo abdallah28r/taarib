@@ -4,7 +4,7 @@
     python scripts/image_candidate.py composite --source <png> --raw <png> (--mask <png> | --box x0 y0 x1 y1) --out <png>
     python scripts/image_candidate.py record --source <png> --candidate <png> --method typeset
     python scripts/image_candidate.py verdict --source <png> --version 2 --verdict rejected --reason "..."
-    python scripts/image_candidate.py spoiler --source <png> --reason "shows who the traitor is"   # --clear to undo
+    python scripts/image_candidate.py spoiler --source <png> --reason "shows who the traitor is"   # or --none
 
 `codex` asks Codex's built-in image tool to edit one source image and copy the
 result to work/images/raw/. It works from either runtime: Claude Code calls it
@@ -228,18 +228,20 @@ def cmd_spoiler(args) -> int:
     if not args.source.is_file():
         print("ERROR --source must be an existing image")
         return 2
-    if not args.clear and not (args.reason or "").strip():
-        print("ERROR give --reason (what it reveals), or --clear")
+    if not args.clear and not args.none and not (args.reason or "").strip():
+        print("ERROR give --reason (what it reveals), --none (checked: reveals nothing), or --clear")
         return 2
     log = attempts(args.attempts)
     entry = log.setdefault(sha256(args.source), {"image": args.source.name, "raw": []})
     entry["source"] = _shown(args.source)
-    if args.clear:
-        entry.pop("spoiler", None)
-    else:
+    entry.pop("spoiler", None)
+    entry.pop("spoiler_none", None)
+    if args.none:
+        entry["spoiler_none"] = True
+    elif not args.clear:
         entry["spoiler"] = args.reason.strip()
     save(log, args.attempts)
-    print(f"SPOILER {args.source.name}: {'cleared' if args.clear else 'flagged'}")
+    print(f"SPOILER {args.source.name}: {'cleared' if args.clear else 'none' if args.none else 'flagged'}")
     return 0
 
 
@@ -279,7 +281,8 @@ def main(argv=None) -> int:
     p = sub.add_parser("spoiler", help="flag an image that reveals the story; images.html blurs it until clicked")
     p.add_argument("--source", type=Path, required=True)
     p.add_argument("--reason", help="what it reveals (shown only after the user clicks)")
-    p.add_argument("--clear", action="store_true")
+    p.add_argument("--none", action="store_true", help="checked: the image reveals nothing")
+    p.add_argument("--clear", action="store_true", help="undo the decision")
     p.add_argument("--attempts", type=Path, default=ATTEMPTS, help=argparse.SUPPRESS)
     p.set_defaults(run=cmd_spoiler)
     args = parser.parse_args(argv)

@@ -160,12 +160,12 @@ with a test, through `localization-project-maintenance`.
 - `PLAN.md` never holds counts, the phase, intake answers, backup paths, or command logs:
   those live in units, `state/pipeline.json`, `PROJECT.yaml`, backup
   manifests, and Git. Write at batch or phase boundaries, one line per item.
-- `dashboard.html` and `tasks.html` (beside `template-map.html`): the user's
-  progress page and your task board, rebuilt from these records by code. Put
-  every piece of work worth a line on the board with `loc.py task` before you
-  start it, and anything for later at once; a gate refuses a phase with open
-  tasks (`references/project-run.md`). Never write either page by hand. Every
-  `loc.py` command: `references/translation-units.md`.
+- The user's pages (`dashboard`, `tasks`, `texts`, `images`.html) are built from
+  these records by code; never by hand. On the board (`loc.py task`, details in
+  `references/project-run.md`): add work before starting it, `--later` at once
+  when you postpone something, `waiting --reason` when you ask the user, `done
+  --evidence` when it is finished. A working phase's gate needs its work on the
+  board and none left open. Commands: `references/translation-units.md`.
 - `glossary.yaml`: approved terminology, names, context variants, and voices.
 - `work/NOTES.md`: temporary findings during a phase.
 - `engines/<engine>.md`: the one place for knowledge that outlives a game;

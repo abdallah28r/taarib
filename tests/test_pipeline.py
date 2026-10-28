@@ -62,6 +62,11 @@ class PipelineWalkthrough(unittest.TestCase):
                 "--state", str(self.state), "--qa", str(self.qa), "--plan", str(self.plan)]
 
     def gate(self, check=False):
+        if not check:  # an agent records its work on the board before closing a working phase
+            phase = self.phase()
+            if phase in pipeline.tasks.WORK_PHASES and not pipeline.tasks.gate_checks(self.state, phase)[0][0]:
+                ident = pipeline.tasks.add(self.state, f"work of {phase}", "other", phase)
+                pipeline.tasks.move(self.state, ident, "done", evidence="walkthrough step")
         return self.run_loc("gate", *(["--check"] if check else []), *self.project_args())
 
     def phase(self):

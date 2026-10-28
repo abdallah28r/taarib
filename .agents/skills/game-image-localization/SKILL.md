@@ -19,8 +19,9 @@ review gates.
 
 1. Classify every region `TRANSLATE`, `KEEP`, or `REVIEW` before editing, and
    record each one (including `KEEP`) as a `kind: image` unit. If the image
-   gives away the story (an ending, a death, a twist), flag it at once:
-   `image_candidate.py spoiler --source <png> --reason "..."`.
+   gives away the story (an ending, a death, a twist), flag it at once with
+   `image_candidate.py spoiler --source <png> --reason "..."`; otherwise record
+   `--none`. The localization gate needs this decision for every image.
 2. Never touch a `KEEP` region. If a translation would distort the art,
    invent information, or need a new caption, keep the source image.
 3. Match the source treatment exactly; invent no outline, shadow, glow, panel,
@@ -34,6 +35,7 @@ review gates.
 5. Open source and candidate and compare them; record the finding and run
    `python scripts/check_image_regions.py <manifest.json>`. Numbers are
    gates, never proof of quality. Give every version its verdict and reason
-   (`image_candidate.py verdict`): the user sees them all on `images.html`.
+   (`image_candidate.py verdict`): the user sees them all on `images.html`,
+   and the gate needs an accepted version with its reason for every image.
 6. Stop at the first candidate that passes both. If none does, keep the source
    and record why.

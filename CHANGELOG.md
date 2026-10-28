@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-10-28 — Recording is enforced, not only described
+
+A review of whether the agent would really record its work found that the
+image-localizer role never mentioned versions, verdicts or spoilers, and that
+nothing stopped an agent from skipping the task board or the verdicts.
+
+- The gates of discovery, extraction, pilot, localization, integration and
+  playtest need at least one task recorded in the phase (as well as none
+  open); `loc.py next` warns while a working phase has none.
+- The localization gate needs, for every translated image, an accepted
+  version with its reason and a spoiler decision: `image_candidate.py
+  spoiler --reason ...` or the new `--none`.
+- `AGENTS.md`, the image-localizer role, the image skill and
+  `references/project-run.md` say when to record: before starting work,
+  `--later` when postponing, `waiting --reason` when asking the user, `done
+  --evidence` when finished.
+- `tests/test_pages_end_to_end.py` drives the agent's commands and checks each
+  record appears in its own place on dashboard.html, tasks.html, texts.html
+  and images.html.
+
 ## 2026-10-28 — Text and images before and after
 
 - `texts.html`: every text unit's source beside its Arabic, with status, batch,
