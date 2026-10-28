@@ -238,7 +238,7 @@ PHASE_LABELS = {
 }
 # Ships with the template (an empty project's page) and lives in every game copy beside the map.
 DASHBOARD = ROOT / "dashboard.html"
-MAP_PAGE = "خريطة-القالب.html"
+MAP_PAGE = "template-map.html"
 PLAN_FILE = ROOT / "PLAN.md"
 PLAN_MAX_LINES = 150
 

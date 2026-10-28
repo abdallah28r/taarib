@@ -85,7 +85,7 @@ real build before bulk translation.
 5. **You are asked twice more**: once to look at a pilot (Arabic shown in the
    game before bulk translation), and once for the final playtest.
 
-Open `خريطة-القالب.html` (the template map, in Arabic) for the full picture of
+Open `template-map.html` (the template map, in Arabic) for the full picture of
 what you do and what the agent does, and `dashboard.html` for live progress.
 
 ## How it works

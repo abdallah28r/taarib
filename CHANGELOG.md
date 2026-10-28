@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-28 — Map renamed to `template-map.html`
+
+- `خريطة-القالب.html` is now `template-map.html`, an English file name that
+  works everywhere; the dashboard link, `AGENTS.md`, `README.md`, and the
+  release list follow it. The page itself stays in Arabic.
+
 ## 2026-10-28 — Ready for GitHub as «taarib»
 
 - `README.md` in English: what the template does, engines, quick start,
