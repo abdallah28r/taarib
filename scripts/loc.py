@@ -228,7 +228,7 @@ main{max-width:760px;margin:0 auto;padding:24px 16px}h1{font-size:1.5rem;margin:
 .plan h2,.plan h3,.plan h4{font-size:1rem;margin:16px 0 6px}.plan p{margin:4px 0}
 .checks{list-style:none;padding:0;margin:0}.checks li{padding:4px 0}.checks li.ok{color:var(--fill)}
 bdi{unicode-bidi:isolate}.checks li.err{color:#c0392b}
-.card.wait{border-color:#c0392b}.pages{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.pages a{padding:6px 14px;border:1px solid var(--line);
+.card.wait{border-color:#c0392b}.card.wait p,.card.wait li{unicode-bidi:plaintext}.pages{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.pages a{padding:6px 14px;border:1px solid var(--line);
 border-radius:999px;background:var(--card);color:var(--ink);text-decoration:none}.pages a:hover{border-color:var(--fill)}
 td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right}ul{padding-inline-start:20px}
 @media (max-width:480px){.row{grid-template-columns:6.5rem 1fr 3.5rem}}
@@ -450,7 +450,7 @@ TASKS_STYLE = """
 main.wide{max-width:1400px}.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;
 margin-top:12px;align-items:start}.col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
 .col h2{margin:0 0 8px;font-size:1rem}.task{border:1px solid var(--line);border-radius:10px;padding:8px 10px;
-margin-bottom:8px;background:var(--bg)}.task p{margin:2px 0}.task.dropped p:not(.muted){text-decoration:line-through}
+margin-bottom:8px;background:var(--bg)}.task p{margin:2px 0;unicode-bidi:plaintext}.task.dropped p:not(.muted){text-decoration:line-through}
 .col.waiting{border-color:#c0392b}.col.doing{border-color:var(--fill)}details{font-size:.85rem}
 """
 

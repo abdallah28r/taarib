@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Install guide</title>
+<meta name="description" content="From an empty folder to your first localization request in minutes. You need your own copy of the game, Git, Python 3, and Claude Code or Codex.">
+<link rel="alternate" hreflang="ar" href="../install.html">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-head"><div class="wrap">
+<a class="brand" href="index.html">Taarib <small>تعريب</small></a>
+<nav class="site-nav" aria-label="Sections"><a href="index.html">Home</a><a href="how-it-works.html">How it works</a><a href="install.html" aria-current="page">Install guide</a><a href="showcase.html">Follow-up pages</a><a href="https://github.com/abdallah28r/taarib">GitHub</a><a class="lang" href="../install.html" hreflang="ar" lang="ar">العربية</a></nav>
+</div></header>
+<main id="main">
+<div class="wrap doc"><aside class="toc"><p>Install guide</p><ol><li><a href="#need">What you need</a></li><li><a href="#get">Get the template</a></li><li><a href="#rename">One folder per game</a></li><li><a href="#runtime">Open it in your agent</a></li><li><a href="#codex">In Codex</a></li><li><a href="#claude">In Claude Code</a></li><li><a href="#ask">Ask for the localization</a></li><li><a href="#next">What happens next</a></li></ol></aside><article>
+<h1>Install guide</h1><p class="lead">From an empty folder to your first localization request in minutes. You need your own copy of the game, Git, Python 3, and Claude Code or Codex.</p>
+<h2 id="need">What you need</h2><ul><li>Your own copy of the game.</li><li>Git and Python 3 (with the packages: <code>pip install -r requirements.txt</code>).</li><li>A Claude Code or Codex subscription, or both.</li></ul>
+<h2 id="get">Get the template</h2><p>Choose a folder for the template, for example one named <bdi>Arabic Game</bdi>. Open a terminal inside it and run:</p><pre class="cmd">git clone https://github.com/abdallah28r/taarib.git
+cd taarib
+pip install -r requirements.txt</pre>
+<h2 id="rename">One folder per game</h2><p>A folder named <bdi>taarib</bdi> appears. Rename it after the game you are localizing, for example <bdi>Cyberpunk 2077</bdi>. Each game gets its own copy of the template; keep a clean original for other games.</p>
+<h2 id="runtime">Open it in your agent</h2><p>Open the agent you will localize with, then follow its section:</p><div class="tabs"><a href="#codex">Codex</a><a href="#claude">Claude Code</a></div>
+<h3 id="codex">In Codex</h3><ol class="steps"><li><p>Open a new chat and choose “New project”.</p><figure><img src="../assets/install/codex-1-new-project.png" alt="" loading="lazy"></figure></li><li><p>Add the folder you renamed (here <bdi>Cyberpunk 2077</bdi>, formerly <bdi>taarib</bdi>) and name the project, for example “Localize Cyberpunk 2077”.</p><figure><img src="../assets/install/codex-2-create-project.png" alt="" loading="lazy"></figure></li><li><p>Check that the folder is the one you added, then press “Create project”.</p><figure><img src="../assets/install/codex-3-project-folder.png" alt="" loading="lazy"></figure></li><li><p>Open a new chat inside the project and type your localization request.</p><figure><img src="../assets/install/codex-4-request.png" alt="" loading="lazy"></figure></li></ol>
+<h3 id="claude">In Claude Code</h3><ol class="steps"><li><p>Open a new chat in Claude Code, press “Choose…” and pick the folder you renamed (here <bdi>Cyberpunk 2077</bdi>).</p><figure><img src="../assets/install/claude-1-choose-folder.png" alt="" loading="lazy"></figure></li></ol><div class="callout soon">Screenshots for the remaining Claude Code steps are coming soon.</div>
+<h2 id="ask">Ask for the localization</h2><p>Type «عرّب اللعبة» (localize the game). The agent asks one set of questions at the start: the game's name and location, whether images are in scope, whether it may launch the game, and how its subagents should work. Then it works on its own.</p>
+<h2 id="next">What happens next</h2><ul><li>It asks you once to check a pilot: the main menu and first scene in Arabic, in your game.</li><li>And once more at the end, to play the full localization and accept it.</li><li>In between, follow everything from the <a href="showcase.html">follow-up pages</a> in the game's folder.</li></ul>
+</article></div>
+</main>
+<footer class="site-foot"><div class="wrap"><span>Taarib — open source under the MIT License. Works with Claude Code and Codex. A game's text and art are never uploaded.</span><span>Engine names and logos are trademarks of their owners, shown only to name what is supported.</span></div></footer>
+</body>
+</html>

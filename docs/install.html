@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>الشرح والتثبيت</title>
+<meta name="description" content="من مجلد فارغ إلى أول طلب تعريب في دقائق. تحتاج نسخة أصلية من اللعبة، و Git، و Python 3، و Claude Code أو Codex.">
+<link rel="alternate" hreflang="en" href="en/install.html">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">انتقل إلى المحتوى</a>
+<header class="site-head"><div class="wrap">
+<a class="brand" href="index.html">تعريب <small>taarib</small></a>
+<nav class="site-nav" aria-label="الأقسام"><a href="index.html">الرئيسية</a><a href="how-it-works.html">كيف يعمل</a><a href="install.html" aria-current="page">الشرح والتثبيت</a><a href="showcase.html">صفحات المتابعة</a><a href="https://github.com/abdallah28r/taarib">GitHub</a><a class="lang" href="en/install.html" hreflang="en" lang="en">English</a></nav>
+</div></header>
+<main id="main">
+<div class="wrap doc"><aside class="toc"><p>الشرح والتثبيت</p><ol><li><a href="#need">ما تحتاجه</a></li><li><a href="#get">تنزيل القالب</a></li><li><a href="#rename">مجلد لكل لعبة</a></li><li><a href="#runtime">افتحه في وكيلك</a></li><li><a href="#codex">في Codex</a></li><li><a href="#claude">في Claude Code</a></li><li><a href="#ask">اطلب التعريب</a></li><li><a href="#next">ماذا يحدث بعدها</a></li></ol></aside><article>
+<h1>الشرح والتثبيت</h1><p class="lead">من مجلد فارغ إلى أول طلب تعريب في دقائق. تحتاج نسخة أصلية من اللعبة، و Git، و Python 3، و Claude Code أو Codex.</p>
+<h2 id="need">ما تحتاجه</h2><ul><li>نسخة أصلية من اللعبة على جهازك.</li><li>Git و Python 3 (مع المكتبات: <code>pip install -r requirements.txt</code>).</li><li>اشتراك في Claude Code أو Codex، أو كليهما.</li></ul>
+<h2 id="get">تنزيل القالب</h2><p>اختر مجلدًا على جهازك لتنزيل القالب، مثل مجلد باسم <bdi>Arabic Game</bdi>. افتح الطرفية داخله وشغّل:</p><pre class="cmd">git clone https://github.com/abdallah28r/taarib.git
+cd taarib
+pip install -r requirements.txt</pre>
+<h2 id="rename">مجلد لكل لعبة</h2><p>سيظهر مجلد باسم <bdi>taarib</bdi>. غيّر اسمه إلى اسم اللعبة التي تريد تعريبها، مثل <bdi>Cyberpunk 2077</bdi>. لكل لعبة نسخة مستقلة من القالب؛ واحتفظ بالأصل نظيفًا إن أردت تعريب ألعاب أخرى.</p>
+<h2 id="runtime">افتحه في وكيلك</h2><p>افتح الوكيل الذي ستعرّب به، ثم اتبع قسمه:</p><div class="tabs"><a href="#codex">Codex</a><a href="#claude">Claude Code</a></div>
+<h3 id="codex">في Codex</h3><ol class="steps"><li><p>افتح محادثة جديدة، واختر «New project» لإنشاء مشروع جديد.</p><figure><img src="assets/install/codex-1-new-project.png" alt="" loading="lazy"></figure></li><li><p>أضف مسار المجلد الذي غيّرت اسمه (في هذا المثال <bdi>Cyberpunk 2077</bdi>، وكان اسمه <bdi>taarib</bdi>)، واختر اسمًا للمشروع مثل «تعريب Cyberpunk 2077».</p><figure><img src="assets/install/codex-2-create-project.png" alt="" loading="lazy"></figure></li><li><p>تأكد أن المجلد هو المجلد المضاف، ثم اضغط «Create project».</p><figure><img src="assets/install/codex-3-project-folder.png" alt="" loading="lazy"></figure></li><li><p>افتح محادثة جديدة داخل المشروع واكتب طلب التعريب.</p><figure><img src="assets/install/codex-4-request.png" alt="" loading="lazy"></figure></li></ol>
+<h3 id="claude">في Claude Code</h3><ol class="steps"><li><p>افتح محادثة جديدة في Claude Code، واضغط «Choose…» واختر المجلد الذي غيّرت اسمه (في هذا المثال <bdi>Cyberpunk 2077</bdi>).</p><figure><img src="assets/install/claude-1-choose-folder.png" alt="" loading="lazy"></figure></li></ol><div class="callout soon">صور بقية خطوات Claude Code تُضاف قريبًا.</div>
+<h2 id="ask">اطلب التعريب</h2><p>اكتب «عرّب اللعبة». يسألك الوكيل مجموعة أسئلة واحدة في البداية: اسم اللعبة ومكانها، وهل الصور ضمن التعريب، وهل يشغّل اللعبة بنفسه، وكيف يعمل وكلاؤه الفرعيون. بعدها يعمل وحده.</p>
+<h2 id="next">ماذا يحدث بعدها</h2><ul><li>يسألك مرة ليريك تجربة أولى: القائمة الرئيسية وأول مشهد بالعربية داخل لعبتك.</li><li>ويسألك مرة أخيرة لتجرّب النسخة كاملة وتقبلها.</li><li>وبينهما تتابع كل شيء من <a href="showcase.html">صفحات المتابعة</a> في مجلد اللعبة.</li></ul>
+</article></div>
+</main>
+<footer class="site-foot"><div class="wrap"><span>تعريب — مفتوح المصدر بترخيص MIT. يعمل مع Claude Code و Codex. نص اللعبة وصورها لا يُرفعان أبدًا.</span><span>أسماء المحركات وشعاراتها علامات تجارية لأصحابها، وذكرها هنا للإشارة إلى دعمها فقط.</span></div></footer>
+</body>
+</html>
