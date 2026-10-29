@@ -10,6 +10,8 @@ import shutil
 from apply_patch_package import _atomic_copy, digest
 from build_patch_package import has_symlink_component
 from file_ops import remove_file
+import patch_v3
+from storage_core import no_link_components
 
 
 TRANSACTION = re.compile(r"\d{8}T\d{6}Z-[0-9a-f]{32}\Z")
@@ -23,16 +25,29 @@ def main(argv=None):
     a = p.parse_args(argv)
     if not a.yes:
         raise SystemExit("refusing uninstall without --yes")
+    no_link_components(a.root)
     root = a.root.resolve()
-    if not root.is_dir() or not TRANSACTION.fullmatch(a.transaction_id):
+    if not root.is_dir():
+        raise SystemExit("invalid root or transaction ID")
+    try:
+        active = patch_v3.read_active(root)
+        if active and a.transaction_id == active["id"]:
+            count = len(active["files"])
+            patch_v3.apply(root, None)
+            print(f"UNINSTALLED={count} STATE_ID={a.transaction_id}")
+            return 0
+    except (OSError, ValueError) as error:
+        raise SystemExit(str(error)) from error
+    if not TRANSACTION.fullmatch(a.transaction_id):
         raise SystemExit("invalid root or transaction ID")
     state_root = root / ".install-state"
-    if state_root.is_symlink():
-        raise SystemExit("install-state must not be a symlink")
+    no_link_components(state_root, root)
     transaction = state_root / a.transaction_id
-    if transaction.is_symlink() or not transaction.is_dir():
-        raise SystemExit("transaction not found or is a symlink")
+    no_link_components(transaction, state_root)
+    if not transaction.is_dir():
+        raise SystemExit("transaction not found")
     state_file = transaction / "install-state.json"
+    no_link_components(state_file, transaction)
     record = json.loads(state_file.read_text(encoding="utf-8"))
     if record.get("schema") != 2 or record.get("status") not in {"installed", "prepared"}:
         raise SystemExit("transaction is not installed or recoverable")

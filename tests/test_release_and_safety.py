@@ -67,7 +67,7 @@ class ReleaseAndSafetyTests(unittest.TestCase):
             self.assertEqual([item["name"] for item in bom["components"]], ["a.txt"])
             self.assertEqual(bom["components"][0]["hashes"][0]["content"], hashlib.sha256(b"hello").hexdigest())
 
-    def test_safe_replace_preserves_each_previous_version(self):
+    def test_safe_replace_preserves_only_the_original(self):
         with tempfile.TemporaryDirectory() as temporary:
             temporary = Path(temporary)
             root = temporary / "game"
@@ -82,8 +82,10 @@ class ReleaseAndSafetyTests(unittest.TestCase):
                                         capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(target.read_text(encoding="utf-8"), "three")
-            originals = sorted((root / "backups" / "safe-replace").rglob("text.txt"))
-            self.assertEqual(sorted(path.read_text(encoding="utf-8") for path in originals), ["one", "two"])
+            original = root / "backups" / "originals" / "files" / "data" / "text.txt"
+            self.assertEqual(original.read_text(encoding="utf-8"), "one")
+            self.assertEqual(len(list((root / "backups").rglob("text.txt"))), 1)
+            self.assertEqual(target.read_text(encoding="utf-8"), "three")
 
     def test_patch_install_requires_existing_exact_original(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -117,7 +119,7 @@ class ReleaseAndSafetyTests(unittest.TestCase):
                                       str(root), str(package), "--yes"], capture_output=True, text=True)
             self.assertEqual(install.returncode, 0, install.stdout + install.stderr)
             self.assertEqual((root / "data" / "text.txt").read_text(encoding="utf-8"), "حفظ")
-            snapshots = list((root / ".install-state").glob("*/originals/data/text.txt"))
+            snapshots = list((root / "backups" / "originals").glob("files/data/text.txt"))
             self.assertEqual(len(snapshots), 1)
             self.assertEqual(snapshots[0].read_text(encoding="utf-8"), "Save")
 
@@ -142,7 +144,7 @@ class ReleaseAndSafetyTests(unittest.TestCase):
             self.assertEqual(subprocess.run(install_cmd, capture_output=True).returncode, 0)
             self.assertEqual((root / "data" / "text.txt").read_text(encoding="utf-8"), "حفظ")
             self.assertTrue((root / "data" / "font.txt").exists())
-            transaction = next((root / ".install-state").iterdir()).name
+            transaction = json.loads((root / ".install-state" / "active.json").read_text(encoding="utf-8"))["id"]
             uninstall_cmd = [sys.executable, "-B", str(ROOT / "scripts" / "uninstall_patch_package.py"),
                              str(root), transaction, "--yes"]
             self.assertEqual(subprocess.run(uninstall_cmd, capture_output=True).returncode, 0)
@@ -166,7 +168,7 @@ class ReleaseAndSafetyTests(unittest.TestCase):
                                       str(root), str(package), "--yes"], capture_output=True)
             self.assertEqual(install.returncode, 0)
             (root / "ar.txt").write_text("User changed", encoding="utf-8")
-            transaction = next((root / ".install-state").iterdir()).name
+            transaction = json.loads((root / ".install-state" / "active.json").read_text(encoding="utf-8"))["id"]
             uninstall = subprocess.run([sys.executable, "-B", str(ROOT / "scripts" / "uninstall_patch_package.py"),
                                         str(root), transaction, "--yes"], capture_output=True)
             self.assertNotEqual(uninstall.returncode, 0)
@@ -185,13 +187,24 @@ class ReleaseAndSafetyTests(unittest.TestCase):
                                     str(root), str(package), "base.txt", "added.txt", "--patch-root", str(changed)],
                                    capture_output=True, text=True)
             self.assertEqual(build.returncode, 0, build.stderr)
+            # Old installed transactions remain removable, while installing a
+            # schema 2 package again must not create another permanent backup.
+            legacy = json.loads((package / "manifest.json").read_text(encoding="utf-8"))
+            legacy["schema"] = 2
+            (package / "manifest.json").write_text(json.dumps(legacy), encoding="utf-8")
             install = subprocess.run([sys.executable, "-B", str(ROOT / "scripts/apply_patch_package.py"),
                                       str(root), str(package), "--yes"], capture_output=True, text=True)
-            self.assertEqual(install.returncode, 0, install.stderr)
-            transaction = next((root / ".install-state").iterdir())
+            self.assertNotEqual(install.returncode, 0)
+            self.assertIn("legacy package installation is disabled", install.stderr)
+            self.assertFalse((root / ".install-state").exists())
+            (root / "base.txt").write_bytes(b"new")
+            (root / "added.txt").write_bytes(b"arabic")
+            transaction = root / ".install-state" / ("20261029T000000Z-" + "a" * 32)
+            original = transaction / "originals" / "base.txt"
+            original.parent.mkdir(parents=True)
+            original.write_bytes(b"old")
             state = transaction / "install-state.json"
-            record = json.loads(state.read_text(encoding="utf-8"))
-            record["status"] = "prepared"
+            record = {"schema": 2, "status": "prepared", "files": legacy["files"]}
             state.write_text(json.dumps(record), encoding="utf-8")
             uninstall = subprocess.run([sys.executable, "-B", str(ROOT / "scripts/uninstall_patch_package.py"),
                                         str(root), transaction.name, "--yes"], capture_output=True, text=True)

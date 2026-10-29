@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-29 — Bounded project storage and one verified original
+
+- Repeated game-file changes reuse one verified pre-localization original rather
+  than retaining a full copy for every update. New patch packages are complete
+  snapshots: an upgrade removes files omitted from the new package, and removal
+  restores the original. Older installed transactions keep their existing
+  removal path; installing an old package again requires rebuilding it as v3.
+- Backup and save-snapshot commands reject a source that contains its destination
+  (including links and junctions) before making any folder. Large-file hashes
+  and byte-range patch creation read in bounded chunks; copying checks available
+  space first.
+- `storage_audit.py report` inventories existing projects without following
+  links. `clean-temp` and image-page refresh remove only recorded, unused
+  previews or committed transaction staging; unknown old work remains for review.
+
+
 ## 2026-10-28 — A game file Windows holds for a moment
 
 The test suite failed twice, once in the byte patch test and once in the package

@@ -26,13 +26,13 @@ included, so the user sees what was tried.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+from storage_core import digest
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGES = ROOT / "work" / "images"
@@ -62,7 +62,7 @@ def cap() -> int:
 
 
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return digest(path)
 
 
 def attempts(path: Path = ATTEMPTS) -> dict:

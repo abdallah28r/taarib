@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
+from storage_core import digest
 import json
 from pathlib import Path
 import re
@@ -41,7 +41,7 @@ def validate(lock_path: Path, verify_files: bool = False) -> list[str]:
                     local = ROOT / local
                 if not local.is_file():
                     errors.append(f"selection {index}: local_file missing")
-                elif isinstance(checksum, str) and hashlib.sha256(local.read_bytes()).hexdigest().lower() != checksum.lower():
+                elif isinstance(checksum, str) and digest(local).lower() != checksum.lower():
                     errors.append(f"selection {index}: local_file hash mismatch")
     return errors
 

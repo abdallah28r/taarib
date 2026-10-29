@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
+from storage_core import digest
 import json
 import os
 from pathlib import Path
@@ -70,7 +70,7 @@ def validate(root: Path) -> list[str]:
             if license_path is None or not license_path.is_file():
                 errors.append(f"{label}: license file missing or unsafe")
             if isinstance(checksum, str) and SHA256.fullmatch(checksum) and font_path is not None and font_path.is_file():
-                actual = hashlib.sha256(font_path.read_bytes()).hexdigest()
+                actual = digest(font_path)
                 if actual.lower() != checksum.lower():
                     errors.append(f"{label}: font hash mismatch")
         elif origin == "game-shipped":

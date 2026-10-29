@@ -58,6 +58,7 @@ adapter_base = _load("loc_adapter_base", ROOT / "adapters" / "base.py")
 pipeline = _load("loc_pipeline")
 board = pipeline.tasks
 review = _load("review_pages")
+storage = _load("storage_core")
 tools = _load("loc_tools")
 brief_tools = _load("loc_brief")
 experiences = _load("loc_experiences")
@@ -566,8 +567,10 @@ def write_images(out: Path = IMAGES_PAGE, units_dir: Path = units.UNITS_DIR, pro
     game_root = Path(game) if pipeline.filled(game) else None
     mode = (settings.get("reporting") or {}).get("spoilers") or "flagged"
     items = review.collect_images(project.root, all_units, game_root)
-    out.write_text(review.render_images(items, project.root, mode, project_title(project), HTML_STYLE,
-                                        page_links(out.name), local_time), encoding="utf-8", newline="\n")
+    page = review.render_images(items, project.root, mode, project_title(project), HTML_STYLE,
+                                page_links(out.name), local_time)
+    out.write_text(page, encoding="utf-8", newline="\n")
+    review.clean_previews(project.root, page)
     return out
 
 
@@ -915,6 +918,12 @@ def cmd_rebuild(args) -> int:
         held_back += bool(unit.get("target")) and not ready
         selected.append({**unit, "target": unit.get("target", "") if ready else ""})
     adapter = adapter_base.load_adapter(args.adapter, game, parse_options(args.option))
+    estimated = sum((game / rel).stat().st_size for rel in adapter.inventory() if (game / rel).is_file())
+    try:
+        storage.require_space(out, estimated)
+    except OSError as error:
+        print(f"ERROR {error}")
+        return 2
     out.mkdir(parents=True, exist_ok=True)
     written = adapter.rebuild(selected, out)
     for rel in written:

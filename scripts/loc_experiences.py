@@ -13,6 +13,7 @@ automatically; the user decides.
 from __future__ import annotations
 
 import hashlib
+from storage_core import digest
 import json
 import re
 import zipfile
@@ -162,4 +163,4 @@ def pack(lessons: list[dict], facts: dict, files: dict[str, Path], out_dir: Path
 
 
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return digest(path)

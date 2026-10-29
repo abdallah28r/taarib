@@ -20,12 +20,14 @@ game's files; it does not prove the game renders Arabic correctly.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import importlib.util
 import shutil
 import sys
 import tempfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from storage_core import digest, require_space
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -62,7 +64,17 @@ def listing(root: Path) -> dict[str, tuple[int, int]]:
 
 
 def file_hashes(root: Path, paths) -> dict[str, str]:
-    return {rel: hashlib.sha256((root / rel).read_bytes()).hexdigest() for rel in paths if (root / rel).is_file()}
+    return {rel: digest(root / rel) for rel in paths if (root / rel).is_file()}
+
+
+def same_bytes(first: Path, second: Path) -> bool:
+    if first.stat().st_size != second.stat().st_size:
+        return False
+    with first.open("rb") as left, second.open("rb") as right:
+        while block := left.read(1 << 20):
+            if block != right.read(len(block)):
+                return False
+    return True
 
 
 class Result:
@@ -134,19 +146,22 @@ def _run_checks(result: Result, adapter_path: Path, game_root: Path, options: di
     result.add("read-back", shown == sources, "" if shown == sources else _diff(sources, shown))
 
     blank = [{**u, "target": ""} for u in units]
+    inventory_bytes = sum((game_root / rel).stat().st_size for rel in inventory)
     with tempfile.TemporaryDirectory() as temporary:
+        require_space(Path(temporary), inventory_bytes)
         out = Path(temporary) / "out"
         out.mkdir()
         written = adapter.rebuild(blank, out)
-        changed = [p for p in written if (out / p).read_bytes() != (game_root / p).read_bytes()]
+        changed = [p for p in written if not same_bytes(out / p, game_root / p)]
         result.add("identity", not changed, "" if not changed else f"changed without targets: {changed[:3]}")
 
     translatable = [u for u in units if loc_units.decision(u) != "keep"]
     targets = {u["id"]: pseudo(u["source"]) for u in translatable}
     with tempfile.TemporaryDirectory() as temporary:
+        require_space(Path(temporary), inventory_bytes * 3)
         out, copy = Path(temporary) / "out", Path(temporary) / "game"
         out.mkdir()
-        for rel in inventory:  # only the text files, so huge games stay cheap
+        for rel in inventory:
             (copy / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(game_root / rel, copy / rel)
         written = adapter.rebuild([{**u, "target": targets.get(u["id"], "")} for u in units], out)

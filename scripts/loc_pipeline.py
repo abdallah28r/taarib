@@ -32,6 +32,7 @@ def _load(name, path):
 units = _load("loc_units", ROOT / "scripts" / "loc_units.py")
 tools = _load("loc_tools", ROOT / "scripts" / "loc_tools.py")
 tasks = _load("loc_tasks", ROOT / "scripts" / "loc_tasks.py")
+storage = _load("storage_core", ROOT / "scripts" / "storage_core.py")
 
 PHASES = ("intake", "discovery", "extraction", "pilot", "localization", "integration", "playtest", "handoff", "release")
 ROUTES = {
@@ -99,7 +100,7 @@ def digest_files(root: Path, paths) -> str:
     sha = hashlib.sha256()
     for rel in sorted(paths):
         sha.update(rel.encode("utf-8") + b"\0")
-        sha.update(hashlib.sha256((root / rel).read_bytes()).digest())
+        sha.update(bytes.fromhex(storage.digest(root / rel)))
     return sha.hexdigest()[:16]
 
 

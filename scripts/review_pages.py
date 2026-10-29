@@ -20,7 +20,11 @@ from __future__ import annotations
 import hashlib
 import html
 import json
+import os
 from pathlib import Path
+from uuid import uuid4
+
+from storage_core import digest as hash_file, is_link, no_link_components
 
 STATUS_LABELS = {"extracted": "مستخرجة", "translated": "مترجمة", "proofread": "مدققة", "integrated": "مدمجة",
                  "tested": "مختبرة"}
@@ -170,13 +174,25 @@ document.querySelectorAll(".compare").forEach(box=>{const top=box.querySelector(
 
 
 def thumbnail(image: Path, root: Path) -> str | None:
-    """A small PNG copy under work/images/preview/, reused while the image is unchanged; its page-relative path."""
+    """One replaceable preview per source path, with an ownership sidecar."""
     if not image.is_file():
         return None
     stat = image.stat()
-    key = hashlib.sha1(f"{image.resolve()}|{stat.st_mtime_ns}|{stat.st_size}".encode("utf-8")).hexdigest()[:16]
+    key = hashlib.sha1(str(image.resolve()).encode("utf-8")).hexdigest()[:16]
     out = root / "work" / "images" / "preview" / f"{key}.png"
-    if not out.is_file():
+    no_link_components(out, root)
+    sidecar = out.with_suffix(".json")
+    source_marker = {"owner": "taarib-preview-v1", "source": str(image.resolve()),
+                     "mtime_ns": stat.st_mtime_ns, "size": stat.st_size}
+    try:
+        current = json.loads(sidecar.read_text(encoding="utf-8")) if sidecar.is_file() else None
+    except (OSError, ValueError):
+        current = None
+    valid = (out.is_file() and isinstance(current, dict)
+             and all(current.get(key) == value for key, value in source_marker.items())
+             and current.get("preview_sha256") == hash_file(out))
+    if not valid:
+        temporary = out.with_name(out.stem + "." + uuid4().hex + ".tmp.png")
         try:
             from PIL import Image
             with Image.open(image) as im:
@@ -184,10 +200,47 @@ def thumbnail(image: Path, root: Path) -> str | None:
                 if im.width > THUMB_WIDTH:
                     im = im.resize((THUMB_WIDTH, round(im.height * THUMB_WIDTH / im.width)))
                 out.parent.mkdir(parents=True, exist_ok=True)
-                im.save(out)
+                im.save(temporary)
+            os.replace(temporary, out)
+            sidecar.write_text(json.dumps({**source_marker, "preview_sha256": hash_file(out)}, sort_keys=True),
+                               encoding="utf-8")
         except Exception:  # an unreadable image is shown as missing, never breaks the page
             return None
+        finally:
+            if temporary.exists():
+                temporary.unlink()
     return out.relative_to(root).as_posix()
+
+
+def clean_previews(root: Path, page_html: str) -> int:
+    """Remove only owned previews no longer referenced by the written page."""
+    folder = root / "work" / "images" / "preview"
+    try:
+        no_link_components(folder, root)
+    except ValueError:
+        return 0
+    if not folder.is_dir():
+        return 0
+    removed = 0
+    for sidecar in folder.glob("*.json"):
+        if is_link(sidecar):
+            continue
+        try:
+            marker = json.loads(sidecar.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if marker.get("owner") != "taarib-preview-v1":
+            continue
+        png = sidecar.with_suffix(".png")
+        if png.name in page_html:
+            continue
+        if png.is_file():
+            if is_link(png) or marker.get("preview_sha256") != hash_file(png):
+                continue
+            png.unlink()
+        sidecar.unlink()
+        removed += 1
+    return removed
 
 
 def collect_images(root: Path, all_units: list[dict], game_root: Path | None) -> list[dict]:

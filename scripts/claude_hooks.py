@@ -87,6 +87,18 @@ def path_spellings(folder: str) -> list[str]:
 
 
 def backup_exists(rel: str, game: str, root: Path = ROOT) -> bool:
+    # Schema 3 keeps the one documented original at a stable path.
+    store = Path(game) / "backups" / "originals"
+    manifest = store / "manifest.json"
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        records = data.get("files", {})
+        recorded = any(key.casefold() == rel.replace("\\", "/").casefold() and isinstance(value, dict)
+                       for key, value in records.items()) if isinstance(records, dict) else False
+        if recorded and (store / "files" / rel).is_file():
+            return True
+    except (OSError, ValueError, TypeError):
+        pass
     pattern = glob.escape(rel.replace("\\", "/"))
     bases = [(Path(game) / "backups", ("*", "safe-replace/*")), (root / "backups", ("**",))]
     for base, prefixes in bases:

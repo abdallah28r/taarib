@@ -88,12 +88,16 @@ catalog entry.
 | Script | When |
 | --- | --- |
 | `arabic_shaping.py` | *(library)* shaping, line wrapping, visual order, `unrender`; used by adapters' `render()`. |
-| `safe_backup.py` | Before changing any file inside the game folder. |
-| `safe_replace.py` | Replace one game file with backup and atomic swap. |
+| `storage_core.py` | *(library)* streaming hashes, link checks, and free-space preflight for large files. |
+| `original_store.py` | *(library)* one verified pre-localization original per game file. |
+| `patch_v3.py` | *(library)* full-snapshot patch update, removal, rollback, and crash recovery. |
+| `storage_audit.py` | `report <root>` inventories a project; `clean-temp <root>` removes only verified template-owned temporary files. |
+| `safe_backup.py` | Before changing a game file: preserve its original once; repeated calls verify and reuse it. |
+| `safe_replace.py` | Replace or restore one game file atomically using the verified original. |
 | `save_guard.py` | Snapshot the player's save folder before the first launch of a patched build. |
-| `build_patch_package.py` | A hash-checked package of added and replaced files. |
-| `apply_patch_package.py` | Install that package on the user's identified copy, with rollback state. |
-| `uninstall_patch_package.py` | Remove an installed package after verifying its hashes. |
+| `build_patch_package.py` | A hash-checked full-snapshot package of added and replaced files. |
+| `apply_patch_package.py` | Install or upgrade a schema 3 package on the user's identified copy; rebuild old packages before installing. |
+| `uninstall_patch_package.py` | Restore the single original after verifying installed hashes; previously installed legacy transactions remain removable. |
 | `byte_patch.py` | Archives or disc images too large to ship whole: byte-range patch, hash-checked apply; guarded byte edits. |
 | `generate_sbom.py` | Release: a file-level SBOM of the actual release archive. |
 

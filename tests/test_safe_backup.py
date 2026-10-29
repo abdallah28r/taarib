@@ -22,11 +22,16 @@ class SafeBackupTests(unittest.TestCase):
             (root / "data" / "text.json").write_text('{"a": 1}', encoding="utf-8")
             result = run(root, "data/text.json")
             self.assertEqual(result.returncode, 0, result.stderr)
-            out = Path(result.stdout.strip())
-            copy = out / "data" / "text.json"
+            out = root / "backups" / "originals"
+            copy = out / "files" / "data" / "text.json"
             self.assertEqual(copy.read_text(encoding="utf-8"), '{"a": 1}')
             manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
-            self.assertEqual(manifest["files"][str(Path("data/text.json"))], hashlib.sha256(b'{"a": 1}').hexdigest())
+            self.assertEqual(manifest["files"]["data/text.json"]["sha256"], hashlib.sha256(b'{"a": 1}').hexdigest())
+            self.assertEqual(run(root, "data/text.json").returncode, 0)
+            self.assertEqual(len(list(out.rglob("text.json"))), 1)
+            (root / "data" / "text.json").write_text('{"a": 2}', encoding="utf-8")
+            self.assertIn("live file differs", run(root, "data/text.json").stderr)
+            self.assertEqual(copy.read_text(encoding="utf-8"), '{"a": 1}')
 
     def test_paths_outside_the_root_or_in_backups_are_refused(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -36,7 +41,21 @@ class SafeBackupTests(unittest.TestCase):
             (root / "backups" / "old.txt").write_text("x", encoding="utf-8")
             self.assertIn("outside root", run(root, Path(folder) / "elsewhere.txt").stderr)
             self.assertIn("backups directory", run(root, "backups/old.txt").stderr)
+            self.assertIn("backups directory", run(root, "backups").stderr)
             self.assertIn("missing", run(root, "nope.txt").stderr)
+            self.assertFalse((root / "backups" / "originals").exists())
+
+    def test_game_manifest_name_cannot_overwrite_backup_manifest(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "game"
+            root.mkdir()
+            (root / "manifest.json").write_bytes(b"game-original")
+            result = run(root, "manifest.json")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            store = root / "backups" / "originals"
+            self.assertEqual((store / "files" / "manifest.json").read_bytes(), b"game-original")
+            self.assertEqual(json.loads((store / "manifest.json").read_text(encoding="utf-8"))["files"]
+                             ["manifest.json"]["sha256"], hashlib.sha256(b"game-original").hexdigest())
 
 
 if __name__ == "__main__":

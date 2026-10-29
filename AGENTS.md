@@ -50,9 +50,9 @@ Available routes: `discovery`, `extraction`, `translation-ui`,
 ## Invariants
 
 - Discovery is read-only. Never overwrite the only source or extracted copy.
-- Back up a game file with its relative path before changing it
-  (`safe_backup.py`, `safe_replace.py`, or a patch package). Each backup's
-  manifest is the record; do not copy backup paths into `PLAN.md`.
+- Keep one hash-verified original per game-relative path (`safe_backup.py`,
+  `safe_replace.py`, or a patch package); repeated updates reuse it. Never
+  label an unknown live file original. Do not copy backup paths into `PLAN.md`.
 - Prefer native localization and removable patch mechanisms. Do not bypass DRM,
   anti-cheat, signatures, or access controls. Decrypting a game's own archives
   and injecting code each need explicit per-game approval under

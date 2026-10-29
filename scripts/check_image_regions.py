@@ -6,11 +6,11 @@ Pillow is needed only when invoking this image-specific tool.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw
+from storage_core import digest
 
 
 DECISIONS = {"TRANSLATE", "KEEP", "REVIEW"}
@@ -23,7 +23,7 @@ def _path(value: str, base: Path) -> Path:
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return digest(path)
 
 
 def _region_mask(region: dict, box: list[int], size: tuple[int, int], base: Path,

@@ -56,6 +56,16 @@ class HookTests(unittest.TestCase):
         backup.write_text("{}", encoding="utf-8")
         self.assertIsNone(self.pre("Write", file_path=str(self.file)))
 
+    def test_single_original_store_counts_as_backup(self):
+        store = self.game / "backups" / "originals"
+        saved = store / "files" / "Data" / "text.json"
+        saved.parent.mkdir(parents=True)
+        saved.write_text("{}", encoding="utf-8")
+        (store / "manifest.json").write_text(
+            json.dumps({"schema": 1, "files": {"Data/text.json": {"sha256": "recorded"}}}),
+            encoding="utf-8")
+        self.assertIsNone(self.pre("Edit", file_path=str(self.file)))
+
     def test_new_game_file_and_outside_files_are_allowed(self):
         self.assertIsNone(self.pre("Write", file_path=str(self.game / "Data" / "new_ar.json")))
         self.assertIsNone(self.pre("Edit", file_path=str(self.root / "glossary.yaml")))

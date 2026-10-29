@@ -88,7 +88,8 @@ class BytePatchTests(Temp):
         byte_patch.make_patch(original, built, self.dir / "p.arpatch")
         self.assertTrue(byte_patch.apply_patch(self.dir / "p.arpatch", target).startswith("installed"))
         self.assertEqual(target.read_bytes(), built.read_bytes())
-        self.assertTrue((self.dir / "game.bin.ar_old").is_file())
+        self.assertEqual((self.dir / "backups" / "originals" / "files" / "game.bin").read_bytes(), original.read_bytes())
+        self.assertFalse((self.dir / "game.bin.ar_old").exists())
         self.assertEqual(byte_patch.apply_patch(self.dir / "p.arpatch", target), "already-installed")
         other = self.dir / "other.bin"
         other.write_bytes(b"something else")
@@ -111,7 +112,8 @@ class BytePatchTests(Temp):
         held.close()
         self.assertIn("Close the game", str(caught.exception))
         self.assertEqual(target.read_bytes(), original.read_bytes(), "nothing was changed")
-        self.assertEqual(sorted(p.name for p in self.dir.iterdir()), ["a.bin", "b.bin", "game.bin", "p.arpatch"])
+        self.assertFalse(any(p.name.endswith(".ar_tmp") for p in self.dir.iterdir()))
+        self.assertEqual((self.dir / "backups" / "originals" / "files" / "game.bin").read_bytes(), original.read_bytes())
         held = open(target, "rb")  # held only briefly, as an antivirus scan does
         threading.Timer(0.3, held.close).start()
         time.sleep(0.05)

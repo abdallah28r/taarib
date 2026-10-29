@@ -80,9 +80,16 @@ before publishing. An allowlist is not a content/license audit. Follow
 
 When a changed file is too large to ship whole (an archive, a disc image),
 `scripts/byte_patch.py make` stores only the changed byte ranges with the
-original and result SHA-256; `apply` refuses any other version, writes a
-temporary copy, verifies the result, and keeps `<name>.ar_old` for restore.
-Back up with `safe_backup.py` first as for any game file.
+original and result SHA-256; `apply --root <game-folder>` refuses any other
+version, writes a temporary copy, verifies the result, and keeps one verified
+pre-localization original under `backups/originals/`. Back up with
+`safe_backup.py` first as for any game file; a repeated request reuses that
+original. The workspace storage report is `python scripts/storage_audit.py
+report <project-root>`. `clean-temp` removes only recorded, regenerable files;
+it does not delete legacy backups, tools, or image candidates.
+Previously installed schema 1/2 transactions can still be removed with their
+original transaction IDs. Rebuild an old package as schema 3 before installing
+it again.
 
 ## Installation failures
 
