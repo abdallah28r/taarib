@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "always": ["PROJECT.yaml", "PLAN.md"],
+  "routes": {
+    "discovery": {
+      "skill": ".agents/skills/game-localization-engineering/SKILL.md",
+      "required": ["references/project-run.md", "references/discovery.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "mod-research": {
+      "skill": ".agents/skills/game-localization-engineering/SKILL.md",
+      "required": ["references/localization-mods.md", "LEGAL_POLICY.md"],
+      "optional": ["engines/<engine>.md", "tools/open-source-tools.json"]
+    },
+    "extraction": {
+      "skill": ".agents/skills/game-localization-engineering/SKILL.md",
+      "required": ["adapters/README.md", "references/translation-units.md", "references/extraction-integration.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "translation-ui": {
+      "skill": ".agents/skills/arabic-game-translation/SKILL.md",
+      "required": ["references/translation-units.md", "glossary.yaml", "references/translation-core.md", "references/ui-style.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "translation-dialogue": {
+      "skill": ".agents/skills/arabic-game-translation/SKILL.md",
+      "required": ["references/translation-units.md", "glossary.yaml", "references/translation-core.md", "references/dialogue-style.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "subtitles": {
+      "skill": ".agents/skills/arabic-game-translation/SKILL.md",
+      "required": ["references/translation-units.md", "glossary.yaml", "references/translation-core.md", "references/dialogue-style.md", "references/subtitles-style.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "proofreading": {
+      "skill": ".agents/skills/arabic-proofreading/SKILL.md",
+      "required": ["references/problem-codes.md", "references/translation-units.md", "glossary.yaml", "references/translation-core.md", ".agents/skills/arabic-proofreading/references/proofreading-checklist.md"],
+      "optional": ["references/ui-style.md", "references/dialogue-style.md", "references/subtitles-style.md", ".agents/skills/game-localization-qa/references/lqa-severity.md"]
+    },
+    "qa-structural": {
+      "skill": ".agents/skills/game-localization-qa/SKILL.md",
+      "required": ["references/problem-codes.md", "references/translation-units.md", "references/qa-strategy.md"],
+      "optional": ["glossary.yaml", "engines/<engine>.md"]
+    },
+    "qa-rendering": {
+      "skill": ".agents/skills/game-localization-qa/SKILL.md",
+      "required": ["references/qa-strategy.md", "references/arabic-rendering.md"],
+      "optional": ["references/font-sourcing.md", "references/rendering-lessons.md", "engines/<engine>.md"]
+    },
+    "images": {
+      "skill": ".agents/skills/game-image-localization/SKILL.md",
+      "required": ["references/translation-units.md", "references/image-localization.md"],
+      "optional": ["references/font-sourcing.md", "glossary.yaml", "engines/<engine>.md", "config/image-localization-policy.yaml"]
+    },
+    "integration": {
+      "skill": ".agents/skills/game-localization-engineering/SKILL.md",
+      "required": ["adapters/README.md", "references/translation-units.md", "references/extraction-integration.md", "references/arabic-rendering.md"],
+      "optional": ["references/font-sourcing.md", "engines/<engine>.md", "references/localization-mods.md"]
+    },
+    "maintenance": {
+      "skill": ".agents/skills/localization-project-maintenance/SKILL.md",
+      "required": ["references/extraction-integration.md"],
+      "optional": ["engines/<engine>.md"]
+    },
+    "delegation": {
+      "skill": ".agents/skills/localization-subagent-orchestration/SKILL.md",
+      "required": ["MODEL_AND_SUBAGENT_POLICY.md", "config/agent-policy.json"],
+      "optional": []
+    },
+    "release": {
+      "skill": ".agents/skills/localization-project-maintenance/SKILL.md",
+      "required": ["references/release.md", "LEGAL_POLICY.md", "RELEASE_COMPLIANCE.md", "THIRD_PARTY_NOTICES.md"],
+      "optional": ["engines/<engine>.md"]
+    }
+  }
+}

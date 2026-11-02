@@ -1,0 +1,10 @@
+# Only for a shareable game patch. Fill from the user's own words (references/release.md).
+permission:
+  type: ""  # publisher-written | published-policy; no permission means no shareable package
+  source: ""
+  date: ""  # YYYY-MM-DD
+content_review:
+  target_country: ""
+  official_age_rating: ""  # the game's official rating in that country, or none
+  sensitive_content: []
+  reviewed_by_user: false

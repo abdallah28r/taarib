@@ -1,0 +1,103 @@
+# ===== مصطلحات عامة (تنتقل معك لكل لعبة) =====
+general:
+  # Quote YAML 1.1 boolean words (Yes/No/On/Off/Y/N/True/False) used as keys;
+  # unquoted, PyYAML loads them as true/false and silently drops entries.
+  Save: حفظ
+  Load: تحميل
+  Continue: متابعة
+  New Game: لعبة جديدة
+  Load Game: تحميل لعبة
+  Settings: الإعدادات
+  Options: الخيارات
+  Quit: خروج
+  Exit to Main Menu: العودة إلى القائمة الرئيسية
+  Main Menu: القائمة الرئيسية
+  Back: رجوع
+  Resume: استئناف
+  Apply: تطبيق
+  Cancel: إلغاء
+  Confirm: تأكيد
+  "Yes": نعم
+  "No": لا
+  Loading: جارٍ التحميل
+  Pause: إيقاف مؤقت
+  Controls: التحكم
+  Graphics: الرسومات
+  Audio: الصوت
+  Volume: مستوى الصوت
+  Music: الموسيقى
+  Brightness: السطوع
+  Resolution: الدقة
+  Fullscreen: ملء الشاشة
+  Language: اللغة
+  Subtitles: الترجمة النصية
+  Difficulty: الصعوبة
+  Easy: سهل
+  Normal: عادي
+  Hard: صعب
+  Chapter: الفصل
+  Credits: فريق العمل
+  Achievements: الإنجازات
+  Health: الصحة
+  Armor: الدرع
+  Damage: الضرر
+  Inventory: المخزون
+  Skills: المهارات
+  Quest: المهمة
+  Objective: الهدف
+  Map: الخريطة
+  Press: اضغط
+  Hold: اضغط مطولاً
+
+  Achievement: إنجاز
+  Trophy: جائزة
+  Checkpoint: نقطة تفتيش
+  Tutorial: البرنامج التعليمي
+  Enabled: مفعّل
+  Disabled: معطّل
+  "On": تشغيل
+  "Off": إيقاف
+
+# ===== أسماء تُكتب بحروف عربية (نقحرة ثابتة) =====
+names:
+  # Ethan Carter: إيثان كارتر
+
+# ===== تبقى بالحروف اللاتينية (عنوان اللعبة، علامات تجارية) =====
+keep_latin:
+  - "[عنوان اللعبة]"
+
+# ===== وصف الشخصيات (للحفاظ على صوت كل شخصية) =====
+characters:
+  # إيثان كارتر: صبي في الثانية عشرة، خيالي وحساس، جمل بسيطة
+
+# ===== مصطلحات خاصة بهذه اللعبة (تُضاف أثناء العمل) =====
+game_specific: {}
+
+# ===== صيغ ممنوعة (تُكتشف آليًا في loc.py validate وterms، ومستواها خطأ يمنع بوابة التعريب) =====
+# المفتاح هو الصيغة الممنوعة، والقيمة هي البديل أو سبب المنع. استثناء سطر بعينه: loc.py terms --allow <id> <الصيغة>
+forbidden: {}
+  # "قام بـ": "استخدم الفعل مباشرة (أغلق بدل قام بإغلاق)"
+  # "خزّن": "حفظ"
+
+# ===== أسماء دينية (اختياري، يقرره المستخدم لكل لعبة) =====
+# آلهة اللعبة وكائناتها المقدسة المختلَقة، وصيغتها المعتمدة. لفظ الجلالة والأسماء الحسنى
+# لا تُطلق عليها. لا فحص آلي لهذا القسم؛ المدقق يراجعه.
+religious_terms: {}
+  # "God of Fire": "إله النار"
+  # "The Goddess": "الإلهة"
+
+# المصطلحات العامة قد تتغير حسب السياق. لا يطبق الوكيل قيمة عامة إذا كان
+# للسياق أو اللعبة قرار موثق مختلف.
+context_rules:
+  - term: Load
+    contexts:
+      menu_load_game: تحميل لعبة
+      asset_or_data: تحميل
+  - term: Continue
+    contexts:
+      menu_resume: استئناف
+      menu_story: متابعة
+  - term: Checkpoint
+    contexts:
+      save_point: نقطة حفظ
+      gameplay_objective: نقطة تفتيش

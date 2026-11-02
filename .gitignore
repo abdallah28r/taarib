@@ -1,0 +1,32 @@
+.tools/
+**/__pycache__/
+*.pyc
+units/*
+!units/README.md
+state/*
+!state/README.md
+reports/PROGRESS.md
+reports/progress.html
+backups/*
+!backups/README.md
+builds/
+releases/
+.install-state/
+fonts/selected/*
+!fonts/selected/README.md
+fonts/licenses/*
+!fonts/licenses/README.md
+# Generated on demand; never commit (stale snapshots mislead agents)
+reports/*.json
+work/updates/
+work/batches/
+work/probe/
+# Each game's lessons and its handoff package; the template ships neither
+work/experiences.jsonl
+work/experiences-inbox/
+experiences-*.zip
+# The game's own text and art, shown before and after; never committed or released
+texts.html
+images.html
+work/images/
+work/proofreading/

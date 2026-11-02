@@ -1,0 +1,398 @@
+import importlib.util
+import json
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def load(name):
+    if name in sys.modules:
+        return sys.modules[name]
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+shaping = load("arabic_shaping")
+font_bank = load("font_bank")
+byte_patch = load("byte_patch")
+save_guard = load("save_guard")
+probe = load("game_probe")
+detect = load("detect_engine")
+
+
+class Temp(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.dir = Path(self.temporary.name)
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def touch(self, *names):
+        for name in names:
+            path = self.dir / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch()
+
+
+class ShapingExtrasTests(unittest.TestCase):
+    def test_diacritics_stay_after_their_letter_when_reversed(self):
+        visual = shaping.render("بِسْمِ")
+        self.assertEqual([hex(ord(c)) for c in visual], ["0xfee2", "0x650", "0xfeb4", "0x652", "0xfe91", "0x650"])
+
+    def test_unrender_restores_logical_text(self):
+        for text in ("مرحبا بك في اللعبة", "قال {name} (بهدوء): لا إله", "المستوى ٢٥ و 50%",
+                     "<b>تحذير</b> هنا", "بِسْمِ اللهِ"):
+            self.assertEqual(shaping.unrender(shaping.render(text)), text)
+
+    def test_marks_one_later(self):
+        self.assertEqual(shaping.shift_marks("بِت"), "بتِ")
+        self.assertEqual(shaping.shift_marks("بِ"), "ب ِ")
+        self.assertEqual(shaping.render("بِت", marks_one_later=True), shaping.shift_marks(shaping.render("بِت")))
+
+
+class FontBankTests(Temp):
+    def test_assign_skips_used_and_command_bytes_and_keeps_the_seed(self):
+        bank = font_bank.assign_bank(["ﺍ", "ﺏ"], used_bytes={0x80}, start=0x80)
+        self.assertEqual(bank, {"ﺍ": 0x81, "ﺏ": 0x82})
+        with self.assertRaises(SystemExit):
+            font_bank.assign_bank(["x"] * 200, set())
+        text, seed = self.dir / "build.txt", self.dir / "bank.json"
+        text.write_text("ﺍﺏ", encoding="utf-8")
+        self.assertEqual(font_bank.main(["assign", "--text", str(text), "--seed", str(seed)]), 0)
+        first = json.loads(seed.read_text(encoding="utf-8"))
+        text.write_text("ﺕﺍﺏ", encoding="utf-8")  # a new letter must not move the old ones
+        font_bank.main(["assign", "--text", str(text), "--seed", str(seed)])
+        second = json.loads(seed.read_text(encoding="utf-8"))
+        self.assertEqual({k: second[k] for k in first}, first)
+        self.assertNotIn("FE", second.values())
+
+    def test_dte_counts_pairs(self):
+        self.assertEqual(font_bank.suggest_dte("abab", 1), [("ab", 2)])
+
+
+class BytePatchTests(Temp):
+    def test_make_apply_and_refuse_other_versions(self):
+        original, built, target = self.dir / "a.bin", self.dir / "b.bin", self.dir / "game.bin"
+        original.write_bytes(b"HELLO WORLD" * 50)
+        built.write_bytes(b"HELLO WORLD" * 20 + b"HELLO ARABI" + b"HELLO WORLD" * 29 + b"TAIL")
+        target.write_bytes(original.read_bytes())
+        byte_patch.make_patch(original, built, self.dir / "p.arpatch")
+        self.assertTrue(byte_patch.apply_patch(self.dir / "p.arpatch", target).startswith("installed"))
+        self.assertEqual(target.read_bytes(), built.read_bytes())
+        self.assertEqual((self.dir / "backups" / "originals" / "files" / "game.bin").read_bytes(), original.read_bytes())
+        self.assertFalse((self.dir / "game.bin.ar_old").exists())
+        self.assertEqual(byte_patch.apply_patch(self.dir / "p.arpatch", target), "already-installed")
+        other = self.dir / "other.bin"
+        other.write_bytes(b"something else")
+        with self.assertRaises(RuntimeError):
+            byte_patch.apply_patch(self.dir / "p.arpatch", other)
+
+    @unittest.skipUnless(sys.platform == "win32", "only Windows refuses to replace a file another program has open")
+    def test_a_file_held_open_by_the_game(self):
+        import threading
+        import time
+        file_ops = load("file_ops")
+        original, built, target = self.dir / "a.bin", self.dir / "b.bin", self.dir / "game.bin"
+        original.write_bytes(b"HELLO WORLD" * 50)
+        built.write_bytes(b"HELLO ARABI" * 50)
+        target.write_bytes(original.read_bytes())
+        byte_patch.make_patch(original, built, self.dir / "p.arpatch")
+        held = open(target, "rb")  # the game keeps its file open
+        with self.assertRaises(file_ops.FileInUse) as caught:
+            byte_patch.apply_patch(self.dir / "p.arpatch", target)
+        held.close()
+        self.assertIn("Close the game", str(caught.exception))
+        self.assertEqual(target.read_bytes(), original.read_bytes(), "nothing was changed")
+        self.assertFalse(any(p.name.endswith(".ar_tmp") for p in self.dir.iterdir()))
+        self.assertEqual((self.dir / "backups" / "originals" / "files" / "game.bin").read_bytes(), original.read_bytes())
+        held = open(target, "rb")  # held only briefly, as an antivirus scan does
+        threading.Timer(0.3, held.close).start()
+        time.sleep(0.05)
+        self.assertTrue(byte_patch.apply_patch(self.dir / "p.arpatch", target).startswith("installed"))
+        self.assertEqual(target.read_bytes(), built.read_bytes())
+
+    def test_guarded_edit(self):
+        path = self.dir / "x.bin"
+        path.write_bytes(bytes.fromhex("00112233"))
+        self.assertEqual(byte_patch.patch_bytes(path, 1, b"\x11\x22", b"\xaa\xbb"), "applied")
+        self.assertEqual(byte_patch.patch_bytes(path, 1, b"\x11\x22", b"\xaa\xbb"), "already-applied")
+        with self.assertRaises(RuntimeError):
+            byte_patch.patch_bytes(path, 1, b"\x11\x22", b"\xcc\xdd")
+
+
+class SaveGuardTests(Temp):
+    def test_snapshot_verify_restore_keeps_current_saves(self):
+        saves, snap = self.dir / "Saves", self.dir / "snap"
+        saves.mkdir()
+        (saves / "slot1.sav").write_bytes(b"v1")
+        save_guard.snapshot(saves, snap)
+        with self.assertRaises(SystemExit):
+            save_guard.snapshot(saves, snap)  # never overwritten
+        (saves / "slot1.sav").write_bytes(b"v2")
+        (saves / "slot2.sav").write_bytes(b"new")
+        self.assertEqual(save_guard.changes(saves, snap), {"changed": ["slot1.sav"], "added": ["slot2.sav"], "removed": []})
+        aside = save_guard.restore(saves, snap)
+        self.assertEqual((saves / "slot1.sav").read_bytes(), b"v1")
+        self.assertEqual((aside / "slot2.sav").read_bytes(), b"new")
+
+    def test_refuses_store_sandbox(self):
+        with self.assertRaises(SystemExit):
+            save_guard.refuse_sandbox(Path("C:/Users/x/AppData/Local/Packages/Game/LocalState"))
+
+
+class ProbeTests(Temp):
+    def test_fonts_logs_and_recording(self):
+        (self.dir / "Fonts").mkdir()
+        (self.dir / "Fonts" / "ui.fnt").write_text('info face="x"\nchar id=1575 x=0\nchar id=65 x=0\n', encoding="utf-8")
+        (self.dir / "Player.log").write_text("Initialize engine version\n", encoding="utf-8")
+        fonts = probe.find_fonts(self.dir)
+        self.assertEqual(fonts[0]["arabic_chars"], 1)
+        self.assertEqual(fonts[0]["verdict"], "partial-arabic")
+        logs = probe.discover_logs(self.dir, since=0)
+        self.assertIn(self.dir / "Player.log", logs)
+        self.assertTrue(probe.belongs(self.dir / "Player.log", self.dir))
+        self.assertEqual(probe.generalize(self.dir / "Player.log", self.dir), "{game}/Player.log")
+
+    def test_record_log_writes_once_into_the_profile(self):
+        profile = ROOT / "engines" / "godot.md"
+        before = profile.read_text(encoding="utf-8")
+        try:
+            self.assertTrue(probe.record_log("godot", "{game}/test-only.log"))
+            self.assertFalse(probe.record_log("godot", "{game}/test-only.log"))
+            text = profile.read_text(encoding="utf-8")
+            self.assertIn("`{game}/test-only.log`", text.split("## Logs", 1)[1].split("\n## ", 1)[0])
+        finally:
+            profile.write_text(before, encoding="utf-8")
+
+    def test_launch_needs_permission(self):
+        self.assertFalse(probe.launch_allowed())  # the template ships with allow_launch_game: false
+        code = probe.main(["--game", str(self.dir), "--launch", str(self.dir / "game.exe")])
+        self.assertEqual(code, 2)
+
+
+class ProbeNamesAndProfilesTests(Temp):
+    def test_unity_names_give_the_exact_log_path(self):
+        game = self.dir / "Some Game"
+        (game / "SomeGame_Data").mkdir(parents=True)
+        (game / "SomeGame_Data" / "app.info").write_text("Acme Studio\nStarfall Tale\n", encoding="utf-8")
+        log = self.dir / "AppData" / "LocalLow" / "Acme Studio" / "Starfall Tale" / "Player.log"
+        log.parent.mkdir(parents=True)
+        log.write_text("Initialize engine version\n", encoding="utf-8")
+        old = os.environ.get("USERPROFILE")
+        os.environ["USERPROFILE"] = str(self.dir)
+        try:
+            names = probe.game_names(game)
+            self.assertEqual((names["unity_company"], names["unity_product"]), ("Acme Studio", "Starfall Tale"))
+            self.assertIn(log, probe.exact_candidates(names))
+            self.assertTrue(probe.belongs(log, game, probe.name_words(names)))  # folder name alone would miss it
+        finally:
+            if old is None:
+                del os.environ["USERPROFILE"]
+            else:
+                os.environ["USERPROFILE"] = old
+
+    def test_aliases_and_paths_recorded_in_a_profile(self):
+        self.assertEqual(probe.profile_name("rpg-maker-mv"), "rpg-maker")
+        self.assertEqual(probe.profile_name("source"), "source-engine")
+        profile = ROOT / "engines" / "godot.md"
+        before = profile.read_text(encoding="utf-8")
+        (self.dir / "logs").mkdir()
+        (self.dir / "logs" / "game.log").write_text("x", encoding="utf-8")
+        try:
+            probe.record_log("godot", "{game}/logs/game.log")
+            self.assertEqual(probe.profile_log_paths("godot", self.dir), [self.dir / "logs" / "game.log"])
+        finally:
+            profile.write_text(before, encoding="utf-8")
+
+    def test_new_engine_profile_passes_the_structure_check_and_joins_the_catalog(self):
+        engine = "zz-test-engine"
+        profile = ROOT / "engines" / f"{engine}.md"
+        catalog = ROOT / "tools" / "open-source-tools.json"
+        before = catalog.read_text(encoding="utf-8")
+        try:
+            probe.create_profile(engine, {"scores": {"unity": 3}}, [])
+            self.assertTrue(profile.is_file())
+            self.assertEqual(json.loads(catalog.read_text(encoding="utf-8"))["engines"][engine], [])
+            knowledge = load("check_knowledge")
+            import contextlib, io
+            folder = self.dir / "engines"
+            folder.mkdir()
+            (folder / profile.name).write_text(profile.read_text(encoding="utf-8"), encoding="utf-8")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                sys.argv = ["check_knowledge", str(folder)]
+                self.assertFalse(knowledge.main())
+            self.assertTrue(probe.record_log(engine, "{game}/output.log"))
+            with self.assertRaises(ValueError):
+                probe.create_profile("Bad Name", {"scores": {}}, [])
+        finally:
+            profile.unlink(missing_ok=True)
+            catalog.write_text(before, encoding="utf-8")
+
+
+class ReviewFixTests(Temp):
+    def test_company_words_do_not_tie_logs_to_the_game(self):
+        words = probe.name_words({"folder": "Some Game", "exe": ["StarfallTale", "UnityCrashHandler64"],
+                                  "unity_company": "Visual Studio Interactive", "unity_product": "Starfall Tale"})
+        self.assertEqual(words, {"some", "starfall", "tale", "starfalltale"})
+
+    def test_unreal_logs_come_from_the_project_not_any_program(self):
+        boot = load("boot_verdict")
+        game = self.dir / "Game"
+        for folder in ("Engine/Binaries", "Proj/Binaries"):
+            (game / folder).mkdir(parents=True)
+        local = self.dir / "Local"
+        for log in ("EpicGamesLauncher/Saved/Logs/EpicGamesLauncher.log", "Proj/Saved/Logs/Proj.log"):
+            (local / log).parent.mkdir(parents=True)
+            (local / log).write_text("LogInit\n", encoding="utf-8")
+        old = os.environ.get("LOCALAPPDATA")
+        os.environ["LOCALAPPDATA"] = str(local)
+        try:
+            self.assertEqual(boot.unreal_project(game), "Proj")
+            self.assertEqual(boot.candidates("unreal", game), [local / "Proj/Saved/Logs/Proj.log"])
+        finally:
+            if old is None:
+                del os.environ["LOCALAPPDATA"]
+            else:
+                os.environ["LOCALAPPDATA"] = old
+
+    def test_crash_words(self):
+        boot = load("boot_verdict")
+        for line, crash in (("Non-fatal error in shader", False), ("Assertion failed on expression: x", False),
+                            ("Assertion failed: Index < Num", True), ("Fatal error!", True), ("FATAL: no memory", True)):
+            self.assertEqual(bool(boot.CRASH.search(line)), crash, line)
+
+    def test_real_renpy_log_lines(self):
+        """Lines from Slay the Princess's real log.txt (Ren'Py 8.0.3), launched directly by probe."""
+        boot = load("boot_verdict")
+        log = self.dir / "log.txt"
+        log.write_text("Early init took 0.00s\nLoading error handling took 1.41s\n"
+                       "Faled to initialize steam: Exception('Init returned false.')\n"
+                       "Interface start took 1.08s\n", encoding="utf-8")
+        report = boot.judge([log], 60, direct_launch=True)
+        self.assertEqual(report["verdict"], "booted_clean")
+        self.assertEqual(len(report["launch_notes"]), 1)
+        # Started by the user through Steam, the same Steam failure is a real error.
+        self.assertEqual(boot.judge([log], 60)["verdict"], "booted_with_errors")
+
+    def test_font_with_gsub_but_no_script_list(self):
+        # Seen in a shipped Ren'Py game font: a GSUB table whose ScriptList is empty.
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.pens.ttGlyphPen import TTGlyphPen
+        from fontTools.ttLib import newTable
+        from fontTools.ttLib.tables import otTables
+        builder = FontBuilder(1000, isTTF=True)
+        builder.setupGlyphOrder([".notdef", "A"])
+        builder.setupCharacterMap({65: "A"})
+        empty = TTGlyphPen(None).glyph()
+        builder.setupGlyf({".notdef": empty, "A": empty})
+        builder.setupHorizontalMetrics({".notdef": (500, 0), "A": (500, 0)})
+        builder.setupHorizontalHeader()
+        builder.setupNameTable({"familyName": "T", "styleName": "R"})
+        builder.setupOS2()
+        builder.setupPost()
+        gsub, table = newTable("GSUB"), otTables.GSUB()
+        table.Version, table.ScriptList, table.FeatureList, table.LookupList = 0x00010000, None, None, None
+        gsub.table = table
+        builder.font["GSUB"] = gsub
+        font = self.dir / "no-scripts.ttf"
+        builder.save(str(font))
+        self.assertEqual(probe.font_report(font)["verdict"], "no-arabic")
+        self.assertEqual(shaping.font_measure(font, 20)("AA"), 20)
+        self.assertEqual(font_bank.coverage(font, {"A"}), {})
+        font.unlink()  # every reader closed the file; Windows refuses to delete an open one
+
+    def test_characters_the_original_draws_keep_their_byte(self):
+        build, original, seed = self.dir / "b.txt", self.dir / "o.txt", self.dir / "s.json"
+        build.write_text("ﺍ…é", encoding="utf-8")
+        original.write_text("café…", encoding="utf-8")
+        font_bank.main(["assign", "--text", str(build), "--original", str(original), "--seed", str(seed)])
+        self.assertEqual(list(json.loads(seed.read_text(encoding="utf-8"))), ["ﺍ"])
+
+    def test_baseline_makes_only_new_errors_count(self):
+        game, out = self.dir / "Game", self.dir / "out"
+        game.mkdir()
+        log = game / "output.log"
+        log.write_text("Initialize engine version\nNullReferenceException at Foo\n", encoding="utf-8")
+        import contextlib, io
+        def run(*extra):
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                probe.main(["--game", str(game), "--out", str(out), *extra])
+            return json.loads(buffer.getvalue())
+        roots, probe.SEARCH_ROOTS = probe.SEARCH_ROOTS, []  # only the game folder: fast and independent of this machine
+        self.addCleanup(setattr, probe, "SEARCH_ROOTS", roots)
+        self.assertEqual(run()["boot"]["verdict"], "booted_with_errors")
+        self.assertIn("baseline_saved", run("--save-baseline")["logs"])
+        self.assertEqual(run()["boot"]["verdict"], "booted_clean")
+        log.write_text("Initialize engine version\nNullReferenceException at Foo\nIOException: font\n", encoding="utf-8")
+        self.assertEqual(run()["boot"]["verdict"], "booted_with_errors")
+
+    @unittest.skipUnless(Path("C:/Windows/Fonts/tahoma.ttf").is_file(), "needs an Arabic system font")
+    def test_preview_both_modes_fit_the_box(self):
+        font = Path("C:/Windows/Fonts/tahoma.ttf")
+        lines = ["قال {name}: لا إله إلا الله، شيء جميل في هذا اليوم الطويل جدًا"]
+        for native in (False, True):
+            report = probe.preview(font, 24, 300, lines, self.dir / f"p{native}.png", native)
+            if "error" in report:
+                continue  # Pillow without raqm
+            self.assertEqual(report["too_wide"], [])
+            self.assertTrue((self.dir / f"p{native}.png").is_file())
+
+
+class ScriptsIndexTests(unittest.TestCase):
+    def test_every_script_has_a_line_in_the_index(self):
+        index = (ROOT / "references" / "scripts.md").read_text(encoding="utf-8")
+        scripts = [p.name for p in (ROOT / "scripts").glob("*.py")]
+        scripts += ["maintainer/" + p.name for p in (ROOT / "scripts" / "maintainer").glob("*.py")]
+        self.assertEqual([s for s in scripts if f"`{s}`" not in index], [], "add a line to references/scripts.md")
+        self.assertIn("references/scripts.md", (ROOT / "AGENTS.md").read_text(encoding="utf-8"))
+
+
+class EngineMarkersConfigTests(unittest.TestCase):
+    def test_markers_file_is_valid(self):
+        config = json.loads((ROOT / "config" / "engine-markers.json").read_text(encoding="utf-8"))
+        for engine, markers in config["engines"].items():
+            self.assertRegex(engine, r"^[a-z0-9][a-z0-9-]+$")
+            self.assertTrue(markers and all(isinstance(w, int) and w > 0 for w in markers.values()), engine)
+            self.assertTrue(all(m == m.lower() for m in markers), f"{engine}: markers are lowercase")
+        self.assertEqual(detect.MARKERS, config["engines"])
+
+
+class NewEngineDetectionTests(Temp):
+    def test_each_new_engine_is_recognized(self):
+        layouts = {
+            "monogame-xna": ["MonoGame.Framework.dll", "Content/a.xnb", "Game.runtimeconfig.json"],
+        }
+        for engine, files in layouts.items():
+            with self.subTest(engine=engine), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                for name in files:
+                    (root / name).parent.mkdir(parents=True, exist_ok=True)
+                    (root / name).touch()
+                self.assertEqual(detect.detect(root)["engine"], engine)
+
+
+class ImageAlphaTests(Temp):
+    def test_transparency_kind(self):
+        from PIL import Image
+        regions = load("check_image_regions")
+        self.assertEqual(regions._alpha_class(Image.new("RGB", (2, 2))), "opaque")
+        binary = Image.new("RGBA", (2, 1), (0, 0, 0, 0))
+        binary.putpixel((1, 0), (0, 0, 0, 255))
+        self.assertEqual(regions._alpha_class(binary), "binary")
+        binary.putpixel((0, 0), (0, 0, 0, 128))
+        self.assertEqual(regions._alpha_class(binary), "gradient")
+
+
+if __name__ == "__main__":
+    unittest.main()

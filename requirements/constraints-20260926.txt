@@ -1,0 +1,11 @@
+Babel==2.18.0
+charset-normalizer==3.4.7
+fonttools==4.63.0
+freetype-py==2.5.1
+Pillow==12.2.0
+polib==1.2.0
+PyYAML==6.0.3
+pytesseract==0.3.13
+regex==2026.4.4
+translate-toolkit==3.20.0
+uharfbuzz==0.56.1

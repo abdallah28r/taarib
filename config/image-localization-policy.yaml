@@ -1,0 +1,98 @@
+schema_version: 1
+
+external_image_editing:
+  # Not set here. The per-project switch is PROJECT.yaml
+  # image_localization.external_image_editing.enabled, asked at intake when
+  # workflow.image_scope is yes.
+  enabled_by: "PROJECT.yaml:image_localization.external_image_editing.enabled"
+  provider: "openai-official"
+  authorization_scope: "current-project"
+  final_asset_requires_review: true
+
+classification:
+  required_before_editing: true
+  states: ["TRANSLATE", "KEEP", "REVIEW"]
+  keep_if_translation_distorts_or_adds_information: true
+  forbid_external_caption_or_explanatory_overlay: true
+  embedded_design_text_default: "KEEP"
+  standalone_nameplate_with_approved_glossary: "TRANSLATE when the name is the image's player-facing content and the original design can be preserved"
+  embedded_design_categories:
+    - "clothing-and-accessories"
+    - "character-body-or-design-details"
+    - "weapons-and-tools-held-or-used-by-characters"
+    - "food-and-packaging"
+    - "commercial-or-fictional-products"
+    - "cosmetics-and-consumables"
+  gameplay_or_story_critical_exception: "TRANSLATE only when the image itself can be localized without distortion, invented information, or a new visual element; otherwise KEEP"
+
+style_fidelity:
+  match_source: true
+  source_typography_first: true
+  coordinate_with_project_role_fonts: true
+  do_not_force_one_font_across_all_images: true
+  match_visible_text_scale_as_close_as_possible: true
+  measure_visible_ink_not_only_region_box: true
+  smaller_text_is_not_automatic_rejection: true
+  avoid_downsizing_before_trying_fit_routes: true
+  visual_priority: "meaning-and-readability > artwork-and-composition > source-typography > approximate-scale > occupancy-metric"
+  do_not_fill_region_for_its_own_sake: true
+  preserve_intentional_negative_space: true
+  forbid_nonuniform_glyph_scaling_to_hit_target_width: true
+  whole_image_resizing_for_text_fit: false
+  forbid_invented_outline: true
+  forbid_invented_shadow: true
+  forbid_invented_glow: true
+  forbid_invented_panel_or_background: true
+  preserve_fill_color_opacity_weight_spacing_rotation_perspective: true
+
+candidate_search:
+  strategy: "adaptive"
+  try_every_method_unconditionally: false
+  simple_image_initial_candidates: 1
+  complex_or_uncertain_initial_candidates: 2
+  expand_only_after_visual_failure: true
+  text_only_assets: "extra_size_and_occupancy_review"
+  size_fit_attempts: ["font-family", "font-size", "weight", "tracking", "line-spacing", "alignment", "line-breaks", "safe-layout-adjustment"]
+  preserve_best_non_distorting_candidate: true
+  stop_when_next_size_gain_harms_visual_balance: true
+  stop_after_visual_and_technical_pass: true
+  keep_source_when_all_candidates_fail: true
+
+legacy_candidate_reuse:
+  inspect_generation_method_before_reuse: true
+  prior_approval_does_not_waive_current_visual_review: true
+  flag_glyph_resampling_done_only_to_fill_source_width: true
+  compare_full_image_before_keep_or_replace: true
+
+openai_editing:
+  route: "scripts/image_candidate.py codex (Codex built-in image tool, both runtimes)"
+  raw_output_is_candidate: false
+  confine_with: "scripts/image_candidate.py composite (resize to source, copy back only the mask or box)"
+  max_attempts_per_image: "PROJECT.yaml:image_localization.max_generative_attempts (default 5)"
+  raw_result_auto_integration: false
+
+region_record:
+  required_image_fields: ["image", "source", "source_sha256", "regions"]
+  required_region_fields: ["box", "decision", "reason"]
+  translated_region_fields: ["target_text", "review_status"]
+  approval_fields: ["candidate", "candidate_sha256", "method", "visual_reviewed", "visual_review", "technical_qa"]
+  optional_when_relevant: ["mask", "source_text", "prompt", "model", "visual_qa", "source_text_bounds", "target_text_bounds", "source_visible_height", "target_visible_height", "visual_scale_ratio", "size_match", "fit_attempts", "font_size"]
+
+visual_review:
+  required_for_every_changed_image: true
+  source_and_candidate_must_be_opened: true
+  reviewer: "agent"
+  record: "source_opened, candidate_opened, and concise visual findings per approved region"
+  inspect_at_native_scale: true
+  transparent_assets_require_dark_light_and_checkerboard_views: true
+  side_by_side_comparison: true
+  numeric_only_acceptance_forbidden: true
+  generated_asset_auto_integration_forbidden: true
+
+technical_gates:
+  preserve_dimensions: true
+  preserve_color_mode_and_alpha_semantics: true
+  preserve_native_texture_format_mips_and_compression: true
+  outside_allowed_region_changed_pixels: 0
+  source_script_residue_check: true
+  exact_text_and_glossary_check: true
